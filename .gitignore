@@ -1,0 +1,51 @@
+# ─── Sensitive / Secret Files ───────────────────────────────────────────────
+settings.json
+trusted_users.json
+sessions.json
+blocked_users.json
+.env
+*.key
+*.pem
+*.secret
+
+# ─── Build Output ────────────────────────────────────────────────────────────
+build/
+*.exe
+*.dll
+*.lib
+*.a
+*.obj
+*.o
+*.pdb
+*.ilk
+*.exp
+
+# ─── Logs & Runtime Data ────────────────────────────────────────────────────
+logs/
+data/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+
+# ─── IDE / Editor ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.user
+*.suo
+*.sln.docstates
+CMakeSettings.json
+.cmake/
+
+# ─── CMake Cache ─────────────────────────────────────────────────────────────
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+ninja.build
+_deps/
+
+# ─── Windows Artifacts ───────────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini
+*.lnk
