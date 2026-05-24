@@ -22,6 +22,8 @@
 #include "../include/SecurityManager.h"
 #include "../include/NativeCommandRouter.h"
 #include "../../plugins/spotify/spotify_plugin.hpp"
+#include "../../plugins/spotify/spotify_commands.hpp"
+#include "../../plugins/spotify/spotify_dock.hpp"
 #include <windows.h>
 #include <csignal>
 #include <atomic>
@@ -105,6 +107,27 @@ static std::string execute_plan_step(const std::string& chat_id,
         task.execute_at = now + delay;
         g_scheduler.add_task(task);
         return "⏱ Scheduled '" + desc + "' in " + std::to_string(delay) + "s\n";
+    }
+
+    // ── Special: Spotify plugin integration ─────────────────────────────────
+    if (act.size() >= 8 && act.substr(0, 8) == "spotify_") {
+        std::string sub = act.substr(8); // e.g. "play", "pause", "resume", "volume", "next", "prev", "dock", "get_status"
+        std::string args = "";
+        if (sub == "play" && params.contains("query")) {
+            args = params["query"].get<std::string>();
+        } else if (sub == "volume" && params.contains("level")) {
+            args = std::to_string(params["level"].get<int>());
+        }
+
+        if (sub == "get_status") {
+            sub = "status";
+        } else if (sub == "dock") {
+            SpotifyDock::instance().send_dock(chat_id);
+            return "✅ Spotify Dock opened\n";
+        }
+
+        std::string reply = SpotifyCommands::dispatch(sub, args);
+        return reply + "\n";
     }
 
     // ── Special: remember ───────────────────────────────────────────────────

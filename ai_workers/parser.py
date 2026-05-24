@@ -60,6 +60,101 @@ def build_tools():
         {
             "type": "function",
             "function": {
+                "name": "spotify_play",
+                "description": "Play a specific song, artist, playlist, or album in Spotify. If query is empty/omitted, it resumes playback.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "Song name, artist, or playlist to play (optional)"},
+                        **_delay_param()
+                    }
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "spotify_pause",
+                "description": "Pause playback in Spotify.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {**_delay_param()}
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "spotify_resume",
+                "description": "Resume playback in Spotify.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {**_delay_param()}
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "spotify_next",
+                "description": "Skip to the next song in Spotify.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {**_delay_param()}
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "spotify_prev",
+                "description": "Go back to the previous song in Spotify.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {**_delay_param()}
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "spotify_volume",
+                "description": "Set volume level in Spotify.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "level": {"type": "integer", "description": "Volume level (0-100)"},
+                        **_delay_param()
+                    },
+                    "required": ["level"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "spotify_get_status",
+                "description": "Get status of the currently playing track on Spotify (title, artist, progress, volume, states).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {}
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "spotify_dock",
+                "description": "Launch the interactive live-updating Spotify media dock control panel in the Telegram chat.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {}
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
                 "name": "media_play_pause",
                 "description": "Play or pause the currently playing media/music.",
                 "parameters": {"type": "object", "properties": {"action": {"type": "string", "enum": ["play_pause"]}, **_delay_param()}, "required": ["action"]}
@@ -445,7 +540,12 @@ You are NOT just a tool caller. You are a PLANNER and ORCHESTRATOR.
 ## PLANNING RULES
 1. Always classify the intent first (set the intent field)
 2. Use SEMANTIC tools — not raw system calls
-3. For media: use play_youtube or open_website
+3. For media:
+   - For general requests or YouTube, use play_youtube.
+   - If the user specifically asks to play a song, artist, album, or playlist on Spotify, or references playing on Spotify:
+     * First, ensure Spotify is open. If Spotify needs to be launched, add an `open_app` action with target="spotify".
+     * Second, call the `spotify_play` action with the requested track/artist as the query parameter.
+     * Crucial: If you planned `open_app` for spotify in the step immediately before, you MUST add `delay_seconds: 3` to the `spotify_play` step so that Spotify has time to launch and establish its WebSocket connection. E.g. step 1: open_app("spotify"), step 2: spotify_play(query="...", delay_seconds=3).
 4. For "when X happens" requests → use add_event_rule
 5. For delayed actions → use delay_seconds on the step
 6. For reminders → use notify with delay_seconds
@@ -467,6 +567,14 @@ You are NOT just a tool caller. You are a PLANNER and ORCHESTRATOR.
 User: "play Jungkook Seven on YouTube"
 → (Calls tool `play_youtube` with query="Jungkook Seven")
 → Text: "Playing Jungkook Seven on YouTube! 🎵"
+
+User: "play leave her jhony leave her song in spotify"
+→ (Calls tool `spotify_play` with query="leave her jhony leave her")
+→ Text: "Playing Leave Her Johnny Leave Her on Spotify! 🎵"
+
+User: "open spotify and play starboy"
+→ (Calls `open_app` with target="spotify", and `spotify_play` with query="starboy", delay_seconds=3)
+→ Text: "Opening Spotify and playing Starboy! 🎵"
 
 User: "pause the music"
 → (Calls tool `media_play_pause` with action="play_pause")
@@ -622,6 +730,14 @@ def _classify_intent_from_steps(steps: list, content: str) -> str:
     action = steps[0].get("action", "")
     mapping = {
         "play_youtube":      "media_playback",
+        "spotify_play":      "media_playback",
+        "spotify_pause":     "media_playback",
+        "spotify_resume":    "media_playback",
+        "spotify_next":      "media_playback",
+        "spotify_prev":      "media_playback",
+        "spotify_volume":    "media_playback",
+        "spotify_get_status": "media_playback",
+        "spotify_dock":      "media_playback",
         "media_play_pause":  "media_playback",
         "media_next":        "media_playback",
         "media_prev":        "media_playback",

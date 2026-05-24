@@ -16,6 +16,8 @@ ActionValidator::ActionValidator() {
         // Browser / media (semantic)
         "play_youtube", "search_google", "open_website",
         "media_play_pause", "media_next", "media_prev", "media_stop",
+        "spotify_play", "spotify_pause", "spotify_resume", "spotify_next",
+        "spotify_prev", "spotify_volume", "spotify_get_status", "spotify_dock",
         // Apps
         "open_app", "close_process", "focus_window",
         "enum_windows", "enum_processes",
@@ -67,6 +69,14 @@ RiskLevel ActionValidator::classify_action(const std::string& action) const {
     static const std::unordered_map<std::string, RiskLevel> risk_map = {
         // LOW — safe semantic tools
         {"play_youtube",      RiskLevel::LOW},
+        {"spotify_play",      RiskLevel::LOW},
+        {"spotify_pause",     RiskLevel::LOW},
+        {"spotify_resume",    RiskLevel::LOW},
+        {"spotify_next",      RiskLevel::LOW},
+        {"spotify_prev",      RiskLevel::LOW},
+        {"spotify_volume",    RiskLevel::LOW},
+        {"spotify_get_status", RiskLevel::LOW},
+        {"spotify_dock",      RiskLevel::LOW},
         {"search_google",     RiskLevel::LOW},
         {"open_website",      RiskLevel::LOW},
         {"media_play_pause",  RiskLevel::LOW},
