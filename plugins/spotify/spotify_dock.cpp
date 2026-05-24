@@ -148,8 +148,6 @@ void SpotifyDock::send_dock(const std::string& chat_id) {
     }
 }
 
-// --- Update Loop ---
-
 void SpotifyDock::update_loop() {
     while (running_) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -157,11 +155,19 @@ void SpotifyDock::update_loop() {
         std::string text = render_text();
         auto keyboard    = make_keyboard();
 
-        std::lock_guard<std::mutex> lk(mtx_);
-        for (auto& [cid, sess] : sessions_) {
-            if (sess.message_id == 0) continue;
+        std::vector<DockSession> active_sessions;
+        {
+            std::lock_guard<std::mutex> lk(mtx_);
+            for (auto& [cid, sess] : sessions_) {
+                if (sess.message_id != 0) {
+                    active_sessions.push_back(sess);
+                }
+            }
+        }
+
+        for (const auto& sess : active_sessions) {
             g_telegram.api_call("editMessageText", {
-                {"chat_id",      cid},
+                {"chat_id",      sess.chat_id},
                 {"message_id",   sess.message_id},
                 {"text",         text},
                 {"parse_mode",   "Markdown"},

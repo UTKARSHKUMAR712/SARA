@@ -171,8 +171,11 @@ json TelegramGateway::get_recent_messages(int count) {
     return arr;
 }
 
-bool TelegramGateway::send_message(const std::string& chat_id, const std::string& text) {
+bool TelegramGateway::send_message(const std::string& chat_id, const std::string& text, const std::string& parse_mode) {
     json payload = {{"chat_id", chat_id}, {"text", text}};
+    if (!parse_mode.empty()) {
+        payload["parse_mode"] = parse_mode;
+    }
     auto result = api_call("sendMessage", payload);
     bool ok = result.value("ok", false);
     if (!ok) {

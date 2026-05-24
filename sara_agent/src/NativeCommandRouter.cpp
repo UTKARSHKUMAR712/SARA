@@ -150,7 +150,7 @@ bool NativeCommandRouter::handle_media(const std::string& chat_id, const std::st
         execute_and_reply(chat_id, "play_youtube", {{"query", text.substr(4)}}, true);
         return true;
     }
-    if (text == "/spotify1") { execute_and_reply(chat_id, "open_app", {{"target", "spotify"}}, true); return true; }
+    if (text == "/spotify" || text == "/spotify1") { execute_and_reply(chat_id, "open_app", {{"target", "spotify"}}, true); return true; }
     if (text == "/spotify0") { execute_and_reply(chat_id, "close_process", {{"target", "spotify"}}, false); return true; }
     return false;
 }

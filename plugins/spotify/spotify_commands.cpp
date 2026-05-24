@@ -3,6 +3,8 @@
 #include "spotify_state.hpp"
 #include <sstream>
 #include <iomanip>
+#include <windows.h>
+#include <shellapi.h>
 
 namespace sara {
 
@@ -26,6 +28,46 @@ std::string SpotifyCommands::send(const json& cmd) {
 }
 
 std::string SpotifyCommands::dispatch(const std::string& sub, const std::string& args) {
+
+    // ── HELP ──────────────────────────────────────────────────────────────────
+    if (sub == "help") {
+        return "\xF0\x9F\x8E\xB5 *SARA Spotify Plugin Commands*\n\n"
+               "*Dock Control:*\n"
+               "• `/sp dock` — Launch interactive control panel (live updating)\n\n"
+               "*Playback Controls:*\n"
+               "• `/sp play <song>` — Play a song, playlist, or artist\n"
+               "• `/sp pause` — Pause music\n"
+               "• `/sp resume` — Resume music\n"
+               "• `/sp toggle` — Play / Pause toggle\n"
+               "• `/sp next` — Skip to the next track\n"
+               "• `/sp prev` — Go back to the previous track\n\n"
+               "*Progress & Volume:*\n"
+               "• `/sp seek <sec>` — Seek to specific seconds\n"
+               "• `/sp forward [sec]` — Skip forward (default 10s)\n"
+               "• `/sp backward [sec]` — Skip backward (default 10s)\n"
+               "• `/sp vol <0-100>` — Set volume level\n"
+               "• `/sp mute` / `/sp unmute`\n\n"
+               "*Modes & Customization:*\n"
+               "• `/sp shuffle on|off` — Toggle shuffle mode\n"
+               "• `/sp repeat off|all|one` — Set repeat mode\n"
+               "• `/sp heart` / `/sp unheart` — Like/unlike current song\n\n"
+               "*App Control:*\n"
+               "• `/sp open` — Open the Spotify desktop application\n\n"
+               "*Advanced:* \n"
+               "• `/sp queue <song>` — Queue up a song\n"
+               "• `/sp playlist <name>` — Play one of your playlists\n"
+               "• `/sp radio <artist>` — Queue up radio for an artist\n"
+               "• `/sp status` — Get detailed current track status";
+    }
+
+    // ── OPEN ──────────────────────────────────────────────────────────────────
+    if (sub == "open" || sub == "start" || sub == "launch") {
+        HINSTANCE result = ShellExecuteA(nullptr, "open", "spotify:", nullptr, nullptr, SW_SHOWNORMAL);
+        if ((INT_PTR)result <= 32) {
+            return "\u274c Failed to open Spotify.";
+        }
+        return "\u2705 Opening Spotify...";
+    }
 
     // ── PLAY ──────────────────────────────────────────────────────────────────
     if (sub == "play") {

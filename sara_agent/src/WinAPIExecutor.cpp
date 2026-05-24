@@ -191,7 +191,7 @@ ActionResult WinAPIExecutor::open_app(const std::string& target, const json& par
     if (lower_target == "edge") actual_target = "msedge.exe";
     else if (lower_target == "chrome") actual_target = "chrome.exe";
     else if (lower_target == "firefox") actual_target = "firefox.exe";
-    else if (lower_target == "spotify") actual_target = "spotify.exe";
+    else if (lower_target == "spotify") actual_target = "spotify:";
     else if (lower_target == "notepad") actual_target = "notepad.exe";
     else if (lower_target == "calculator" || lower_target == "calc") actual_target = "calc.exe";
     else if (lower_target == "cmd") actual_target = "cmd.exe";

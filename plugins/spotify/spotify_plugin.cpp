@@ -48,7 +48,7 @@ bool SpotifyPlugin::handle_command(const std::string& chat_id, const std::string
     }
 
     std::string reply = SpotifyCommands::dispatch(sub, args);
-    g_telegram.send_message(chat_id, reply);
+    g_telegram.send_message(chat_id, reply, "Markdown");
     return true;
 }
 
