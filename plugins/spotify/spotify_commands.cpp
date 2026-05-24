@@ -101,14 +101,14 @@ std::string SpotifyCommands::dispatch(const std::string& sub, const std::string&
 
         std::string repeat_str = s.repeat_mode == 0 ? "OFF" : s.repeat_mode == 1 ? "ALL" : "ONE";
         return
-            "\ud83c\udfb5 " + s.title + "\n"
-            "\ud83d\udc64 " + s.artist + "\n"
-            "\ud83d\udcc0 " + s.album  + "\n"
-            "\u23f1 "  + ms_to_time(s.progress_ms) + " / " + ms_to_time(s.duration_ms) + "\n"
-            "\ud83d\udd0a " + std::to_string(s.volume) + "%\n"
-            "\ud83d\udd00 " + std::string(s.shuffle ? "ON" : "OFF") + "\n"
-            "\ud83d\udd01 " + repeat_str + "\n"
-            "\u2764\ufe0f "  + std::string(s.hearted ? "YES" : "NO");
+            "\xF0\x9F\x8E\xB5 " + s.title + "\n"
+            "\xF0\x9F\x91\xA4 " + s.artist + "\n"
+            "\xF0\x9F\x93\x80 " + s.album  + "\n"
+            "\xE2\x8F\xB1 " + ms_to_time(s.progress_ms) + " / " + ms_to_time(s.duration_ms) + "\n"
+            "\xF0\x9F\x94\x8A " + std::to_string(s.volume) + "%\n"
+            "\xF0\x9F\x94\x80 " + std::string(s.shuffle ? "ON" : "OFF") + "\n"
+            "\xF0\x9F\x94\x81 " + repeat_str + "\n"
+            "\xE2\x9D\xA4\xEF\xB8\x8F " + std::string(s.hearted ? "YES" : "NO");
     }
 
     return "\u274c Unknown /sp command. Try /sp status, /sp play <song>, /sp pause, /sp next, etc.";
