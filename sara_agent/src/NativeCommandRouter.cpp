@@ -2,6 +2,7 @@
 #include "../include/TelegramGateway.h"
 #include "../include/WinAPIExecutor.h"
 #include "../include/Logger.h"
+#include "../../plugins/spotify/spotify_plugin.hpp"
 
 extern sara::TelegramGateway g_telegram;
 extern sara::WinAPIExecutor g_executor;
@@ -48,6 +49,10 @@ bool NativeCommandRouter::handle(const std::string& chat_id, const std::string& 
 
     if (handle_volume(chat_id, text)) return true;
     if (handle_brightness(chat_id, text)) return true;
+    // Spotify plugin — /sp prefix, always before media so it intercepts first
+    if (text.size() >= 3 && text.substr(0,3) == "/sp") {
+        return SpotifyPlugin::instance().handle_command(chat_id, text);
+    }
     if (handle_media(chat_id, text)) return true;
     if (handle_system(chat_id, text)) return true;
     if (handle_screenshot(chat_id, text)) return true;

@@ -41,6 +41,14 @@ add_executable(sara_agent
     
     # Security System
     sara_agent/src/SecurityManager.cpp
+
+    # Spotify Plugin
+    plugins/spotify/spotify_state.cpp
+    plugins/spotify/spotify_events.cpp
+    plugins/spotify/spotify_ws.cpp
+    plugins/spotify/spotify_commands.cpp
+    plugins/spotify/spotify_dock.cpp
+    plugins/spotify/spotify_plugin.cpp
 )
 
 # Compile sqlite3.c as C, not C++
@@ -49,6 +57,7 @@ set_source_files_properties(shared/sqlite3.c PROPERTIES LANGUAGE C)
 target_include_directories(sara_agent PRIVATE
     sara_agent/include
     shared
+    plugins/spotify
 )
 
 target_link_options(sara_agent PRIVATE -static-libstdc++ -static-libgcc -mwindows)

@@ -4,6 +4,7 @@
 #include "../include/MonitorDock.h"
 #include "../include/AutomationDock.h"
 #include "../include/TelegramGateway.h"
+#include "../../plugins/spotify/spotify_plugin.hpp"
 #include <thread>
 
 extern sara::TelegramGateway g_telegram;
@@ -31,6 +32,12 @@ bool DockRouter::handle_command(const std::string& chat_id, const std::string& c
 }
 
 bool DockRouter::handle_callback(const std::string& chat_id, const std::string& callback_data, const std::string& callback_query_id, int message_id) {
+    // Spotify dock buttons handled first
+    if (callback_data.substr(0, 8) == "spotify:") {
+        return SpotifyPlugin::instance().handle_callback(
+            chat_id, callback_data, callback_query_id, message_id);
+    }
+
     // Expected format: "dock_media:play_pause"
     size_t colon_pos = callback_data.find(':');
     if (colon_pos == std::string::npos) return false;

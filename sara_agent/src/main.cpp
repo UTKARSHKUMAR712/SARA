@@ -21,6 +21,7 @@
 #include "../include/DockRouter.h"
 #include "../include/SecurityManager.h"
 #include "../include/NativeCommandRouter.h"
+#include "../../plugins/spotify/spotify_plugin.hpp"
 #include <windows.h>
 #include <csignal>
 #include <atomic>
@@ -696,6 +697,7 @@ int main() {
         }
     });
     g_event_engine.start(&g_executor, &g_proc_monitor);
+    SpotifyPlugin::instance().start();
 
     g_net_monitor.on_connect([](const NetworkStatus& s) {
         Logger::instance().info("Network connected: " + s.ip);
@@ -718,6 +720,7 @@ int main() {
     while (g_running) Sleep(1000);
 
     Logger::instance().info("SARA Agent shutting down...");
+    SpotifyPlugin::instance().stop();
     g_event_engine.stop();
     g_proc_monitor.stop();
     g_net_monitor.stop();
