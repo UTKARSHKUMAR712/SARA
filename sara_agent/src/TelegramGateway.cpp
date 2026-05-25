@@ -21,6 +21,21 @@ bool TelegramGateway::start(const std::string& token, long polling_interval_ms) 
     }
     token_ = token;
     polling_interval_ms_ = polling_interval_ms;
+    
+    // Flush old updates before starting poll loop
+    try {
+        json payload = {{"offset", 0}, {"timeout", 0}, {"allowed_updates", json::array({"message", "callback_query"})}};
+        auto result = api_call("getUpdates", payload);
+        if (result.contains("result") && result["result"].is_array()) {
+            for (auto& update : result["result"]) {
+                if (update.contains("update_id")) {
+                    long long uid = update["update_id"].get<long long>();
+                    if (uid > last_update_id_) last_update_id_ = uid;
+                }
+            }
+        }
+    } catch (...) {}
+
     running_ = true;
     poll_thread_ = std::thread(&TelegramGateway::poll_loop, this);
     Logger::instance().info("Telegram gateway started");
@@ -48,7 +63,10 @@ bool TelegramGateway::set_my_commands() {
             {{"command", "monitor"}, {"description", "Live system stats"}},
             {{"command", "tasks"}, {"description", "Scheduled tasks"}},
             {{"command", "rules"}, {"description", "Event automation rules"}},
-            {{"command", "memory"}, {"description", "Stored user memory"}}
+            {{"command", "memory"}, {"description", "Stored user memory"}},
+            {{"command", "clear"}, {"description", "Clear AI chat history"}},
+            {{"command", "master_clear"}, {"description", "Clear chat & memory"}},
+            {{"command", "sp_help"}, {"description", "Spotify commands list"}}
         })}
     };
     auto result = api_call("setMyCommands", payload);

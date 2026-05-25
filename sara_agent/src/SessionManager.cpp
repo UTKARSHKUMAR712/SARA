@@ -88,6 +88,14 @@ void SessionManager::add_history(const std::string& session_id, const std::strin
     }
 }
 
+void SessionManager::clear_history(const std::string& session_id) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = sessions_.find(session_id);
+    if (it == sessions_.end()) return;
+    it->second.history.clear();
+    it->second.recent_commands.clear();
+}
+
 void SessionManager::set_last_target(const std::string& session_id,
     const std::string& target)
 {

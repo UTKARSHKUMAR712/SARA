@@ -543,9 +543,7 @@ You are NOT just a tool caller. You are a PLANNER and ORCHESTRATOR.
 3. For media:
    - For general requests or YouTube, use play_youtube.
    - If the user specifically asks to play a song, artist, album, or playlist on Spotify, or references playing on Spotify:
-     * First, ensure Spotify is open. If Spotify needs to be launched, add an `open_app` action with target="spotify".
-     * Second, call the `spotify_play` action with the requested track/artist as the query parameter.
-     * Crucial: If you planned `open_app` for spotify in the step immediately before, you MUST add `delay_seconds: 3` to the `spotify_play` step so that Spotify has time to launch and establish its WebSocket connection. E.g. step 1: open_app("spotify"), step 2: spotify_play(query="...", delay_seconds=3).
+     * Just call `spotify_play`, `spotify_next`, etc. directly. Do NOT use `open_app("spotify")`—the Spotify plugin automatically launches the application if it is closed.
 4. For "when X happens" requests → use add_event_rule
 5. For delayed actions → use delay_seconds on the step
 6. For reminders → use notify with delay_seconds
@@ -568,13 +566,13 @@ User: "play Jungkook Seven on YouTube"
 → (Calls tool `play_youtube` with query="Jungkook Seven")
 → Text: "Playing Jungkook Seven on YouTube! 🎵"
 
-User: "play leave her jhony leave her song in spotify"
-→ (Calls tool `spotify_play` with query="leave her jhony leave her")
-→ Text: "Playing Leave Her Johnny Leave Her on Spotify! 🎵"
+User: "play leave her jhony leave her song in spotify from 1 minute 5 sec"
+→ (Calls tool `spotify_play` with query="leave her jhony leave her", seek_seconds=65)
+→ Text: "Playing Leave Her Johnny Leave Her on Spotify from 1:05! 🎵"
 
-User: "open spotify and play starboy"
-→ (Calls `open_app` with target="spotify", and `spotify_play` with query="starboy", delay_seconds=3)
-→ Text: "Opening Spotify and playing Starboy! 🎵"
+User: "like this song on spotify"
+→ (Calls tool `spotify_heart`)
+→ Text: "Added to your Liked Songs on Spotify! ❤️"
 
 User: "pause the music"
 → (Calls tool `media_play_pause` with action="play_pause")
@@ -605,7 +603,7 @@ User: "hello, how are you?"
 # AI API caller
 # ─────────────────────────────────────────────────────────────────────────────
 
-def call_ai_api(config: dict, messages: list) -> dict:
+def call_ai_api(config: dict, messages: list, final_tools: list) -> dict:
     provider = config.get("provider", "openai")
     endpoint = config.get("endpoint", "")
     api_key  = config.get("api_key", "")
@@ -629,7 +627,7 @@ def call_ai_api(config: dict, messages: list) -> dict:
     body = {
         "model":       model,
         "messages":    messages,
-        "tools":       build_tools(),
+        "tools":       final_tools,
         "max_tokens":  max_tok,
         "temperature": temp,
     }
@@ -800,7 +798,19 @@ def parse_command(data: dict) -> dict:
 
     messages.append({"role": "user", "content": user_message})
 
-    return call_ai_api(config, messages)
+    # Merge dynamic C++ tools with hardcoded Python tools
+    dynamic_tools = data.get("tools", [])
+    python_tools = build_tools()
+    merged = { t["function"]["name"]: t for t in python_tools }
+    
+    for dt in dynamic_tools:
+        name = dt["function"]["name"]
+        if name not in merged:
+            merged[name] = dt
+
+    final_tools = list(merged.values())
+
+    return call_ai_api(config, messages, final_tools)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -50,7 +50,13 @@ void SecurityManager::load_trusted_users() {
             u.phone      = entry.value("phone",      "");
             u.added_at   = entry.value("added_at",   "");
             u.blocked    = entry.value("blocked",    false);
-            if (u.user_id != 0) trusted_users_[u.user_id] = u;
+            u.session_active = entry.value("session_active", false);
+            if (u.user_id != 0) {
+                trusted_users_[u.user_id] = u;
+                if (u.session_active && !u.blocked) {
+                    authenticated_sessions_.insert(u.user_id);
+                }
+            }
         }
     } catch (...) {}
 }
@@ -65,7 +71,8 @@ void SecurityManager::save_trusted_users() {
             {"last_name",  u.last_name},
             {"phone",      u.phone},
             {"added_at",   u.added_at},
-            {"blocked",    u.blocked}
+            {"blocked",    u.blocked},
+            {"session_active", u.session_active}
         });
     }
     std::ofstream file(trusted_users_file_);
@@ -110,6 +117,7 @@ bool SecurityManager::block_user(long long user_id) {
     auto it = trusted_users_.find(user_id);
     if (it == trusted_users_.end()) return false;
     it->second.blocked = true;
+    it->second.session_active = false;
     authenticated_sessions_.erase(user_id);   // kill active session
     save_trusted_users();
     Logger::instance().warning("SecurityManager: User " + std::to_string(user_id) + " BLOCKED.");
@@ -135,6 +143,10 @@ bool SecurityManager::authenticate_session(long long user_id, const std::string&
     if (session_password == g_config.get().telegram.password) {
         std::lock_guard<std::mutex> lock(mtx_);
         authenticated_sessions_.insert(user_id);
+        if (trusted_users_.find(user_id) != trusted_users_.end()) {
+            trusted_users_[user_id].session_active = true;
+            save_trusted_users();
+        }
         Logger::instance().info("SecurityManager: User " + std::to_string(user_id) + " authenticated session.");
         return true;
     }
@@ -162,6 +174,7 @@ bool SecurityManager::authenticate_root(long long user_id, const std::string& ro
     u.last_name  = last_name;
     u.added_at   = current_timestamp();
     u.blocked    = false;
+    u.session_active = true;
     trusted_users_[user_id] = u;
     authenticated_sessions_.insert(user_id);
     save_trusted_users();
@@ -214,6 +227,10 @@ std::vector<TrustedUser> SecurityManager::get_trusted_users() {
 void SecurityManager::logout(long long user_id) {
     std::lock_guard<std::mutex> lock(mtx_);
     authenticated_sessions_.erase(user_id);
+    if (trusted_users_.find(user_id) != trusted_users_.end()) {
+        trusted_users_[user_id].session_active = false;
+        save_trusted_users();
+    }
     Logger::instance().info("SecurityManager: User " + std::to_string(user_id) + " session revoked.");
 }
 

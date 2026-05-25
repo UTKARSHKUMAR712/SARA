@@ -22,6 +22,42 @@ std::string SpotifyCommands::not_connected() {
 }
 
 std::string SpotifyCommands::send(const json& cmd) {
+    bool was_closed = !SpotifyWS::instance().is_client_connected();
+    if (was_closed) {
+        HINSTANCE result = ShellExecuteA(nullptr, "open", "spotify:", nullptr, nullptr, SW_SHOWNORMAL);
+        if ((INT_PTR)result <= (INT_PTR)32) {
+            return "\u274c Failed to open Spotify.";
+        }
+        
+        // Wait for connection (up to 30 seconds for slow PCs)
+        int retries = 300; // 300 * 100ms = 30000ms
+        while (retries-- > 0) {
+            Sleep(100);
+            if (SpotifyWS::instance().is_client_connected()) {
+                break;
+            }
+        }
+        
+        if (!SpotifyWS::instance().is_client_connected()) {
+            return "\u274c Spotify opened, but extension failed to connect.";
+        }
+        
+        // Wait for Spicetify to send its first state payload (so we know it's ready)
+        retries = 50; // max 5 seconds wait for Spicetify to initialize
+        while (retries-- > 0) {
+            if (!SpotifyStateManager::instance().get().title.empty() || 
+                SpotifyStateManager::instance().get().duration_ms > 0) {
+                break;
+            }
+            Sleep(100);
+        }
+    }
+
+    // Give Spotify UI time to settle if it was just launched, to prevent black screen glitches
+    if (was_closed) {
+        Sleep(2500);
+    }
+
     if (!SpotifyWS::instance().send_command(cmd))
         return not_connected();
     return "\u2705 Done";

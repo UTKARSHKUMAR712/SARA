@@ -37,6 +37,7 @@ public:
     
     // History
     void add_history(const std::string& session_id, const std::string& role, const std::string& content);
+    void clear_history(const std::string& session_id);
 
     // Target context
     void        set_last_target(const std::string& session_id, const std::string& target);

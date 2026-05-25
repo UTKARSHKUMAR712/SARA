@@ -21,6 +21,7 @@
 #include "../include/DockRouter.h"
 #include "../include/SecurityManager.h"
 #include "../include/NativeCommandRouter.h"
+#include "../include/ToolRegistry.h"
 #include "../../plugins/spotify/spotify_plugin.hpp"
 #include "../../plugins/spotify/spotify_commands.hpp"
 #include "../../plugins/spotify/spotify_dock.hpp"
@@ -73,6 +74,19 @@ static void send_file_result(const std::string& chat_id,
         g_telegram.send_document(chat_id, path, res.message);
 }
 
+// ── Generic Action Dispatcher (handles plugins and native commands) ──────────
+static ActionResult dispatch_action(const std::string& act, const json& params) {
+    if (ToolRegistry::instance().has_tool(act)) {
+        json jres = ToolRegistry::instance().execute(act, params);
+        ActionResult res;
+        res.success = jres.value("success", false);
+        res.message = jres.value("message", jres.value("error", ""));
+        if (jres.contains("data")) res.data = jres["data"];
+        return res;
+    }
+    return g_executor.execute(act, params);
+}
+
 // ── Execute a single plan step from the execution_plan ───────────────────────
 static std::string execute_plan_step(const std::string& chat_id,
                                       const json& step,
@@ -107,27 +121,6 @@ static std::string execute_plan_step(const std::string& chat_id,
         task.execute_at = now + delay;
         g_scheduler.add_task(task);
         return "⏱ Scheduled '" + desc + "' in " + std::to_string(delay) + "s\n";
-    }
-
-    // ── Special: Spotify plugin integration ─────────────────────────────────
-    if (act.size() >= 8 && act.substr(0, 8) == "spotify_") {
-        std::string sub = act.substr(8); // e.g. "play", "pause", "resume", "volume", "next", "prev", "dock", "get_status"
-        std::string args = "";
-        if (sub == "play" && params.contains("query")) {
-            args = params["query"].get<std::string>();
-        } else if (sub == "volume" && params.contains("level")) {
-            args = std::to_string(params["level"].get<int>());
-        }
-
-        if (sub == "get_status") {
-            sub = "status";
-        } else if (sub == "dock") {
-            SpotifyDock::instance().send_dock(chat_id);
-            return "✅ Spotify Dock opened\n";
-        }
-
-        std::string reply = SpotifyCommands::dispatch(sub, args);
-        return reply + "\n";
     }
 
     // ── Special: remember ───────────────────────────────────────────────────
@@ -188,8 +181,8 @@ static std::string execute_plan_step(const std::string& chat_id,
         return "🔒 Permission denied for: " + act + "\n";
     }
 
-    // ── Execute via WinAPIExecutor ──────────────────────────────────────────
-    auto res = g_executor.execute(act, params);
+    // ── Execute via Dispatcher (Plugin or Native) ───────────────────────────
+    auto res = dispatch_action(act, params);
 
     Logger::instance().info("Step [" + act + "]: "
         + (res.success ? "OK" : "FAIL") + " - " + res.message);
@@ -327,8 +320,46 @@ void handle_telegram_message(const std::string& chat_id,
             "/ping        — Latency check\n"
             "/test        — System diagnostic\n"
             "/show_config — AI configuration\n"
-            "/set_ai key val — Change AI setting\n\n"
+            "/set_ai key val — Change AI setting\n"
+            "/clear       — Clear chat history\n"
+            "/master clear— Clear chat and memory\n\n"
             "Or just talk naturally! 💬");
+        return;
+    }
+    if (text == "/clear") {
+        Session& session = g_sessions.get_or_create("telegram", chat_id);
+        g_sessions.clear_history(session.session_id);
+        std::string spaces = "🧹 Chat history cleared.\n";
+        for (int i = 0; i < 40; i++) spaces += "\n";
+        spaces += "(Old messages pushed out of view)";
+        g_telegram.send_message(chat_id, spaces);
+        return;
+    }
+    if (text == "/master clear" || text == "/master_clear") {
+        Session& session = g_sessions.get_or_create("telegram", chat_id);
+        g_sessions.clear_history(session.session_id);
+        g_store.memory_clear();
+        std::string spaces = "🔥 Master clear complete. Chat history and user memory erased.\n";
+        for (int i = 0; i < 40; i++) spaces += "\n";
+        spaces += "(Old messages pushed out of view)";
+        g_telegram.send_message(chat_id, spaces);
+        return;
+    }
+    if (text == "/sp help" || text == "/sp_help") {
+        g_telegram.send_message(chat_id,
+            "🎵 Spotify Commands:\n"
+            "/sp play <song> — Play a song\n"
+            "/sp pause — Pause playback\n"
+            "/sp resume — Resume playback\n"
+            "/sp next — Skip to next song\n"
+            "/sp prev — Go to previous song\n"
+            "/sp volume <0-100> — Set volume\n"
+            "/sp status — View playing track\n"
+            "/sp heart — Add to Liked Songs\n"
+            "/sp shuffle <on/off> — Toggle shuffle\n"
+            "/sp repeat <off/all/one> — Toggle repeat\n"
+            "/sp seek <sec> — Jump to second\n"
+            "/sp dock — Open Telegram dock");
         return;
     }
     if (text == "/status") {
@@ -415,7 +446,7 @@ void handle_telegram_message(const std::string& chat_id,
     if (text == "/screenshot" || text == "/photo") {
         std::string action = (text == "/photo") ? "capture_camera" : "take_screenshot";
         g_telegram.send_action(chat_id, "upload_photo");
-        auto res = g_executor.execute(action, json::object());
+        auto res = dispatch_action(action, json::object());
         if (res.success && res.data.contains("path")) {
             g_telegram.send_photo(chat_id, res.data["path"].get<std::string>(), "");
         } else {
@@ -459,9 +490,9 @@ void handle_telegram_message(const std::string& chat_id,
         std::string report;
         auto ai = g_ai_worker.test_provider(cfg.ai_primary);
         report += "AI: " + std::string(ai["success"].get<bool>() ? "✅ OK" : "❌ FAIL") + "\n";
-        auto ss = g_executor.execute("take_screenshot", {});
+        auto ss = dispatch_action("take_screenshot", {});
         report += "Screenshot: " + std::string(ss.success ? "✅ OK" : "❌ FAIL") + "\n";
-        auto nt = g_executor.execute("notify", {{"target", "SARA Test"}, {"message", "Diagnostic v2.0"}});
+        auto nt = dispatch_action("notify", {{"target", "SARA Test"}, {"message", "Diagnostic v2.0"}});
         report += "Notify: " + std::string(nt.success ? "✅ OK" : "❌ FAIL") + "\n";
         SystemMonitor mon;
         auto stats = mon.get_all();
@@ -612,7 +643,7 @@ json handle_ipc_message(const json& msg) {
                     {"payload",{{"success",true},{"rules",rules_json}}}};
         }
 
-        auto res = g_executor.execute(action, params);
+        auto res = dispatch_action(action, params);
         return {{"type","response"}, {"request_id",req_id},
                 {"payload",{{"success",res.success},{"message",res.message},{"data",res.data}}}};
     }
@@ -681,7 +712,7 @@ int main() {
         json params = task.parameters;
         if (!task.target.empty() && !params.contains("target"))
             params["target"] = task.target;
-        auto res = g_executor.execute(task.action, params);
+        auto res = dispatch_action(task.action, params);
         std::string chat = task.source_id;
         if (chat.empty()) return;
         if (res.success && res.data.contains("path"))

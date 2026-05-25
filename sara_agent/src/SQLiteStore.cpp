@@ -241,6 +241,10 @@ std::vector<std::pair<std::string, std::string>> SQLiteStore::memory_get_all() {
     return entries;
 }
 
+void SQLiteStore::memory_clear() {
+    execute("DELETE FROM memory;");
+}
+
 std::vector<Task> SQLiteStore::load_due(long long now) {
     std::vector<Task> tasks;
     const char* sql = "SELECT * FROM tasks WHERE status='pending' AND execute_at > 0 AND execute_at <= ?;";

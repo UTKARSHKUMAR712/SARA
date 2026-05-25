@@ -1,5 +1,6 @@
 #include "../include/AIWorkerLauncher.h"
 #include "../include/Logger.h"
+#include "../include/ToolRegistry.h"
 #include <windows.h>
 #include <fstream>
 #include <sstream>
@@ -67,6 +68,7 @@ PlannerResult AIWorkerLauncher::run_worker(
     input["config"]["max_tokens"]      = config.max_tokens;
     input["config"]["temperature"]     = config.temperature;
     input["config"]["timeout_seconds"] = config.timeout_seconds;
+    input["tools"]                     = ToolRegistry::instance().build_tool_definitions();
 
     if (!write_temp_file(input_file, input.dump())) {
         result.error = "Failed to write AI worker input file";

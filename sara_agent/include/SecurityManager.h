@@ -21,6 +21,7 @@ struct TrustedUser {
     std::string phone;          // rarely available via bot API
     std::string added_at;       // ISO-8601 timestamp
     bool blocked             = false;
+    bool session_active      = false;
 };
 
 class SecurityManager {

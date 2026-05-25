@@ -1,5 +1,6 @@
 #include "../include/ActionValidator.h"
 #include "../include/Logger.h"
+#include "../include/ToolRegistry.h"
 #include <unordered_map>
 #include <algorithm>
 
@@ -49,6 +50,8 @@ RiskLevel ActionValidator::get_risk_level(const std::string& action) const {
 }
 
 bool ActionValidator::is_action_allowed(const std::string& action) const {
+    if (ToolRegistry::instance().has_tool(action)) return true;
+
     for (auto& a : allowed_actions_) {
         if (a == action) return true;
     }
@@ -120,6 +123,19 @@ RiskLevel ActionValidator::classify_action(const std::string& action) const {
     };
     auto it = risk_map.find(action);
     if (it != risk_map.end()) return it->second;
+
+    // Check ToolRegistry dynamically
+    if (ToolRegistry::instance().has_tool(action)) {
+        auto tools = ToolRegistry::instance().list_all();
+        for (const auto& t : tools) {
+            if (t.name == action) {
+                if (t.risk_level == "LOW") return RiskLevel::LOW;
+                if (t.risk_level == "MEDIUM") return RiskLevel::MEDIUM;
+                if (t.risk_level == "HIGH") return RiskLevel::HIGH;
+            }
+        }
+    }
+
     return RiskLevel::UNKNOWN;
 }
 

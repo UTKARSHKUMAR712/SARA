@@ -2,8 +2,10 @@
 #include "spotify_ws.hpp"
 #include "spotify_commands.hpp"
 #include "spotify_dock.hpp"
+#include "spotify_state.hpp"
 #include "../../sara_agent/include/TelegramGateway.h"
 #include "../../sara_agent/include/Logger.h"
+#include "../../sara_agent/include/ToolRegistry.h"
 #include <sstream>
 
 extern sara::TelegramGateway g_telegram;
@@ -18,6 +20,115 @@ SpotifyPlugin& SpotifyPlugin::instance() {
 void SpotifyPlugin::start() {
     SpotifyWS::instance().start();
     Logger::instance().info("SpotifyPlugin: started");
+
+    auto register_sp = [](const std::string& sub, const std::string& desc, const json& schema = json::object()) {
+        ToolDef def;
+        def.name = "spotify_" + sub;
+        def.description = desc;
+        def.category = ToolCategory::media;
+        def.risk_level = "LOW";
+        def.ai_visible = true;
+        def.parameters_schema = schema;
+        def.handler = [sub](const json& p) -> json {
+            std::string args = "";
+            int seek_sec = -1;
+            if ((sub == "play" || sub == "queue" || sub == "playlist" || sub == "radio") && p.contains("query")) {
+                args = p["query"].get<std::string>();
+                if (sub == "play" && p.contains("seek_seconds")) {
+                    seek_sec = p["seek_seconds"].get<int>();
+                }
+            } else if (sub == "volume" && p.contains("level")) {
+                args = std::to_string(p["level"].get<int>());
+            } else if ((sub == "shuffle" || sub == "repeat") && p.contains("mode")) {
+                args = p["mode"].get<std::string>();
+            } else if ((sub == "seek" || sub == "forward" || sub == "backward") && p.contains("seconds")) {
+                args = std::to_string(p["seconds"].get<int>());
+            }
+            
+            std::string cmd_sub = sub;
+            if (cmd_sub == "get_status") cmd_sub = "status";
+            
+            if (cmd_sub == "dock") {
+                return {{"success", true}, {"message", "Spotify Dock requested"}};
+            }
+
+            std::string old_title = SpotifyStateManager::instance().get().title;
+            std::string reply = SpotifyCommands::dispatch(cmd_sub, args);
+
+            bool success = true;
+            if (reply.find("\u274c") != std::string::npos) {
+                success = false;
+            }
+
+            if (success && seek_sec >= 0) {
+                int wait_loops = 50; // max 5 seconds
+                while (wait_loops-- > 0) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    auto s = SpotifyStateManager::instance().get();
+                    if (s.title != old_title && !s.title.empty()) {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                        break;
+                    }
+                }
+                SpotifyCommands::dispatch("seek", std::to_string(seek_sec));
+            }
+
+            return {{"success", success}, {"message", reply}};
+        };
+        ToolRegistry::instance().register_tool(def);
+    };
+
+    json query_schema = {
+        {"type", "object"},
+        {"properties", {
+            {"query", {{"type", "string"}, {"description", "Search query or name"}}},
+            {"seek_seconds", {{"type", "integer"}, {"description", "Optional: start song from this second"}}}
+        }},
+        {"required", json::array({"query"})}
+    };
+    json empty_schema = {{"type", "object"}, {"properties", json::object()}, {"required", json::array()}};
+
+    register_sp("play", "Play a specific song on Spotify", query_schema);
+    register_sp("pause", "Pause playback in Spotify", empty_schema);
+    register_sp("resume", "Resume playback in Spotify", empty_schema);
+    register_sp("next", "Skip to the next song in Spotify", empty_schema);
+    register_sp("prev", "Go back to the previous song in Spotify", empty_schema);
+    
+    register_sp("volume", "Set volume level in Spotify", {
+        {"type", "object"},
+        {"properties", {{"level", {{"type", "integer"}, {"description", "Volume from 0 to 100"}}}}},
+        {"required", json::array({"level"})}
+    });
+    
+    register_sp("get_status", "Get status of the currently playing track on Spotify", empty_schema);
+    
+    register_sp("heart", "Add current song to Liked Songs", empty_schema);
+    register_sp("unheart", "Remove current song from Liked Songs", empty_schema);
+    
+    register_sp("shuffle", "Toggle shuffle on Spotify", {
+        {"type", "object"},
+        {"properties", {{"mode", {{"type", "string"}, {"description", "'on' or 'off'"}}}}},
+        {"required", json::array({"mode"})}
+    });
+    
+    register_sp("repeat", "Set repeat mode on Spotify", {
+        {"type", "object"},
+        {"properties", {{"mode", {{"type", "string"}, {"description", "'off', 'all', or 'one'"}}}}},
+        {"required", json::array({"mode"})}
+    });
+    
+    json seconds_schema = {
+        {"type", "object"},
+        {"properties", {{"seconds", {{"type", "integer"}, {"description", "Number of seconds"}}}} },
+        {"required", json::array({"seconds"})}
+    };
+    register_sp("seek", "Seek to a specific second in the song", seconds_schema);
+    register_sp("forward", "Skip forward in the song by seconds", seconds_schema);
+    register_sp("backward", "Skip backward in the song by seconds", seconds_schema);
+    
+    register_sp("queue", "Queue a song in Spotify", query_schema);
+    register_sp("playlist", "Play a specific playlist", query_schema);
+    register_sp("radio", "Play artist radio", query_schema);
 }
 
 void SpotifyPlugin::stop() {

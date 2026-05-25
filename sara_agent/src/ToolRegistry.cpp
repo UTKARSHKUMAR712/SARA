@@ -66,11 +66,16 @@ json ToolRegistry::build_tool_definitions() const {
         tool["type"] = "function";
         tool["function"]["name"] = name;
         tool["function"]["description"] = def.description + " [" + def.risk_level + "]";
-        tool["function"]["parameters"] = {
-            {"type", "object"},
-            {"properties", json::object()},
-            {"required", json::array()}
-        };
+        
+        if (!def.parameters_schema.is_null() && !def.parameters_schema.empty()) {
+            tool["function"]["parameters"] = def.parameters_schema;
+        } else {
+            tool["function"]["parameters"] = {
+                {"type", "object"},
+                {"properties", json::object()},
+                {"required", json::array()}
+            };
+        }
         defs.push_back(tool);
     }
     return defs;
