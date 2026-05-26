@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <mutex>
 #include <atomic>
 
@@ -9,6 +10,8 @@ struct SpotifyState {
     std::string title;
     std::string artist;
     std::string album;
+    std::string image;
+    std::vector<std::string> next_tracks;
     int         duration_ms  = 0;
     int         progress_ms  = 0;
     int         volume       = 0;

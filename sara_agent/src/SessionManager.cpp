@@ -82,8 +82,8 @@ void SessionManager::add_history(const std::string& session_id, const std::strin
     if (it == sessions_.end()) return;
     
     it->second.history.push_back({role, content});
-    // Keep last 10 messages max to avoid context bloat
-    if (it->second.history.size() > 10) {
+    // Keep last 30 messages to support long agentic chains
+    if (it->second.history.size() > 30) {
         it->second.history.erase(it->second.history.begin());
     }
 }

@@ -56,7 +56,8 @@ std::vector<IntentEngine::KeywordGroup> IntentEngine::build_groups() const {
             "volume", "mute", "unmute", "brightness", "shutdown",
             "restart", "sleep", "hibernate", "kill", "close", "open",
             "launch", "start app", "kill process", "end task", "wifi",
-            "bluetooth", "airplane mode", "power", "battery saver"
+            "bluetooth", "airplane mode", "power", "battery saver",
+            "write", "create", "file", "folder", "directory"
         }, 0.80f },
 
         { Intent::browser_automation, {
@@ -159,17 +160,18 @@ std::string IntentEngine::build_intent_hint(Intent intent) const {
                    "Use play_youtube for new music/videos. "
                    "Use media_play_pause, media_next, media_prev, media_stop for active playback control.";
         case Intent::event_automation:
-            return "HINT: User wants to set up an automation rule. "
+            return "HINT: User wants to set up an automation rule based on an event trigger. "
                    "Use add_event_rule with appropriate trigger_type "
                    "(process_start, process_stop, cpu_high, battery_low, idle_detected). "
-                   "The actions field should be a JSON array of steps.";
+                   "The actions_json field MUST be a valid JSON array of tool calls.";
         case Intent::surveillance:
             return "HINT: User wants visual capture. "
                    "Use take_screenshot for screen, capture_camera for webcam. "
                    "Result will be automatically sent back as photo.";
         case Intent::system_control:
-            return "HINT: User wants to control system settings or processes. "
-                   "Use volume_set, change_brightness, open_app, close_process as appropriate.";
+            return "HINT: User wants to control system settings, processes, files, OR delay an action. "
+                   "For delays, pass 'delay_seconds' parameter to any tool. "
+                   "Use volume_set, change_brightness, open_app, close_process, write_file as appropriate.";
         case Intent::browser_automation:
             return "HINT: User wants to browse or search. "
                    "Use play_youtube for YouTube, search_google for web search, "

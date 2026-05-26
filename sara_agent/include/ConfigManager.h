@@ -14,7 +14,8 @@ struct AIProviderConfig {
     std::string model;
     int max_tokens = 1024;
     double temperature = 0.7;
-    int timeout_seconds = 30;
+    int timeout_seconds = 120;
+    bool thinking_enabled = false;
 };
 
 struct TelegramConfig {
@@ -31,6 +32,8 @@ struct PluginConfig {
 
 struct AppConfig {
     TelegramConfig telegram;
+    std::string active_profile = "default";
+    std::unordered_map<std::string, AIProviderConfig> ai_profiles;
     AIProviderConfig ai_primary;
     AIProviderConfig ai_fallback;
     std::unordered_map<std::string, PluginConfig> plugins;

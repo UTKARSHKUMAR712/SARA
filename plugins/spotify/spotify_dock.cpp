@@ -78,9 +78,19 @@ std::string SpotifyDock::render_text() {
     };
 
     std::string repeat_str = s.repeat_mode == 0 ? "OFF" : s.repeat_mode == 1 ? "ALL" : "ONE";
+    
+    std::string queue_str = "";
+    if (!s.next_tracks.empty()) {
+        queue_str = "\n\n*Up Next:*\n";
+        for (size_t i = 0; i < s.next_tracks.size(); i++) {
+            queue_str += std::to_string(i+1) + ". " + s.next_tracks[i] + "\n";
+        }
+    }
+    
+    std::string artwork = s.image.empty() ? "" : "[​​](" + s.image + ")";
 
     return
-        SP_NOTE " *NOW PLAYING*\n\n"
+        artwork + SP_NOTE " *NOW PLAYING*\n\n"
         "*" + s.title  + "*\n"
         + s.artist + "\n\n"
         + ms_fmt(s.progress_ms) + " / " + ms_fmt(s.duration_ms) + "\n"
@@ -88,7 +98,8 @@ std::string SpotifyDock::render_text() {
         SP_SPEAKER " " + std::to_string(s.volume) + "%   "
         SP_SHUFFLE " " + std::string(s.shuffle ? "ON" : "OFF") + "   "
         SP_REPEAT  " " + repeat_str + "   "
-        SP_HEART   " " + std::string(s.hearted ? "YES" : "NO");
+        SP_HEART   " " + std::string(s.hearted ? "YES" : "NO")
+        + queue_str;
 }
 
 // --- Inline Keyboard ---

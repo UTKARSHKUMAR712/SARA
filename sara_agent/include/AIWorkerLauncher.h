@@ -24,6 +24,7 @@ struct PlannerResult {
     std::string response_text;        // conversational reply to show the user
     bool        needs_clarification   = false;
     std::string clarification_question;
+    bool        needs_continue        = false;
     std::string error;
 };
 
@@ -55,7 +56,8 @@ private:
         const std::string&      user_message,
         const AIProviderConfig& config,
         const json&             session_context,
-        const std::string&      memory_context = "");
+        const std::string&      memory_context = "",
+        const AIProviderConfig* fast_config    = nullptr);
 
     bool        write_temp_file(const std::string& path, const std::string& content);
     std::string read_temp_file(const std::string& path);

@@ -4,6 +4,8 @@
 #include "../include/WinAPIExecutor.h"
 #include "../include/SystemMonitor.h"
 #include "../include/Logger.h"
+#include "../../plugins/spotify/spotify_plugin.hpp"
+#include "../../plugins/spotify/spotify_commands.hpp"
 #include <chrono>
 #include <sstream>
 #include <random>
@@ -228,7 +230,22 @@ void EventAutomationEngine::execute_rule_actions(
             std::this_thread::sleep_for(std::chrono::seconds(delay));
         }
 
-        auto result = executor_->execute(act, params);
+        ActionResult result;
+        if (act == "media_command") {
+            std::string sub_act = params.value("action", "");
+            if (sub_act == "spotify_play") {
+                SpotifyCommands::dispatch("play", params.value("query", ""));
+                result = {true, "Spotify playing", {}};
+            } else if (sub_act == "spotify_pause") {
+                SpotifyCommands::dispatch("pause", "");
+                result = {true, "Spotify paused", {}};
+            } else {
+                result = {false, "Unknown media action", {}};
+            }
+        } else {
+            result = executor_->execute(act, params);
+        }
+
         Logger::instance().info("Rule step [" + act + "]: "
             + (result.success ? "OK" : "FAIL") + " - " + result.message);
 

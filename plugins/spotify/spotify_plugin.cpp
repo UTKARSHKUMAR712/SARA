@@ -88,47 +88,47 @@ void SpotifyPlugin::start() {
     };
     json empty_schema = {{"type", "object"}, {"properties", json::object()}, {"required", json::array()}};
 
-    register_sp("play", "Play a specific song on Spotify", query_schema);
-    register_sp("pause", "Pause playback in Spotify", empty_schema);
-    register_sp("resume", "Resume playback in Spotify", empty_schema);
-    register_sp("next", "Skip to the next song in Spotify", empty_schema);
-    register_sp("prev", "Go back to the previous song in Spotify", empty_schema);
+    register_sp("play", "Play song on Spotify", query_schema);
+    register_sp("pause", "Pause Spotify", empty_schema);
+    register_sp("resume", "Resume Spotify", empty_schema);
+    register_sp("next", "Next song in Spotify", empty_schema);
+    register_sp("prev", "Prev song in Spotify", empty_schema);
     
-    register_sp("volume", "Set volume level in Spotify", {
+    register_sp("volume", "Set volume", {
         {"type", "object"},
-        {"properties", {{"level", {{"type", "integer"}, {"description", "Volume from 0 to 100"}}}}},
+        {"properties", {{"level", {{"type", "integer"}}}}},
         {"required", json::array({"level"})}
     });
     
-    register_sp("get_status", "Get status of the currently playing track on Spotify", empty_schema);
+    register_sp("get_status", "Get Spotify status", empty_schema);
     
-    register_sp("heart", "Add current song to Liked Songs", empty_schema);
-    register_sp("unheart", "Remove current song from Liked Songs", empty_schema);
+    register_sp("heart", "Like song", empty_schema);
+    register_sp("unheart", "Unlike song", empty_schema);
     
-    register_sp("shuffle", "Toggle shuffle on Spotify", {
+    register_sp("shuffle", "Toggle shuffle", {
         {"type", "object"},
-        {"properties", {{"mode", {{"type", "string"}, {"description", "'on' or 'off'"}}}}},
+        {"properties", {{"mode", {{"type", "string"}}}}},
         {"required", json::array({"mode"})}
     });
     
-    register_sp("repeat", "Set repeat mode on Spotify", {
+    register_sp("repeat", "Set repeat mode", {
         {"type", "object"},
-        {"properties", {{"mode", {{"type", "string"}, {"description", "'off', 'all', or 'one'"}}}}},
+        {"properties", {{"mode", {{"type", "string"}}}}},
         {"required", json::array({"mode"})}
     });
     
     json seconds_schema = {
         {"type", "object"},
-        {"properties", {{"seconds", {{"type", "integer"}, {"description", "Number of seconds"}}}} },
+        {"properties", {{"seconds", {{"type", "integer"}}}} },
         {"required", json::array({"seconds"})}
     };
-    register_sp("seek", "Seek to a specific second in the song", seconds_schema);
-    register_sp("forward", "Skip forward in the song by seconds", seconds_schema);
-    register_sp("backward", "Skip backward in the song by seconds", seconds_schema);
+    register_sp("seek", "Seek to second", seconds_schema);
+    register_sp("forward", "Skip forward", seconds_schema);
+    register_sp("backward", "Skip backward", seconds_schema);
     
-    register_sp("queue", "Queue a song in Spotify", query_schema);
-    register_sp("playlist", "Play a specific playlist", query_schema);
-    register_sp("radio", "Play artist radio", query_schema);
+    register_sp("queue", "Queue song", query_schema);
+    register_sp("playlist", "Play playlist", query_schema);
+    register_sp("radio", "Play radio", query_schema);
 }
 
 void SpotifyPlugin::stop() {

@@ -254,6 +254,10 @@ void SpotifyWS::process_frame(const std::string& payload) {
         s.title       = d.value("title",    "");
         s.artist      = d.value("artist",   "");
         s.album       = d.value("album",    "");
+        s.image       = d.value("image",    "");
+        if (d.contains("next_tracks") && d["next_tracks"].is_array()) {
+            for (auto& t : d["next_tracks"]) s.next_tracks.push_back(t.get<std::string>());
+        }
         s.duration_ms = d.value("duration", 0);
         s.progress_ms = d.value("progress", 0);
         s.volume      = d.value("volume",   0);

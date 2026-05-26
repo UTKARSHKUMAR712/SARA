@@ -50,12 +50,9 @@ void SecurityManager::load_trusted_users() {
             u.phone      = entry.value("phone",      "");
             u.added_at   = entry.value("added_at",   "");
             u.blocked    = entry.value("blocked",    false);
-            u.session_active = entry.value("session_active", false);
+            u.session_active = false; // Force re-auth on restart
             if (u.user_id != 0) {
                 trusted_users_[u.user_id] = u;
-                if (u.session_active && !u.blocked) {
-                    authenticated_sessions_.insert(u.user_id);
-                }
             }
         }
     } catch (...) {}

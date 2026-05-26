@@ -17,10 +17,12 @@ PlannerResult AIWorkerLauncher::plan_command_with_fallback(
     const json&             session_context,
     const std::string&      memory_context)
 {
-    auto result = run_worker(user_message, primary, session_context, memory_context);
+    // Pass fallback as fast_config for cognitive modules (router/verifier/reflector)
+    // This lets Python use the fast model for lightweight cognitive calls
+    auto result = run_worker(user_message, primary, session_context, memory_context, &fallback);
     if (!result.success && !fallback.provider.empty()) {
         Logger::instance().warning("Primary AI failed, trying fallback: " + fallback.provider);
-        result = run_worker(user_message, fallback, session_context, memory_context);
+        result = run_worker(user_message, fallback, session_context, memory_context, nullptr);
     }
     return result;
 }
@@ -39,7 +41,8 @@ PlannerResult AIWorkerLauncher::run_worker(
     const std::string&      user_message,
     const AIProviderConfig& config,
     const json&             session_context,
-    const std::string&      memory_context)
+    const std::string&      memory_context,
+    const AIProviderConfig* fast_config)
 {
     PlannerResult result;
 
@@ -61,6 +64,7 @@ PlannerResult AIWorkerLauncher::run_worker(
     input["user_message"]    = user_message;
     input["memory_context"]  = memory_context;
     input["session_context"] = session_context;
+    // Primary (smart) config
     input["config"]["provider"]        = config.provider;
     input["config"]["model"]           = config.model;
     input["config"]["api_key"]         = config.api_key;
@@ -68,7 +72,19 @@ PlannerResult AIWorkerLauncher::run_worker(
     input["config"]["max_tokens"]      = config.max_tokens;
     input["config"]["temperature"]     = config.temperature;
     input["config"]["timeout_seconds"] = config.timeout_seconds;
-    input["tools"]                     = ToolRegistry::instance().build_tool_definitions();
+    input["config"]["thinking_enabled"] = config.thinking_enabled;
+    // Fast config for cognitive modules (router/verifier/reflector)
+    if (fast_config && !fast_config->provider.empty()) {
+        input["fast_config"]["provider"]        = fast_config->provider;
+        input["fast_config"]["model"]           = fast_config->model;
+        input["fast_config"]["api_key"]         = fast_config->api_key;
+        input["fast_config"]["endpoint"]        = fast_config->endpoint;
+        input["fast_config"]["max_tokens"]      = std::min(fast_config->max_tokens, 1024);
+        input["fast_config"]["temperature"]     = fast_config->temperature;
+        input["fast_config"]["timeout_seconds"] = fast_config->timeout_seconds;
+        input["fast_config"]["thinking_enabled"] = false;
+    }
+    input["tools"] = ToolRegistry::instance().build_tool_definitions();
 
     if (!write_temp_file(input_file, input.dump())) {
         result.error = "Failed to write AI worker input file";
@@ -119,6 +135,7 @@ PlannerResult AIWorkerLauncher::run_worker(
         result.response_text         = j.value("response_text", "");
         result.needs_clarification   = j.value("needs_clarification", false);
         result.clarification_question = j.value("clarification_question", "");
+        result.needs_continue        = j.value("needs_continue", false);
 
         if (j.contains("execution_plan") && j["execution_plan"].is_array()) {
             result.execution_plan = j["execution_plan"];

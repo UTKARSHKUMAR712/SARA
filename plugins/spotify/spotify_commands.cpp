@@ -24,10 +24,13 @@ std::string SpotifyCommands::not_connected() {
 std::string SpotifyCommands::send(const json& cmd) {
     bool was_closed = !SpotifyWS::instance().is_client_connected();
     if (was_closed) {
-        HINSTANCE result = ShellExecuteA(nullptr, "open", "spotify:", nullptr, nullptr, SW_SHOWNORMAL);
-        if ((INT_PTR)result <= (INT_PTR)32) {
+        int result = std::system("start spotify:");
+        if (result != 0) {
             return "\u274c Failed to open Spotify.";
         }
+        
+        // Wait for Spotify UI to actually render and load completely BEFORE we expect websocket
+        Sleep(1500);
         
         // Wait for connection (up to 30 seconds for slow PCs)
         int retries = 300; // 300 * 100ms = 30000ms
@@ -51,11 +54,9 @@ std::string SpotifyCommands::send(const json& cmd) {
             }
             Sleep(100);
         }
-    }
 
-    // Give Spotify UI time to settle if it was just launched, to prevent black screen glitches
-    if (was_closed) {
-        Sleep(2500);
+        // Give Spotify UI final time to settle to prevent black screen glitches when executing first command
+        Sleep(500);
     }
 
     if (!SpotifyWS::instance().send_command(cmd))
@@ -98,8 +99,8 @@ std::string SpotifyCommands::dispatch(const std::string& sub, const std::string&
 
     // ── OPEN ──────────────────────────────────────────────────────────────────
     if (sub == "open" || sub == "start" || sub == "launch") {
-        HINSTANCE result = ShellExecuteA(nullptr, "open", "spotify:", nullptr, nullptr, SW_SHOWNORMAL);
-        if ((INT_PTR)result <= 32) {
+        int result = std::system("start spotify:");
+        if (result != 0) {
             return "\u274c Failed to open Spotify.";
         }
         return "\u2705 Opening Spotify...";

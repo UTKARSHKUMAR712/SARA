@@ -51,6 +51,12 @@ public:
 
     // Display
     ActionResult change_brightness(int level);
+
+    // System
+    ActionResult lock_pc();
+    ActionResult write_file(const std::string& path, const std::string& content);
+    ActionResult read_file(const std::string& path);
+    ActionResult list_dir(const std::string& path);
 };
 
 } // namespace sara

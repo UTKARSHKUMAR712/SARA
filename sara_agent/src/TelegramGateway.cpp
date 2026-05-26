@@ -64,6 +64,8 @@ bool TelegramGateway::set_my_commands() {
             {{"command", "tasks"}, {"description", "Scheduled tasks"}},
             {{"command", "rules"}, {"description", "Event automation rules"}},
             {{"command", "memory"}, {"description", "Stored user memory"}},
+            {{"command", "think"}, {"description", "Enable deep reasoning"}},
+            {{"command", "nothink"}, {"description", "Disable reasoning (instant)"}},
             {{"command", "clear"}, {"description", "Clear AI chat history"}},
             {{"command", "master_clear"}, {"description", "Clear chat & memory"}},
             {{"command", "sp_help"}, {"description", "Spotify commands list"}}
@@ -189,7 +191,7 @@ json TelegramGateway::get_recent_messages(int count) {
     return arr;
 }
 
-bool TelegramGateway::send_message(const std::string& chat_id, const std::string& text, const std::string& parse_mode) {
+int TelegramGateway::send_message(const std::string& chat_id, const std::string& text, const std::string& parse_mode) {
     json payload = {{"chat_id", chat_id}, {"text", text}};
     if (!parse_mode.empty()) {
         payload["parse_mode"] = parse_mode;
@@ -198,8 +200,12 @@ bool TelegramGateway::send_message(const std::string& chat_id, const std::string
     bool ok = result.value("ok", false);
     if (!ok) {
         Logger::instance().err("Telegram send failed: " + result.dump());
+        return 0;
     }
-    return ok;
+    if (result.contains("result") && result["result"].contains("message_id")) {
+        return result["result"]["message_id"].get<int>();
+    }
+    return 1;
 }
 
 bool TelegramGateway::send_inline_keyboard(const std::string& chat_id, const std::string& text, const json& inline_keyboard) {

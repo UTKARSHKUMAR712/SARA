@@ -2,10 +2,12 @@
 #include "../include/TelegramGateway.h"
 #include "../include/WinAPIExecutor.h"
 #include "../include/Logger.h"
+#include "../include/ConfigManager.h"
 #include "../../plugins/spotify/spotify_plugin.hpp"
 
 extern sara::TelegramGateway g_telegram;
 extern sara::WinAPIExecutor g_executor;
+extern sara::ConfigManager g_config;
 
 namespace sara {
 
@@ -64,6 +66,20 @@ bool NativeCommandRouter::handle(const std::string& chat_id, const std::string& 
     if (handle_file(chat_id, text)) return true;
     if (handle_automation(chat_id, text)) return true;
     if (handle_hotkey(chat_id, text)) return true;
+    
+    if (text.find("/switch_api ") == 0) {
+        std::string target = text.substr(12);
+        auto& cfg = g_config.get();
+        if (cfg.ai_profiles.count(target)) {
+            cfg.active_profile = target;
+            cfg.ai_primary = cfg.ai_profiles[target];
+            g_config.save("settings.json");
+            g_telegram.send_message(chat_id, "✅ API Profile switched to: " + target);
+        } else {
+            g_telegram.send_message(chat_id, "❌ Profile not found: " + target);
+        }
+        return true;
+    }
     
     // Apps last to prevent dynamic /app1 from overriding other commands
     if (handle_apps(chat_id, text)) return true;

@@ -28,23 +28,48 @@ bool ConfigManager::load(const std::string& path) {
             }
         }
 
-        if (j.contains("ai_primary")) {
+        cfg.active_profile = j.value("active_profile", "default");
+
+        if (j.contains("ai_profiles")) {
+            for (auto& [key, val] : j["ai_profiles"].items()) {
+                AIProviderConfig pc;
+                pc.provider = val.value("provider", "");
+                pc.endpoint = val.value("endpoint", "");
+                pc.api_key = val.value("api_key", "");
+                pc.model = val.value("model", "");
+                pc.max_tokens = val.value("max_tokens", 4096);
+                pc.temperature = val.value("temperature", 0.7);
+                pc.timeout_seconds = val.value("timeout_seconds", 60);
+                pc.thinking_enabled = val.value("thinking_enabled", false);
+                cfg.ai_profiles[key] = pc;
+            }
+        }
+
+        // Load ai_primary from explicit key, then fall back to active_profile
+        if (j.contains("ai_primary") && !j["ai_primary"].value("api_key", "").empty()) {
             auto& a = j["ai_primary"];
             cfg.ai_primary.provider = a.value("provider", "");
             cfg.ai_primary.endpoint = a.value("endpoint", "");
             cfg.ai_primary.api_key = a.value("api_key", "");
             cfg.ai_primary.model = a.value("model", "");
-            cfg.ai_primary.max_tokens = a.value("max_tokens", 1024);
+            cfg.ai_primary.max_tokens = a.value("max_tokens", 4096);
             cfg.ai_primary.temperature = a.value("temperature", 0.7);
-            cfg.ai_primary.timeout_seconds = a.value("timeout_seconds", 30);
+            cfg.ai_primary.timeout_seconds = a.value("timeout_seconds", 60);
+            cfg.ai_primary.thinking_enabled = a.value("thinking_enabled", false);
+        } else if (!cfg.active_profile.empty() && cfg.ai_profiles.count(cfg.active_profile)) {
+            // Use active_profile as primary
+            cfg.ai_primary = cfg.ai_profiles.at(cfg.active_profile);
         }
 
-        if (j.contains("ai_fallback")) {
+        if (j.contains("ai_fallback") && !j["ai_fallback"].value("api_key", "").empty()) {
             auto& a = j["ai_fallback"];
             cfg.ai_fallback.provider = a.value("provider", "");
             cfg.ai_fallback.endpoint = a.value("endpoint", "");
             cfg.ai_fallback.api_key = a.value("api_key", "");
             cfg.ai_fallback.model = a.value("model", "");
+            cfg.ai_fallback.max_tokens = a.value("max_tokens", 2048);
+            cfg.ai_fallback.temperature = a.value("temperature", 0.7);
+            cfg.ai_fallback.timeout_seconds = a.value("timeout_seconds", 30);
         }
 
         cfg.log_level = j.value("log_level", "INFO");
@@ -84,6 +109,18 @@ bool ConfigManager::save(const std::string& path) const {
         j["telegram"]["allowed_user_ids"].push_back(id);
     }
 
+    j["active_profile"] = config_.active_profile;
+    for (auto& [key, val] : config_.ai_profiles) {
+        j["ai_profiles"][key]["provider"] = val.provider;
+        j["ai_profiles"][key]["endpoint"] = val.endpoint;
+        j["ai_profiles"][key]["api_key"] = val.api_key;
+        j["ai_profiles"][key]["model"] = val.model;
+        j["ai_profiles"][key]["max_tokens"] = val.max_tokens;
+        j["ai_profiles"][key]["temperature"] = val.temperature;
+        j["ai_profiles"][key]["timeout_seconds"] = val.timeout_seconds;
+        j["ai_profiles"][key]["thinking_enabled"] = val.thinking_enabled;
+    }
+
     j["ai_primary"]["provider"] = config_.ai_primary.provider;
     j["ai_primary"]["endpoint"] = config_.ai_primary.endpoint;
     j["ai_primary"]["api_key"] = config_.ai_primary.api_key;
@@ -91,6 +128,7 @@ bool ConfigManager::save(const std::string& path) const {
     j["ai_primary"]["max_tokens"] = config_.ai_primary.max_tokens;
     j["ai_primary"]["temperature"] = config_.ai_primary.temperature;
     j["ai_primary"]["timeout_seconds"] = config_.ai_primary.timeout_seconds;
+    j["ai_primary"]["thinking_enabled"] = config_.ai_primary.thinking_enabled;
 
     j["ai_fallback"]["provider"] = config_.ai_fallback.provider;
     j["ai_fallback"]["endpoint"] = config_.ai_fallback.endpoint;

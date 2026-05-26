@@ -49,6 +49,11 @@ add_executable(sara_agent
     plugins/spotify/spotify_commands.cpp
     plugins/spotify/spotify_dock.cpp
     plugins/spotify/spotify_plugin.cpp
+
+    # MCP Adapter Layer
+    sara_agent/src/plugins/mcp/MCPClient.cpp
+    sara_agent/src/plugins/mcp/MCPRegistry.cpp
+    sara_agent/src/plugins/mcp/MCPTransport.cpp
 )
 
 # Compile sqlite3.c as C, not C++

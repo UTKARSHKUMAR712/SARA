@@ -15,6 +15,7 @@
 #include <thread>
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
+#include <cstdlib>
 
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "shell32.lib")
@@ -167,6 +168,18 @@ ActionResult WinAPIExecutor::execute(const std::string& action, const json& para
     if (action == "change_brightness") {
         return change_brightness(params.value("level", 50));
     }
+    if (action == "write_file") {
+        return write_file(params.value("path", ""), params.value("content", ""));
+    }
+    if (action == "read_file") {
+        return read_file(params.value("path", ""));
+    }
+    if (action == "list_dir") {
+        return list_dir(params.value("path", ""));
+    }
+    if (action == "lock_pc") {
+        return lock_pc();
+    }
     if (action == "add_event_rule") {
         // Handled in main.cpp — executor returns placeholder
         return {true, "Event rule request received", {}};
@@ -191,7 +204,11 @@ ActionResult WinAPIExecutor::open_app(const std::string& target, const json& par
     if (lower_target == "edge") actual_target = "msedge.exe";
     else if (lower_target == "chrome") actual_target = "chrome.exe";
     else if (lower_target == "firefox") actual_target = "firefox.exe";
-    else if (lower_target == "spotify") actual_target = "spotify:";
+    else if (lower_target == "spotify") {
+        std::system("start spotify:");
+        Logger::instance().info("Opened app: spotify using system command");
+        return {true, "Opened: spotify", {}};
+    }
     else if (lower_target == "notepad") actual_target = "notepad.exe";
     else if (lower_target == "calculator" || lower_target == "calc") actual_target = "calc.exe";
     else if (lower_target == "cmd") actual_target = "cmd.exe";
@@ -415,14 +432,16 @@ ActionResult WinAPIExecutor::run_cmd(const std::string& command, int timeout_sec
     STARTUPINFOA si = { sizeof(si) };
     si.dwFlags = STARTF_USESTDHANDLES;
     si.hStdOutput = hstdout_w;
-    si.hStdError = hstdout_w;
+    si.hStdError  = hstdout_w;
     PROCESS_INFORMATION pi;
 
     char cmd_buf[8192];
     strncpy_s(cmd_buf, full_cmd.c_str(), _TRUNCATE);
 
+    // Always run from user Desktop so relative paths work correctly
+    const char* desktop_dir = "C:\\Users\\utkarsh_kumar\\Desktop";
     if (!CreateProcessA(nullptr, cmd_buf, nullptr, nullptr, TRUE,
-        CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
+        CREATE_NO_WINDOW, nullptr, desktop_dir, &si, &pi)) {
         CloseHandle(hstdout_r);
         CloseHandle(hstdout_w);
         return {false, "Failed to start CMD", {}};
@@ -469,21 +488,8 @@ static std::string base64_encode(const std::string& in) {
 ActionResult WinAPIExecutor::run_powershell(const std::string& command, int timeout_sec) {
     if (command.empty()) return {false, "No command specified", {}};
 
-    std::string normalized = "$ProgressPreference='SilentlyContinue'; ";
-    for (char c : command) {
-        normalized += c;
-        if (c == '\n') normalized += '\r';
-    }
-
-    int wsize = MultiByteToWideChar(CP_UTF8, 0, normalized.c_str(), -1, nullptr, 0);
-    std::wstring wide(wsize, 0);
-    MultiByteToWideChar(CP_UTF8, 0, normalized.c_str(), -1, &wide[0], wsize);
-
-    std::string utf16_bytes(reinterpret_cast<const char*>(wide.c_str()),
-        (wsize - 1) * sizeof(wchar_t));
-    auto base64 = base64_encode(utf16_bytes);
-
-    std::string full_cmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand " + base64;
+    // Run powershell with Desktop as working directory so relative paths work
+    std::string full_cmd = "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"" + command + "\"";
     return run_cmd(full_cmd, timeout_sec);
 }
 
@@ -723,6 +729,68 @@ ActionResult WinAPIExecutor::change_brightness(int level) {
         return {true, "Brightness set to " + std::to_string(level) + "%", {}};
     }
     return {false, "Failed to set brightness (laptop display required)", {}};
+}
+
+ActionResult WinAPIExecutor::lock_pc() {
+    if (LockWorkStation()) return {true, "PC locked", {}};
+    return {false, "Failed to lock PC", {}};
+}
+
+ActionResult WinAPIExecutor::write_file(const std::string& path, const std::string& content) {
+    if (path.empty()) return {false, "No path provided", {}};
+    
+    // Convert relative path to absolute if needed
+    std::string final_path = path;
+    if (path.find(":") == std::string::npos && path.find("\\") != 0 && path.find("/") != 0) {
+        final_path = "C:\\Users\\utkarsh_kumar\\Desktop\\" + path;
+    }
+    
+    auto pos = final_path.find_last_of("\\/");
+    if (pos != std::string::npos) {
+        std::string dir = final_path.substr(0, pos);
+        std::string cmd = "cmd.exe /c mkdir \"" + dir + "\" 2>nul";
+        system(cmd.c_str());
+    }
+
+    FILE* f;
+    fopen_s(&f, final_path.c_str(), "wb");
+    if (!f) return {false, "Failed to open file for writing", {}};
+    fwrite(content.c_str(), 1, content.size(), f);
+    fclose(f);
+    return {true, "File written successfully", {{"path", final_path}}};
+}
+
+ActionResult WinAPIExecutor::read_file(const std::string& path) {
+    if (path.empty()) return {false, "No path provided", {}};
+    std::string final_path = path;
+    if (path.find(":") == std::string::npos && path.find("\\") != 0 && path.find("/") != 0) {
+        final_path = "C:\\Users\\utkarsh_kumar\\Desktop\\" + path;
+    }
+    
+    FILE* f;
+    fopen_s(&f, final_path.c_str(), "rb");
+    if (!f) return {false, "Failed to open file for reading", {}};
+    
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    
+    std::string content(size, '\0');
+    fread(&content[0], 1, size, f);
+    fclose(f);
+    
+    return {true, "File read successfully", {{"content", content}}};
+}
+
+ActionResult WinAPIExecutor::list_dir(const std::string& path) {
+    if (path.empty()) return {false, "No path provided", {}};
+    std::string final_path = path;
+    if (path.find(":") == std::string::npos && path.find("\\") != 0 && path.find("/") != 0) {
+        final_path = "C:\\Users\\utkarsh_kumar\\Desktop\\" + path;
+    }
+    
+    std::string cmd = "powershell -NoProfile -NonInteractive -Command \"Get-ChildItem '" + final_path + "' | Select-Object Name, Length, LastWriteTime | ConvertTo-Json -Compress\"";
+    return run_cmd(cmd, 10);
 }
 
 } // namespace sara

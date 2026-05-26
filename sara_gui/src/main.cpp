@@ -30,6 +30,7 @@ static char g_token[4096] = {}, g_endpoint[4096] = {};
 static char g_apikey[4096] = {}, g_model[4096] = {};
 static char g_password[256] = {};
 static char g_root_password[256] = {};
+static char g_profile_name[256] = "default";
 
 // User management state
 struct GuiUser {
@@ -85,9 +86,17 @@ static void save_cfg() {
 
 static void ui_from_cfg() {
     auto tg = g_cfg.value("telegram", json::object());
-    auto ai = g_cfg.value("ai_primary", json::object());
     snprintf(g_token, sizeof(g_token), "%s", tg.value("token", "").c_str());
     snprintf(g_password, sizeof(g_password), "%s", tg.value("password", "test123f").c_str());
+    
+    std::string active = g_cfg.value("active_profile", "default");
+    snprintf(g_profile_name, sizeof(g_profile_name), "%s", active.c_str());
+    
+    auto ai = g_cfg.value("ai_primary", json::object());
+    if (g_cfg.contains("ai_profiles") && g_cfg["ai_profiles"].contains(active)) {
+        ai = g_cfg["ai_profiles"][active];
+    }
+    
     snprintf(g_endpoint, sizeof(g_endpoint), "%s", ai.value("endpoint", "").c_str());
     snprintf(g_apikey, sizeof(g_apikey), "%s", ai.value("api_key", "").c_str());
     snprintf(g_model, sizeof(g_model), "%s", ai.value("model", "").c_str());
@@ -99,10 +108,18 @@ static void ui_from_cfg() {
 static void cfg_from_ui() {
     g_cfg["telegram"]["token"] = g_token;
     g_cfg["telegram"]["password"] = g_password;
-    g_cfg["ai_primary"]["provider"] = g_providers[g_provider_idx];
-    g_cfg["ai_primary"]["endpoint"] = g_endpoint;
-    g_cfg["ai_primary"]["api_key"] = g_apikey;
-    g_cfg["ai_primary"]["model"] = g_model;
+    
+    std::string prof = g_profile_name;
+    if (prof.empty()) prof = "default";
+    g_cfg["active_profile"] = prof;
+    
+    if (!g_cfg.contains("ai_profiles")) g_cfg["ai_profiles"] = json::object();
+    g_cfg["ai_profiles"][prof]["provider"] = g_providers[g_provider_idx];
+    g_cfg["ai_profiles"][prof]["endpoint"] = g_endpoint;
+    g_cfg["ai_profiles"][prof]["api_key"] = g_apikey;
+    g_cfg["ai_profiles"][prof]["model"] = g_model;
+    
+    g_cfg["ai_primary"] = g_cfg["ai_profiles"][prof];
 }
 
 static void poll_telegram() {
@@ -386,7 +403,21 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
                 }
                 ImGui::Separator();
 
-                ImGui::Text("AI Provider");
+                ImGui::Text("AI Provider Profiles");
+                if (ImGui::InputText("Profile Name", g_profile_name, sizeof(g_profile_name), ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    std::string prof = g_profile_name;
+                    if (g_cfg.contains("ai_profiles") && g_cfg["ai_profiles"].contains(prof)) {
+                        auto ai = g_cfg["ai_profiles"][prof];
+                        snprintf(g_endpoint, sizeof(g_endpoint), "%s", ai.value("endpoint", "").c_str());
+                        snprintf(g_apikey, sizeof(g_apikey), "%s", ai.value("api_key", "").c_str());
+                        snprintf(g_model, sizeof(g_model), "%s", ai.value("model", "").c_str());
+                        auto p = ai.value("provider", "openai");
+                        for (int i = 0; i < 6; i++)
+                            if (p == g_providers[i]) { g_provider_idx = i; break; }
+                    }
+                }
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Type a profile name and press Enter to load it, or type a new name to create one.");
+                
                 ImGui::Combo("Provider", &g_provider_idx, g_providers, IM_ARRAYSIZE(g_providers));
                 ImGui::InputText("Endpoint", g_endpoint, sizeof(g_endpoint));
                 ImGui::InputText("API Key", g_apikey, sizeof(g_apikey), ImGuiInputTextFlags_Password);

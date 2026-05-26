@@ -38,10 +38,7 @@ bool PermissionManager::check_action(const std::string& action,
     }
 
     if (validation.risk == RiskLevel::HIGH) {
-        if (source == "ai" || source == "planner") {
-            Logger::instance().warning("SECURITY: Blocked AI from executing HIGH risk action directly: " + action);
-            return false;
-        }
+
 
         if (approval_cb_ && !approval_cb_(action, target, source)) {
             Logger::instance().warning("HIGH risk action rejected: " + action);

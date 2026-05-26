@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "intent": "unknown",
+  "execution_plan": [
+    {
+      "action": "run_powershell",
+      "target": "",
+      "parameters": {
+        "command": "Get-Date -Format \"dddd, MMMM dd, yyyy hh:mm:ss tt\""
+      },
+      "description": "Execute run_powershell"
+    }
+  ],
+  "response_text": "Hey! Let me check the current",
+  "needs_clarification": false,
+  "clarification_question": ""
+}
