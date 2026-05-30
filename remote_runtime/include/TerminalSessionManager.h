@@ -92,6 +92,9 @@ public:
     bool validate_token(const std::string& session_id,
                         const std::string& token) const;
 
+    // Validate that a token belongs to ANY active session (for /api/new_session).
+    bool validate_any_token(const std::string& token) const;
+
     // Cleanup expired sessions (called every 60s by background thread).
     void cleanup_expired();
 

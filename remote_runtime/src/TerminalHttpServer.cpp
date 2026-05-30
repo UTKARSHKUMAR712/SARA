@@ -172,6 +172,33 @@ void TerminalHttpServer::handle_client(int sock) {
         return;
     }
 
+    // ── New session API (for tabs/splits from browser) ─────────────────────────
+    if (path == "/api/new_session") {
+        std::string parent_token = parse_query_param(req, "parent_token");
+        std::string shell = parse_query_param(req, "shell");
+        if (parent_token.empty() || shell.empty()) {
+            std::string err = "{\"error\":\"Missing parent_token or shell\"}";
+            send_http(sock, 400, "application/json; charset=utf-8", err);
+            closesocket(sock); return;
+        }
+        if (!TerminalSessionManager::instance().validate_any_token(parent_token)) {
+            std::string err = "{\"error\":\"Invalid or expired token\"}";
+            send_http(sock, 403, "application/json; charset=utf-8", err);
+            closesocket(sock); return;
+        }
+        auto result = TerminalSessionManager::instance().create_session(
+            "", shell, 120, 40, false, 30);
+        if (result.success) {
+            std::string json = "{\"session_id\":\"" + result.session_id +
+                               "\",\"token\":\"" + result.token + "\"}";
+            send_http(sock, 200, "application/json; charset=utf-8", json);
+        } else {
+            std::string err = "{\"error\":\"" + (result.error.empty() ? "Failed to create session" : result.error) + "\"}";
+            send_http(sock, 500, "application/json; charset=utf-8", err);
+        }
+        closesocket(sock); return;
+    }
+
     // ── Static files ──────────────────────────────────────────────────────────
     if (path == "/static/terminal.js") {
         send_http(sock, 200, "application/javascript; charset=utf-8", js_content_); closesocket(sock); return;
@@ -380,13 +407,23 @@ std::string TerminalHttpServer::embedded_index_html() {
 <link rel="stylesheet" href="/static/terminal.css"/>
 </head>
 <body>
-<div id="terminal-container">
+  <div id="terminal-container">
   <div id="topbar">
     <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
     <span id="session-label">SARA Remote Terminal</span>
-    <span id="conn-status" class="disconnected">⬤ Connecting...</span>
+    <span id="conn-status" class="disconnected">&#x2B24; Connecting...</span>
   </div>
-  <div id="terminal"></div>
+  <div id="tab-bar"><div id="btn-add" title="New Terminal">+</div></div>
+  <div id="terminal-area"></div>
+  <div id="add-menu">
+    <div class="menu-item" id="menu-new-tab">&#x2795; New Terminal Tab</div>
+    <div class="menu-item" id="menu-split">&#x1F4D0; Split Current Terminal</div>
+  </div>
+  <div id="shell-picker">
+    <div class="menu-title">Select Shell</div>
+    <div class="menu-item" data-shell="powershell">&#x229E; PowerShell</div>
+    <div class="menu-item" data-shell="cmd">&#x229E; CMD</div>
+  </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
@@ -400,283 +437,409 @@ std::string TerminalHttpServer::embedded_index_html() {
 std::string TerminalHttpServer::embedded_terminal_js() {
     return R"JS(
 (function() {
-  // Parse URL params
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get('token') || '';
-  const pathParts = window.location.pathname.split('/');
-  const sessionId = pathParts[pathParts.length - 1];
+  var params = new URLSearchParams(window.location.search);
+  var token = params.get('token') || '';
+  var pathParts = window.location.pathname.split('/');
+  var sessionId = pathParts[pathParts.length - 1];
+  var parentToken = token;
+  var wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+  var fs = parseInt(params.get('fontSize'), 10);
 
-  // Determine WS URL
-  const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
-  const wsUrl = wsProto + '://' + location.host + '/ws/' + sessionId + '?token=' + token;
-
-  // ── Theme system ──────────────────────────────────────────────────────────
-  const THEMES = {
-    vscode: {
-      background: '#1e1e1e', foreground: '#d4d4d4', cursor: '#569cd6',
-      selectionBackground: '#264f78',
-      black:'#252526',red:'#d16969',green:'#6a9955',yellow:'#dcdcaa',
-      blue:'#569cd6',magenta:'#c586c0',cyan:'#4ec9b0',white:'#d4d4d4',
-      brightBlack:'#6e7681',brightRed:'#d16969',brightGreen:'#6a9955',
-      brightYellow:'#dcdcaa',brightBlue:'#569cd6',brightMagenta:'#c586c0',
-      brightCyan:'#4ec9b0',brightWhite:'#ffffff',
-    },
-    dracula: {
-      background:'#282a36',foreground:'#f8f8f2',cursor:'#f8f8f2',
-      selectionBackground:'#44475a',
-      black:'#21222c',red:'#ff5555',green:'#50fa7b',yellow:'#f1fa8c',
-      blue:'#bd93f9',magenta:'#ff79c6',cyan:'#8be9fd',white:'#f8f8f2',
-      brightBlack:'#6272a4',brightRed:'#ff6e6e',brightGreen:'#69ff94',
-      brightYellow:'#ffffa5',brightBlue:'#d6acff',brightMagenta:'#ff92df',
-      brightCyan:'#a4ffff',brightWhite:'#ffffff',
-    },
-    classic: {
-      background:'#0d1117',foreground:'#e6edf3',cursor:'#58a6ff',
-      selectionBackground:'#388bfd33',
-      black:'#484f58',red:'#ff7b72',green:'#3fb950',yellow:'#d29922',
-      blue:'#58a6ff',magenta:'#bc8cff',cyan:'#39d353',white:'#b1bac4',
-      brightBlack:'#6e7681',brightRed:'#ffa198',brightGreen:'#56d364',
-      brightYellow:'#e3b341',brightBlue:'#79c0ff',brightMagenta:'#d2a8ff',
-      brightCyan:'#56d364',brightWhite:'#f0f6fc',
-    },
-    windows: {
-      background:'#0c0c0c',foreground:'#cccccc',cursor:'#cccccc',
-      selectionBackground:'#76767666',
-      black:'#0c0c0c',red:'#c50f1f',green:'#13a10e',yellow:'#c19c00',
-      blue:'#0037da',magenta:'#881798',cyan:'#3a96dd',white:'#cccccc',
-      brightBlack:'#767676',brightRed:'#e74856',brightGreen:'#16c60c',
-      brightYellow:'#f9f1a5',brightBlue:'#3b78ff',brightMagenta:'#b4009e',
-      brightCyan:'#61d6d6',brightWhite:'#f2f2f2',
-    },
-    hacker: {
-      background:'#000000',foreground:'#00ff00',cursor:'#00ff00',
-      selectionBackground:'#003300',
-      black:'#000000',red:'#ff0000',green:'#00ff00',yellow:'#ffff00',
-      blue:'#0000ff',magenta:'#ff00ff',cyan:'#00ffff',white:'#c0c0c0',
-      brightBlack:'#808080',brightRed:'#ff0000',brightGreen:'#00ff00',
-      brightYellow:'#ffff00',brightBlue:'#0000ff',brightMagenta:'#ff00ff',
-      brightCyan:'#00ffff',brightWhite:'#ffffff',
-    },
+  var THEMES = {
+    vscode: {background:'#1e1e1e',foreground:'#d4d4d4',cursor:'#569cd6',selectionBackground:'#264f78',black:'#252526',red:'#d16969',green:'#6a9955',yellow:'#dcdcaa',blue:'#569cd6',magenta:'#c586c0',cyan:'#4ec9b0',white:'#d4d4d4',brightBlack:'#6e7681',brightRed:'#d16969',brightGreen:'#6a9955',brightYellow:'#dcdcaa',brightBlue:'#569cd6',brightMagenta:'#c586c0',brightCyan:'#4ec9b0',brightWhite:'#ffffff'},
+    dracula: {background:'#282a36',foreground:'#f8f8f2',cursor:'#f8f8f2',selectionBackground:'#44475a',black:'#21222c',red:'#ff5555',green:'#50fa7b',yellow:'#f1fa8c',blue:'#bd93f9',magenta:'#ff79c6',cyan:'#8be9fd',white:'#f8f8f2',brightBlack:'#6272a4',brightRed:'#ff6e6e',brightGreen:'#69ff94',brightYellow:'#ffffa5',brightBlue:'#d6acff',brightMagenta:'#ff92df',brightCyan:'#a4ffff',brightWhite:'#ffffff'},
+    classic: {background:'#0d1117',foreground:'#e6edf3',cursor:'#58a6ff',selectionBackground:'#388bfd33',black:'#484f58',red:'#ff7b72',green:'#3fb950',yellow:'#d29922',blue:'#58a6ff',magenta:'#bc8cff',cyan:'#39d353',white:'#b1bac4',brightBlack:'#6e7681',brightRed:'#ffa198',brightGreen:'#56d364',brightYellow:'#e3b341',brightBlue:'#79c0ff',brightMagenta:'#d2a8ff',brightCyan:'#56d364',brightWhite:'#f0f6fc'},
+    windows: {background:'#0c0c0c',foreground:'#cccccc',cursor:'#cccccc',selectionBackground:'#76767666',black:'#0c0c0c',red:'#c50f1f',green:'#13a10e',yellow:'#c19c00',blue:'#0037da',magenta:'#881798',cyan:'#3a96dd',white:'#cccccc',brightBlack:'#767676',brightRed:'#e74856',brightGreen:'#16c60c',brightYellow:'#f9f1a5',brightBlue:'#3b78ff',brightMagenta:'#b4009e',brightCyan:'#61d6d6',brightWhite:'#f2f2f2'},
+    hacker: {background:'#000000',foreground:'#00ff00',cursor:'#00ff00',selectionBackground:'#003300',black:'#000000',red:'#ff0000',green:'#00ff00',yellow:'#ffff00',blue:'#0000ff',magenta:'#ff00ff',cyan:'#00ffff',white:'#c0c0c0',brightBlack:'#808080',brightRed:'#ff0000',brightGreen:'#00ff00',brightYellow:'#ffff00',brightBlue:'#0000ff',brightMagenta:'#ff00ff',brightCyan:'#00ffff',brightWhite:'#ffffff'},
   };
-  const themeName = (params.get('theme') || 'classic').replace(/-/g,'_');
-  const t = THEMES[themeName] || THEMES.vscode;
+  var themeName = (params.get('theme') || 'classic').replace(/-/g,'_');
+  var theme = THEMES[themeName] || THEMES.classic;
 
-  // ── Background image ──────────────────────────────────────────────────────
-  const bgEnabled = params.get('bgEnabled') === '1';
-  const bgImage = params.get('bgImage') || '';
-  const bgOpacity = parseFloat(params.get('bgOpacity')) || 0.3;
+  var bgEnabled = params.get('bgEnabled') === '1';
+  var bgImage = params.get('bgImage') || '';
+  var bgOpacity = parseFloat(params.get('bgOpacity')) || 0.3;
 
-  // xterm.js setup
-  const fs = parseInt(params.get('fontSize'), 10);
-  const term = new Terminal({
-    cursorBlink: true,
-    fontFamily: '"Cascadia Code", "JetBrains Mono", "Fira Code", "Consolas", monospace',
-    fontSize: fs > 0 ? fs : 14,
-    theme: t,
-    scrollback: 5000,
-    allowProposedApi: true,
-  });
+  var SHELLS = {
+    powershell:{label:'PowerShell',cmd:'powershell.exe'},
+    cmd:{label:'CMD',cmd:'cmd.exe'},
+  };
 
-  const fitAddon = new FitAddon.FitAddon();
-  const webLinksAddon = new WebLinksAddon.WebLinksAddon();
-  const unicode11Addon = new Unicode11Addon.Unicode11Addon();
-  term.loadAddon(fitAddon);
-  term.loadAddon(webLinksAddon);
-  term.loadAddon(unicode11Addon);
-  term.unicode.activeVersion = '11';
-  term.open(document.getElementById('terminal'));
+  var tabBar = document.getElementById('tab-bar');
+  var btnAdd = document.getElementById('btn-add');
+  var addMenu = document.getElementById('add-menu');
+  var shellPicker = document.getElementById('shell-picker');
+  var termArea = document.getElementById('terminal-area');
+  var statusEl = document.getElementById('conn-status');
+  var sessionLabel = document.getElementById('session-label');
 
-  // ── Background image overlay ──────────────────────────────────────────────
-  if (bgEnabled && bgImage) {
-    const terms = document.getElementById('terminal-container');
-    const bg = document.createElement('div');
-    bg.id = 'term-bg';
-    bg.style.cssText =
-      'position:fixed;inset:0;z-index:0;pointer-events:none;' +
-      'background:url("' + bgImage.replace(/"/g,'%22') + '") center/cover no-repeat;' +
-      'opacity:' + bgOpacity + ';';
-    terms.insertBefore(bg, terms.firstChild);
+  var tabs = [];
+  var activeIdx = 0;
+  var splitMode = false;
+  var splitLeftIdx = -1;
+  var splitRightIdx = -1;
+  var pendingAction = null;
 
-    const bgStyle = document.createElement('style');
-    bgStyle.id = 'term-bg-style';
-    bgStyle.textContent =
-      '#terminal { background: transparent !important; }' +
-      '#topbar { background: rgba(0,0,0,0.6) !important; }' +
-      '.xterm, .xterm-viewport, .xterm-screen, .xterm-rows { background: transparent !important; }';
-    document.head.appendChild(bgStyle);
+  function createTermPane(idx) {
+    var pane = document.createElement('div');
+    pane.className = 'term-pane';
+    pane.id = 'term-pane-' + idx;
+    var termDiv = document.createElement('div');
+    termDiv.className = 'terminal-el';
+    termDiv.id = 'terminal-' + idx;
+    pane.appendChild(termDiv);
+    termArea.appendChild(pane);
+    return pane;
+  }
 
-    // Force xterm internal elements to transparent after it creates them
-    const obs = new MutationObserver(() => {
-      document.querySelectorAll('.xterm-viewport, .xterm-screen').forEach(el => {
-        el.style.background = 'transparent';
-      });
+  function createTerminal(shellKey, sessToken, sessId, label) {
+    var idx = tabs.length;
+    var pane = createTermPane(idx);
+    var termDiv = pane.querySelector('.terminal-el');
+    var term = new Terminal({
+      cursorBlink:true,
+      fontFamily:'"Cascadia Code","JetBrains Mono","Fira Code","Consolas",monospace',
+      fontSize:fs>0?fs:14,
+      theme:theme,
+      scrollback:5000,
+      allowProposedApi:true,
     });
-    obs.observe(document.getElementById('terminal'), { childList: true, subtree: true });
-    setTimeout(() => obs.disconnect(), 3000);
-  }
+    var fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.loadAddon(new WebLinksAddon.WebLinksAddon());
+    term.loadAddon(new Unicode11Addon.Unicode11Addon());
+    term.unicode.activeVersion = '11';
+    term.open(termDiv);
 
-  // Delay fit to ensure WebView has rendered dimensions
-  function doFit() { try { fitAddon.fit(); } catch(e) {} }
-  setTimeout(doFit, 100);
-  setTimeout(doFit, 500);
-  setTimeout(doFit, 1000);
-
-  const statusEl = document.getElementById('conn-status');
-  const sessionLabel = document.getElementById('session-label');
-  sessionLabel.textContent = 'SARA Terminal — ' + sessionId;
-
-  // WebSocket connection with reconnect
-  let ws, retries = 0, MAX_RETRIES = 3;
-
-  function connect() {
-    statusEl.textContent = '⬤ Connecting...';
-    statusEl.className = 'disconnected';
-    ws = new WebSocket(wsUrl);
-    ws.binaryType = 'arraybuffer';
-
-    ws.onopen = () => {
-      retries = 0;
-      statusEl.textContent = '⬤ Connected';
-      statusEl.className = 'connected';
-      // Send initial size
-      sendResize();
+    var wsUrl = wsProto+'://'+location.host+'/ws/'+sessId+'?token='+sessToken;
+    var tab = {
+      id:sessId, token:sessToken, shell:shellKey,
+      term:term, fitAddon:fitAddon,
+      label:label||'Terminal', pane:pane,
+      ws:null, retries:0, alive:true,
     };
 
-    ws.onmessage = (ev) => {
-      try {
-        const msg = JSON.parse(ev.data);
-        if (msg.type === 'output') {
-          // base64 decode
-          const bin = atob(msg.data);
-          const bytes = new Uint8Array(bin.length);
-          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-          term.write(bytes);
-        } else if (msg.type === 'exit') {
-          statusEl.textContent = '⬤ Session Ended';
-          statusEl.className = 'disconnected';
-          const code = msg.code !== undefined ? msg.code : '?';
-          const reason = msg.reason || ('Process exited (code ' + code + ')');
-          term.write('\r\n\x1b[33m[' + reason + ']\x1b[0m\r\n');
-        } else if (msg.type === 'error') {
-          term.write('\r\n\x1b[31m[Error: ' + (msg.reason || 'Unknown') + ']\x1b[0m\r\n');
+    function connect() {
+      if (!tab.alive) return;
+      tab.ws = new WebSocket(wsUrl);
+      tab.ws.binaryType = 'arraybuffer';
+      tab.ws.onopen = function() {
+        tab.retries = 0;
+        if (tabs.indexOf(tab)===activeIdx) {
+          statusEl.textContent = '\u2B24 Connected';
+          statusEl.className = 'connected';
         }
-      } catch(e) {}
-    };
+        if (tab.ws.readyState===WebSocket.OPEN)
+          tab.ws.send(JSON.stringify({type:'resize',cols:term.cols,rows:term.rows}));
+      };
+      tab.ws.onmessage = function(ev) {
+        try {
+          var msg = JSON.parse(ev.data);
+          if (msg.type==='output') {
+            var bin = atob(msg.data);
+            var bytes = new Uint8Array(bin.length);
+            for (var i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+            term.write(bytes);
+          } else if (msg.type==='exit') {
+            var code = msg.code!==undefined?msg.code:'?';
+            var reason = msg.reason||('Process exited (code '+code+')');
+            term.write('\r\n\x1b[33m['+reason+']\x1b[0m\r\n');
+            tab.alive = false;
+            tab.label = tab.label + ' \u2716';
+            renderTabBar();
+            if (tabs.indexOf(tab)===activeIdx) {
+              statusEl.textContent = '\u2B24 Ended';
+              statusEl.className = 'disconnected';
+            }
+          } else if (msg.type==='error') {
+            term.write('\r\n\x1b[31m[Error: '+(msg.reason||'Unknown')+']\x1b[0m\r\n');
+          }
+        } catch(e){}
+      };
+      tab.ws.onclose = function() {
+        if (tabs.indexOf(tab)===activeIdx) {
+          statusEl.textContent = '\u2B24 Disconnected';
+          statusEl.className = 'disconnected';
+        }
+        if (tab.alive && tab.retries<3) {
+          tab.retries++;
+          setTimeout(connect, 2000);
+        }
+      };
+    }
 
-    ws.onerror = () => {};
-    ws.onclose = () => {
-      statusEl.textContent = '⬤ Disconnected';
-      statusEl.className = 'disconnected';
-      if (retries < MAX_RETRIES) {
-        retries++;
-        term.write('\r\n\x1b[33m[Reconnecting... attempt ' + retries + '/' + MAX_RETRIES + ']\x1b[0m\r\n');
-        setTimeout(connect, 2000);
+    term.onData(function(data) {
+      if (tab.alive && tab.ws && tab.ws.readyState===WebSocket.OPEN)
+        tab.ws.send(JSON.stringify({type:'input',data:btoa(data)}));
+    });
+
+    connect();
+    tabs.push(tab);
+    pane.addEventListener('click', function() {
+      var i = tabs.indexOf(tab);
+      if (i!==activeIdx) switchTab(i);
+    });
+    setTimeout(function(){try{fitAddon.fit();}catch(e){}}, 200);
+    return tab;
+  }
+
+  function updateLayout() {
+    for (var i=0;i<tabs.length;i++) {
+      if (splitMode) {
+        var vis = (i===splitLeftIdx||i===splitRightIdx);
+        tabs[i].pane.classList.toggle('visible', vis);
+        tabs[i].pane.classList.toggle('split-left', i===splitLeftIdx);
       } else {
-        term.write('\r\n\x1b[31m[Connection lost. Session may have expired.]\x1b[0m\r\n');
+        tabs[i].pane.classList.toggle('visible', i===activeIdx);
+        tabs[i].pane.classList.remove('split-left');
       }
-    };
+    }
+    setTimeout(function(){
+      for (var i=0;i<tabs.length;i++) {
+        if (tabs[i].pane.classList.contains('visible'))
+          try{tabs[i].fitAddon.fit();}catch(e){}
+      }
+    }, 50);
   }
 
-  function sendInput(data) {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'input', data: btoa(data) }));
+  function renderTabBar() {
+    var existing = tabBar.querySelectorAll('.tab');
+    for (var i=0;i<existing.length;i++) existing[i].remove();
+    for (var i=0;i<tabs.length;i++) {
+      (function(idx){
+        var el = document.createElement('div');
+        el.className = 'tab'+(idx===activeIdx?' active':'');
+        var lbl = document.createElement('span');
+        lbl.className = 'tab-label';
+        lbl.textContent = tabs[idx].label;
+        el.appendChild(lbl);
+        if (tabs.length>1) {
+          var cls = document.createElement('span');
+          cls.className = 'tab-close';
+          cls.textContent = '\u00D7';
+          cls.dataset.idx = idx;
+          el.appendChild(cls);
+        }
+        el.addEventListener('click', function(e) {
+          if (e.target.classList.contains('tab-close'))
+            closeTab(parseInt(e.target.dataset.idx));
+          else switchTab(idx);
+        });
+        tabBar.insertBefore(el, btnAdd);
+      })(i);
     }
   }
 
-  function sendResize() {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+  function switchTab(idx) {
+    if (idx<0||idx>=tabs.length) return;
+    activeIdx = idx;
+    updateLayout();
+    renderTabBar();
+    if (tabs[idx].alive) {
+      statusEl.textContent = '\u2B24 Connected';
+      statusEl.className = 'connected';
+    } else {
+      statusEl.textContent = '\u2B24 Ended';
+      statusEl.className = 'disconnected';
+    }
+    sessionLabel.textContent = tabs[idx].label;
+    setTimeout(function(){tabs[idx].term.focus();}, 100);
+  }
+
+  function closeTab(idx) {
+    if (tabs.length<=1||idx<0||idx>=tabs.length) return;
+    var tab = tabs[idx];
+    if (tab.ws) tab.ws.close();
+    tab.term.dispose();
+    tab.pane.remove();
+    tabs.splice(idx, 1);
+    if (splitMode) {
+      if (idx===splitLeftIdx||idx===splitRightIdx) {
+        splitMode = false; splitLeftIdx = -1; splitRightIdx = -1;
+      } else {
+        if (idx<splitLeftIdx) splitLeftIdx--;
+        if (idx<splitRightIdx) splitRightIdx--;
+      }
+    }
+    if (activeIdx>=tabs.length) activeIdx = tabs.length-1;
+    if (splitMode && activeIdx!==splitLeftIdx && activeIdx!==splitRightIdx)
+      activeIdx = splitLeftIdx;
+    updateLayout();
+    renderTabBar();
+    if (tabs[activeIdx]) sessionLabel.textContent = tabs[activeIdx].label;
+  }
+
+  async function createNewSession(shellKey) {
+    var shell = SHELLS[shellKey];
+    if (!shell) return null;
+    try {
+      var url = '/api/new_session?parent_token='+encodeURIComponent(parentToken)+'&shell='+encodeURIComponent(shell.cmd);
+      var resp = await fetch(url);
+      var data = await resp.json();
+      if (!data.session_id||!data.token) {
+        console.error('sara: session create failed', data);
+        return null;
+      }
+      return {id:data.session_id, token:data.token, shell:shellKey, label:shell.label};
+    } catch(e) {
+      console.error('sara: fetch failed', e);
+      return null;
     }
   }
 
-  // Terminal input → WS
-  term.onData(data => sendInput(data));
+  async function handleNewTab(shellKey) {
+    var sess = await createNewSession(shellKey);
+    if (!sess) {
+      termArea.querySelector('.term-pane.visible .terminal-el');
+      var t = new Terminal({cursorBlink:true,theme:theme,fontSize:fs>0?fs:14,fontFamily:'monospace'});
+      return;
+    }
+    createTerminal(sess.shell, sess.token, sess.id, sess.label);
+    switchTab(tabs.length-1);
+  }
 
-  // Window resize → PTY resize
-  const resizeObserver = new ResizeObserver(() => {
-    fitAddon.fit();
-    sendResize();
+  async function handleSplit(shellKey) {
+    if (splitMode) return;
+    var sess = await createNewSession(shellKey);
+    if (!sess) return;
+    createTerminal(sess.shell, sess.token, sess.id, sess.label);
+    splitMode = true;
+    splitLeftIdx = activeIdx;
+    splitRightIdx = tabs.length-1;
+    updateLayout();
+    renderTabBar();
+  }
+
+  function positionMenu(menu, anchor) {
+    var rect = anchor.getBoundingClientRect();
+    menu.style.left = rect.left + 'px';
+    menu.style.top = rect.bottom + 'px';
+    menu.style.right = 'auto';
+  }
+
+  function showShellPicker(action) {
+    pendingAction = action;
+    addMenu.style.display = 'none';
+    positionMenu(shellPicker, btnAdd);
+    shellPicker.style.display = 'block';
+  }
+
+  function showAddMenu() {
+    positionMenu(addMenu, btnAdd);
+    addMenu.style.display = 'block';
+    document.getElementById('menu-split').style.display = splitMode?'none':'block';
+  }
+
+  btnAdd.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (addMenu.style.display==='block') addMenu.style.display='none';
+    else showAddMenu();
   });
-  resizeObserver.observe(document.getElementById('terminal'));
 
-  window.addEventListener('resize', () => {
-    fitAddon.fit();
-    sendResize();
+  document.getElementById('menu-new-tab').addEventListener('click', function(e) {
+    e.stopPropagation();
+    showShellPicker('new-tab');
   });
 
-  // Ping keepalive every 15s
-  setInterval(() => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'ping' }));
+  document.getElementById('menu-split').addEventListener('click', function(e) {
+    e.stopPropagation();
+    showShellPicker('split');
+  });
+
+  var pickerItems = shellPicker.querySelectorAll('.menu-item[data-shell]');
+  for (var i=0;i<pickerItems.length;i++) {
+    pickerItems[i].addEventListener('click', function(e) {
+      e.stopPropagation();
+      shellPicker.style.display = 'none';
+      var shell = this.dataset.shell;
+      if (pendingAction==='new-tab') handleNewTab(shell);
+      else if (pendingAction==='split') handleSplit(shell);
+      pendingAction = null;
+    });
+  }
+
+  document.addEventListener('click', function() {
+    addMenu.style.display = 'none';
+    shellPicker.style.display = 'none';
+  });
+
+  if (bgEnabled && bgImage) {
+    var container = document.getElementById('terminal-container');
+    var bg = document.createElement('div');
+    bg.id = 'term-bg';
+    bg.style.cssText = 'position:fixed;inset:0;z-index:0;pointer-events:none;background:url("'+bgImage.replace(/"/g,'%22')+'") center/cover no-repeat;opacity:'+bgOpacity+';';
+    container.insertBefore(bg, container.firstChild);
+    var bgStyle = document.createElement('style');
+    bgStyle.id = 'term-bg-style';
+    bgStyle.textContent = '#terminal-area{background:transparent!important}.term-pane{background:transparent!important}.xterm,.xterm-viewport,.xterm-screen,.xterm-rows{background:transparent!important}';
+    document.head.appendChild(bgStyle);
+    var obs = new MutationObserver(function(){
+      document.querySelectorAll('.xterm-viewport,.xterm-screen').forEach(function(el){el.style.background='transparent';});
+    });
+    obs.observe(termArea, {childList:true, subtree:true});
+    setTimeout(function(){obs.disconnect();}, 3000);
+  }
+
+  createTerminal('powershell', token, sessionId, 'Terminal');
+  renderTabBar();
+  switchTab(0);
+
+  var resizeObserver = new ResizeObserver(function(){
+    for (var i=0;i<tabs.length;i++) {
+      if (tabs[i].pane.classList.contains('visible'))
+        try{tabs[i].fitAddon.fit();}catch(e){}
+    }
+  });
+  resizeObserver.observe(termArea);
+
+  setInterval(function(){
+    for (var i=0;i<tabs.length;i++) {
+      var w = tabs[i].ws;
+      if (w&&w.readyState===WebSocket.OPEN)
+        w.send(JSON.stringify({type:'ping'}));
     }
   }, 15000);
 
-  connect();
+  window.saraShowAddMenu = function(){showAddMenu();};
 })();
 )JS";
 }
 
 std::string TerminalHttpServer::embedded_terminal_css() {
     return R"CSS(
-* { margin: 0; padding: 0; box-sizing: border-box; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#0d1117;overflow:hidden;font-family:'Cascadia Code','JetBrains Mono',monospace}
+#terminal-container{display:flex;flex-direction:column;width:100vw;height:100vh;background:#0d1117;position:relative}
 
-html, body {
-  width: 100%; height: 100%;
-  background: #0d1117;
-  overflow: hidden;
-  font-family: 'Cascadia Code', 'JetBrains Mono', monospace;
-}
+#tab-bar{display:flex;align-items:center;background:#161b22;border-bottom:1px solid #30363d;min-height:34px;flex-shrink:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#tab-bar::-webkit-scrollbar{display:none}
+.tab{display:flex;align-items:center;gap:6px;padding:0 14px;height:34px;background:transparent;border-right:1px solid #30363d;border-bottom:2px solid transparent;cursor:pointer;font-size:12px;color:#8b949e;white-space:nowrap;user-select:none;flex-shrink:0}
+.tab:hover{background:#21262d}
+.tab.active{background:#0d1117;color:#fff;border-bottom:2px solid #58a6ff}
+.tab-label{max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.tab-close{font-size:15px;color:#484f58;padding:0 2px;line-height:1}
+.tab-close:hover{color:#f85149}
+#btn-add{padding:0 12px;height:34px;display:flex;align-items:center;cursor:pointer;color:#8b949e;font-size:18px;font-weight:bold;flex-shrink:0;border-right:1px solid #30363d}
+#btn-add:hover{color:#fff;background:#21262d}
 
-#terminal-container {
-  display: flex;
-  flex-direction: column;
-  width: 100vw;
-  height: 100vh;
-  background: #0d1117;
-}
+#topbar{display:flex;align-items:center;gap:8px;padding:6px 14px;background:#161b22;border-bottom:1px solid #30363d;height:30px;flex-shrink:0}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.dot.red{background:#ff5f56}.dot.yellow{background:#ffbd2e}.dot.green{background:#27c93f}
+#session-label{color:#8b949e;font-size:11px;margin-left:8px;flex:1}
+#conn-status{font-size:10px;font-family:monospace}
+#conn-status.connected{color:#3fb950}#conn-status.disconnected{color:#f85149}
 
-#topbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  background: #161b22;
-  border-bottom: 1px solid #30363d;
-  height: 34px;
-  flex-shrink: 0;
-}
+#terminal-area{flex:1;display:flex;flex-direction:row;overflow:hidden;position:relative}
+.term-pane{display:none;flex:1;overflow:hidden;position:relative}
+.term-pane.visible{display:block}
+.term-pane.split-left{border-right:1px solid #30363d}
+.terminal-el{width:100%;height:100%;overflow:hidden}
+.xterm{height:100%!important;width:100%!important;padding:0!important}
+.xterm-viewport{overflow:hidden!important}
 
-.dot {
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  display: inline-block;
-}
-.dot.red    { background: #ff5f56; }
-.dot.yellow { background: #ffbd2e; }
-.dot.green  { background: #27c93f; }
-
-#session-label {
-  color: #8b949e;
-  font-size: 12px;
-  margin-left: 8px;
-  flex: 1;
-}
-
-#conn-status {
-  font-size: 11px;
-  font-family: monospace;
-}
-#conn-status.connected    { color: #3fb950; }
-#conn-status.disconnected { color: #f85149; }
-
-#terminal {
-  flex: 1;
-  overflow: hidden;
-  padding: 0;
-}
-
-.xterm { height: 100% !important; width: 100% !important; padding: 0 !important; }
-.xterm-viewport { overflow: hidden !important; }
+#add-menu,#shell-picker{display:none;position:fixed;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:4px 0;z-index:1000;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.menu-title{padding:8px 14px;font-size:11px;color:#8b949e;text-transform:uppercase;font-weight:600}
+.menu-item{padding:10px 14px;font-size:13px;color:#c9d1d9;cursor:pointer;display:flex;align-items:center;gap:8px}
+.menu-item:hover{background:#21262d;color:#fff}
 )CSS";
 }
 

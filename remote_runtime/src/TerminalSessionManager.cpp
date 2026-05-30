@@ -156,13 +156,21 @@ void TerminalSessionManager::pty_resize(const std::string& session_id,
 }
 
 bool TerminalSessionManager::validate_token(const std::string& session_id,
-                                             const std::string& token) const {
+                                              const std::string& token) const {
     std::lock_guard<std::mutex> lock(sessions_mutex_);
     auto it = sessions_.find(session_id);
     if (it == sessions_.end()) return false;
     if (it->second->token != token) return false;
     if (it->second->expired()) return false;
     return true;
+}
+
+bool TerminalSessionManager::validate_any_token(const std::string& token) const {
+    std::lock_guard<std::mutex> lock(sessions_mutex_);
+    for (const auto& [id, sess] : sessions_) {
+        if (sess->token == token && !sess->expired()) return true;
+    }
+    return false;
 }
 
 void TerminalSessionManager::destroy_session(const std::string& session_id,
@@ -181,7 +189,7 @@ void TerminalSessionManager::destroy_session(const std::string& session_id,
 void TerminalSessionManager::cleanup_expired() {
     std::lock_guard<std::mutex> lock(sessions_mutex_);
     for (auto it = sessions_.begin(); it != sessions_.end(); ) {
-        if (it->second->expired() || !it->second->pty.is_alive()) {
+        if (it->second->expired()) {
             ws_send_raw(it->second->ws_socket,
                 "{\"type\":\"exit\",\"code\":-2,\"reason\":\"Session expired\"}");
             it->second->pty.stop();
