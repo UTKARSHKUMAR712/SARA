@@ -7,8 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 endif()
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -flto -s")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -flto -s")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_C_FLAGS_RELEASE "-O3")
 
 add_definitions(-DUNICODE -D_UNICODE)
 
@@ -81,6 +81,9 @@ add_executable(sara_agent
 # Compile sqlite3.c as C, not C++
 set_source_files_properties(shared/sqlite3.c PROPERTIES LANGUAGE C)
 
+target_compile_options(sara_agent PRIVATE -flto -s)
+target_link_options(sara_agent PRIVATE -flto -s)
+
 target_include_directories(sara_agent PRIVATE
     sara_agent/include
     shared
@@ -149,7 +152,8 @@ target_include_directories(sara_gui PRIVATE
     shared/imgui/backends
 )
 
-target_link_options(sara_gui PRIVATE -static-libstdc++ -static-libgcc -mwindows)
+target_compile_options(sara_gui PRIVATE -O3 -static-libstdc++ -static-libgcc -mwindows)
+target_link_options(sara_gui PRIVATE -O3 -static-libstdc++ -static-libgcc -mwindows)
 
 target_link_libraries(sara_gui PRIVATE
     user32

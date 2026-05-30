@@ -663,10 +663,26 @@ nlohmann::json handle_ipc_message(const nlohmann::json& msg) {
         if (action == "reload_config") {
             auto& cfg = g_config.get();
             if (payload.contains("telegram")) {
-                cfg.telegram.token = payload["telegram"].value("token", cfg.telegram.token);
+                auto& t = payload["telegram"];
+                cfg.telegram.token = t.value("token", cfg.telegram.token);
+                cfg.telegram.password = t.value("password", cfg.telegram.password);
+                cfg.telegram.polling_interval_ms = t.value("polling_interval_ms", cfg.telegram.polling_interval_ms);
+                if (t.contains("allowed_user_ids") && t["allowed_user_ids"].is_array()) {
+                    cfg.telegram.allowed_user_ids.clear();
+                    for (auto& id : t["allowed_user_ids"])
+                        cfg.telegram.allowed_user_ids.push_back(id.get<int64_t>());
+                }
                 g_telegram.stop();
                 g_telegram.start(cfg.telegram.token, cfg.telegram.polling_interval_ms);
             }
+            cfg.terminal_port = payload.value("terminal_port", cfg.terminal_port);
+            cfg.terminal_shell = payload.value("terminal_shell", cfg.terminal_shell);
+            cfg.terminal_expiry_minutes = payload.value("terminal_expiry_minutes", cfg.terminal_expiry_minutes);
+            cfg.terminal_host = payload.value("terminal_host", cfg.terminal_host);
+            cfg.cloudflare_enabled = payload.value("cloudflare_enabled", cfg.cloudflare_enabled);
+            cfg.cloudflare_mode = payload.value("cloudflare_mode", cfg.cloudflare_mode);
+            cfg.cloudflare_tunnel_name = payload.value("cloudflare_tunnel_name", cfg.cloudflare_tunnel_name);
+            cfg.log_level = payload.value("log_level", cfg.log_level);
             g_config.save(resolve_path("settings.json"));
             return {{"type","response"}, {"request_id",req_id},
                     {"payload",{{"success",true},{"message","Config updated"}}}};

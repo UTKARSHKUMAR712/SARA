@@ -142,13 +142,25 @@ static void poll_telegram() {
 }
 
 static bool launch_agent() {
-    std::string path = g_bin_dir + "sara_agent.exe";
-    if (GetFileAttributesA(path.c_str()) == INVALID_FILE_ATTRIBUTES)
-        return false;
+    std::string paths[] = {
+        g_bin_dir + "sara_agent.exe",
+        g_exe_dir + "sara_agent.exe",
+        g_exe_dir + "build\\sara_agent.exe",
+    };
+    std::string found;
+    std::string workdir;
+    for (auto& p : paths) {
+        if (GetFileAttributesA(p.c_str()) != INVALID_FILE_ATTRIBUTES) {
+            found = p;
+            workdir = p.substr(0, p.find_last_of("\\/"));
+            break;
+        }
+    }
+    if (found.empty()) return false;
     STARTUPINFOA si = { sizeof(si) };
     PROCESS_INFORMATION pi;
-    if (!CreateProcessA(path.c_str(), nullptr, nullptr, nullptr, FALSE,
-        CREATE_NO_WINDOW, nullptr, g_bin_dir.c_str(), &si, &pi))
+    if (!CreateProcessA(found.c_str(), nullptr, nullptr, nullptr, FALSE,
+        CREATE_NO_WINDOW, nullptr, workdir.c_str(), &si, &pi))
         return false;
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -164,7 +176,7 @@ static bool auto_connect() {
     }
     log("Agent not found. Launching sara_agent.exe...");
     if (!launch_agent()) {
-        log("Failed: sara_agent.exe not found in " + g_exe_dir);
+        log("Failed: sara_agent.exe not found (checked: " + g_bin_dir + ", " + g_exe_dir + ", " + g_exe_dir + "build\\)");
         return false;
     }
     for (int n = 0; n < 15; n++) {
