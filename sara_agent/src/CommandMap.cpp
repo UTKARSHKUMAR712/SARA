@@ -112,7 +112,23 @@ bool CommandMap::load_directory(const std::string& dirpath) {
 }
 
 MatchResult CommandMap::match(const std::string& text) const {
-    std::string key = normalize(text);
+    std::string cleaned = text;
+    {
+        std::string lower;
+        lower.resize(cleaned.size());
+        std::transform(cleaned.begin(), cleaned.end(), lower.begin(), ::tolower);
+        if (lower.find("please ") == 0) {
+            cleaned = cleaned.substr(7);
+            lower.resize(cleaned.size());
+            std::transform(cleaned.begin(), cleaned.end(), lower.begin(), ::tolower);
+        }
+        if (lower.size() >= 7 && lower.rfind(" please") == lower.size() - 7)
+            cleaned = cleaned.substr(0, cleaned.size() - 7);
+    }
+    while (!cleaned.empty() && cleaned[0] == ' ') cleaned.erase(0, 1);
+    while (!cleaned.empty() && cleaned.back() == ' ') cleaned.pop_back();
+
+    std::string key = normalize(cleaned);
     {
         auto it = exact_entries_.find(key);
         if (it != exact_entries_.end())
@@ -121,7 +137,7 @@ MatchResult CommandMap::match(const std::string& text) const {
     for (auto& e : prefix_entries_) {
         std::string pat = normalize(e.pattern);
         if (key.compare(0, pat.size(), pat) == 0) {
-            std::string captured = text.substr(e.pattern.size());
+            std::string captured = cleaned.substr(e.pattern.size());
             while (!captured.empty() && captured[0] == ' ') captured.erase(0, 1);
             return {&e, captured};
         }

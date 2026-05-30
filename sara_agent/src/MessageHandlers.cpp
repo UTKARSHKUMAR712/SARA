@@ -606,6 +606,18 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
                 g_telegram.send_message(chat_id, res.success ? "✅ Volume set to " + std::to_string(level) + "%" : "❌ " + res.message);
                 return;
             }
+            if (e.action == "set_brightness_level") {
+                std::string cap = mr.captured;
+                int level = 50;
+                size_t start = cap.find_first_of("0123456789");
+                if (start != std::string::npos) {
+                    level = std::stoi(cap.substr(start));
+                    if (level > 100) level = 100;
+                }
+                auto res = g_executor.execute("change_brightness", {{"level", level}});
+                g_telegram.send_message(chat_id, res.success ? "✅ Brightness set to " + std::to_string(level) + "%" : "❌ " + res.message);
+                return;
+            }
             if (e.action == "open_app") {
                 auto res = g_executor.execute("open_app", params);
                 g_telegram.send_message(chat_id, res.success ? "✅ Opening " + params.value("name","") + "..." : "❌ " + res.message);

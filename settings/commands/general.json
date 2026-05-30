@@ -1,0 +1,61 @@
+{
+  "commands": [
+    {
+      "type": "exact",
+      "phrases": [
+        "pause", "resume", "play pause", "toggle play",
+        "play/pause", "play or pause", "toggle music",
+        "toggle playback", "unpause", "continue playing"
+      ],
+      "action": "media_play_pause",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "next", "skip", "next track", "next song",
+        "skip track", "skip song", "forward"
+      ],
+      "action": "media_next",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "previous", "back", "previous track",
+        "previous song", "go back", "backward"
+      ],
+      "action": "media_prev",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "stop", "stop music", "stop playing",
+        "stop the music", "stop playback"
+      ],
+      "action": "media_stop",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "mute", "mute volume", "mute audio",
+        "silence", "mute sound", "turn off sound",
+        "silent mode", "no sound", "sound off",
+        "disable audio"
+      ],
+      "action": "volume_mute",
+      "params": { "mute": true }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "unmute", "unmute volume", "unmute audio",
+        "turn on sound", "enable audio"
+      ],
+      "action": "volume_mute",
+      "params": { "mute": false }
+    }
+  ]
+}

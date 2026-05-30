@@ -73,30 +73,6 @@
       "params": {}
     },
     {
-      "type": "exact",
-      "phrases": [
-        "brightness up", "increase brightness",
-        "screen brighter", "more brightness",
-        "brightness increase", "make screen brighter",
-        "turn up brightness", "raise brightness",
-        "increase screen brightness"
-      ],
-      "action": "change_brightness",
-      "params": { "level": 80 }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "brightness down", "decrease brightness",
-        "screen dimmer", "less brightness",
-        "brightness decrease", "make screen dimmer",
-        "turn down brightness", "lower brightness",
-        "decrease screen brightness"
-      ],
-      "action": "change_brightness",
-      "params": { "level": 30 }
-    },
-    {
       "type": "prefix",
       "phrases": [
         "set brightness to ", "set brightness ",
@@ -104,26 +80,6 @@
       ],
       "action": "set_brightness_level",
       "params": {}
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "max brightness", "full brightness",
-        "brightness max", "set brightness max",
-        "maximum brightness"
-      ],
-      "action": "change_brightness",
-      "params": { "level": 100 }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "min brightness", "minimum brightness",
-        "brightness min", "set brightness min",
-        "lowest brightness"
-      ],
-      "action": "change_brightness",
-      "params": { "level": 0 }
     },
     {
       "type": "exact",
