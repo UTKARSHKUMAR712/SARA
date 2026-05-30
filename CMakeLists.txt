@@ -152,8 +152,8 @@ target_include_directories(sara_gui PRIVATE
     shared/imgui/backends
 )
 
-target_compile_options(sara_gui PRIVATE -O3 -static-libstdc++ -static-libgcc -mwindows)
-target_link_options(sara_gui PRIVATE -O3 -static-libstdc++ -static-libgcc -mwindows)
+target_compile_options(sara_gui PRIVATE -static-libstdc++ -static-libgcc -mwindows)
+target_link_options(sara_gui PRIVATE -static-libstdc++ -static-libgcc -mwindows)
 
 target_link_libraries(sara_gui PRIVATE
     user32

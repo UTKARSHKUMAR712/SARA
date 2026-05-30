@@ -25,19 +25,19 @@ static IDXGISwapChain* g_pSwapChain = nullptr;
 static ID3D11RenderTargetView* g_mainRenderTargetView = nullptr;
 static HWND g_hwnd = nullptr;
 static WNDCLASSEXW g_wc = {};
-static std::string g_log_buf;
+static std::string g_log;
 static char g_token[4096] = {};
-static char g_password[4096] = "test1234";
+static char g_password[4096] = "test123f";
 static std::atomic<bool> g_polling{false};
 static std::thread g_poll_thread;
-static std::mutex g_log_mutex;
-static std::vector<std::string> g_pending_logs;
+static std::mutex g_log_mtx;
+static std::vector<std::string> g_pending_log;
 static long long g_last_update_id = 0;
 static std::string g_settings_path;
-static std::string g_exe_dir;
 static std::string g_bin_dir;
+static std::string g_exe_dir;
 static char g_root_password[4096] = {};
-static std::mutex g_users_mutex;
+static std::mutex g_users_mtx;
 struct GuiUser { long long user_id = 0; std::string username, first_name, last_name, added_at; bool blocked = false; };
 static std::vector<GuiUser> g_users;
 
@@ -45,19 +45,19 @@ static void log(const std::string& msg) {
     auto t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::tm tm; localtime_s(&tm, &t);
     char ts[32]; strftime(ts, sizeof(ts), "%H:%M:%S", &tm);
-    g_log_buf += std::string(ts) + " " + msg + "\n";
-    if (g_log_buf.size() > 16384) g_log_buf.erase(0, g_log_buf.size() - 8192);
+    g_log += std::string(ts) + " " + msg + "\n";
+    if (g_log.size() > 16384) g_log.erase(0, g_log.size() - 8192);
 }
 
-static void log_threadsafe(const std::string& msg) {
-    std::lock_guard<std::mutex> lock(g_log_mutex);
-    g_pending_logs.push_back(msg);
+static void logl(const std::string& msg) {
+    std::lock_guard<std::mutex> lock(g_log_mtx);
+    g_pending_log.push_back(msg);
 }
 
-static void flush_pending_logs() {
-    std::lock_guard<std::mutex> lock(g_log_mutex);
-    for (auto& m : g_pending_logs) log(m);
-    g_pending_logs.clear();
+static void flush_log() {
+    std::lock_guard<std::mutex> lock(g_log_mtx);
+    for (auto& m : g_pending_log) log(m);
+    g_pending_log.clear();
 }
 
 static void load_cfg() {
@@ -75,81 +75,21 @@ static void ui_from_cfg() {
     auto tg = g_cfg.value("telegram", json::object());
     snprintf(g_token, sizeof(g_token), "%s", tg.value("token", "").c_str());
     snprintf(g_password, sizeof(g_password), "%s", tg.value("password", "test123f").c_str());
-    
 }
 
 static void cfg_from_ui() {
     g_cfg["telegram"]["token"] = g_token;
     g_cfg["telegram"]["password"] = g_password;
-    
-}
-
-static void poll_telegram() {
-    IPCClient poll_ipc;
-    if (!poll_ipc.connect()) return;
-    while (g_polling) {
-        json msg;
-        msg["type"] = "get_telegram_updates";
-        msg["request_id"] = "poll";
-        msg["payload"] = json::object();
-        auto resp = poll_ipc.send_message(msg);
-        if (resp.contains("payload") && resp["payload"].contains("messages")) {
-            for (auto& m : resp["payload"]["messages"]) {
-                long long uid = m.value("update_id", 0LL);
-                if (uid <= g_last_update_id) continue;
-                g_last_update_id = uid;
-                std::string from = m.value("from_name", "Unknown");
-                std::string text = m.value("text", "");
-                log_threadsafe("Telegram from " + from + ": " + text);
-            }
-        }
-        
-        json root_msg;
-        root_msg["type"] = "command";
-        root_msg["request_id"] = "get_root_pw";
-        root_msg["payload"] = {{"action", "get_root_password"}};
-        auto root_resp = poll_ipc.send_message(root_msg);
-        if (root_resp.contains("payload") && root_resp["payload"].contains("password")) {
-            std::string pw = root_resp["payload"]["password"].get<std::string>();
-            snprintf(g_root_password, sizeof(g_root_password), "%s", pw.c_str());
-        }
-
-        // Poll trusted users list
-        json users_msg;
-        users_msg["type"] = "command";
-        users_msg["request_id"] = "get_users";
-        users_msg["payload"] = {{"action", "get_users"}};
-        auto users_resp = poll_ipc.send_message(users_msg);
-        if (users_resp.contains("payload") && users_resp["payload"].contains("users")) {
-            std::vector<GuiUser> fresh;
-            for (auto& u : users_resp["payload"]["users"]) {
-                GuiUser gu;
-                gu.user_id    = u.value("user_id",    0LL);
-                gu.username   = u.value("username",   "");
-                gu.first_name = u.value("first_name", "");
-                gu.last_name  = u.value("last_name",  "");
-                gu.added_at   = u.value("added_at",   "");
-                gu.blocked    = u.value("blocked",    false);
-                fresh.push_back(gu);
-            }
-            std::lock_guard<std::mutex> lk(g_users_mutex);
-            g_users = std::move(fresh);
-        }
-
-        for (int i = 0; i < 20 && g_polling; i++)
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
 }
 
 static bool launch_agent() {
-    std::string paths[] = {
+    std::string candidates[] = {
         g_bin_dir + "sara_agent.exe",
         g_exe_dir + "sara_agent.exe",
         g_exe_dir + "build\\sara_agent.exe",
     };
-    std::string found;
-    std::string workdir;
-    for (auto& p : paths) {
+    std::string found, workdir;
+    for (auto& p : candidates) {
         if (GetFileAttributesA(p.c_str()) != INVALID_FILE_ATTRIBUTES) {
             found = p;
             workdir = p.substr(0, p.find_last_of("\\/"));
@@ -167,37 +107,66 @@ static bool launch_agent() {
     return true;
 }
 
-static bool auto_connect() {
+static bool try_connect() {
     if (g_ipc.connect()) {
         log("Connected to sara_agent.exe");
         g_ipc.send_command("reload_config", g_cfg);
-        if (!g_polling) { g_polling = true; g_poll_thread = std::thread(poll_telegram); }
+        if (!g_polling) { g_polling = true; g_poll_thread = std::thread([]() {
+            IPCClient poll_ipc;
+            while (g_polling) {
+                if (!poll_ipc.connect()) { std::this_thread::sleep_for(std::chrono::milliseconds(500)); continue; }
+                json msg; msg["type"] = "get_telegram_updates"; msg["request_id"] = "poll"; msg["payload"] = json::object();
+                auto resp = poll_ipc.send_message(msg);
+                if (resp.contains("payload") && resp["payload"].contains("messages")) {
+                    for (auto& m : resp["payload"]["messages"]) {
+                        long long uid = m.value("update_id", 0LL);
+                        if (uid <= g_last_update_id) continue;
+                        g_last_update_id = uid;
+                        logl("Telegram from " + m.value("from_name", "Unknown") + ": " + m.value("text", ""));
+                    }
+                }
+                json r; r["type"] = "command"; r["request_id"] = "get_root_pw"; r["payload"] = {{"action", "get_root_password"}};
+                auto rr = poll_ipc.send_message(r);
+                if (rr.contains("payload") && rr["payload"].contains("password"))
+                    snprintf(g_root_password, sizeof(g_root_password), "%s", rr["payload"]["password"].get<std::string>().c_str());
+                json u; u["type"] = "command"; u["request_id"] = "get_users"; u["payload"] = {{"action", "get_users"}};
+                auto ur = poll_ipc.send_message(u);
+                if (ur.contains("payload") && ur["payload"].contains("users")) {
+                    std::vector<GuiUser> fresh;
+                    for (auto& x : ur["payload"]["users"]) {
+                        fresh.push_back({x.value("user_id",0LL),x.value("username",""),x.value("first_name",""),x.value("last_name",""),x.value("added_at",""),x.value("blocked",false)});
+                    }
+                    std::lock_guard<std::mutex> lk(g_users_mtx);
+                    g_users = std::move(fresh);
+                }
+                for (int i = 0; i < 20 && g_polling; i++) std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+        }); }
         return true;
     }
-    log("Agent not found. Launching sara_agent.exe...");
+    return false;
+}
+
+static void auto_connect() {
+    if (try_connect()) return;
+    log("Agent not found. Attempting to launch sara_agent.exe...");
+    std::string checked = "checked: " + g_bin_dir + ", " + g_exe_dir + ", " + g_exe_dir + "build\\";
     if (!launch_agent()) {
-        log("Failed: sara_agent.exe not found (checked: " + g_bin_dir + ", " + g_exe_dir + ", " + g_exe_dir + "build\\)");
-        return false;
+        log("Failed: sara_agent.exe not found (" + checked + ")");
+        return;
     }
-    for (int n = 0; n < 15; n++) {
+    log("Launched sara_agent.exe, waiting for pipe...");
+    for (int n = 0; n < 30; n++) {
         std::this_thread::sleep_for(std::chrono::milliseconds(400));
-        if (g_ipc.connect()) {
-            log("Connected to sara_agent.exe");
-            g_ipc.send_command("reload_config", g_cfg);
-            if (!g_polling) { g_polling = true; g_poll_thread = std::thread(poll_telegram); }
-            return true;
-        }
+        if (try_connect()) { log("Connected after launch"); return; }
     }
     log("ERROR: Agent launched but connection timed out");
-    return false;
 }
 
 static bool create_render_target() {
     ID3D11Texture2D* back_buffer = nullptr;
     if (FAILED(g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&back_buffer)))) return false;
-    if (FAILED(g_pd3dDevice->CreateRenderTargetView(back_buffer, nullptr, &g_mainRenderTargetView))) {
-        back_buffer->Release(); return false;
-    }
+    if (FAILED(g_pd3dDevice->CreateRenderTargetView(back_buffer, nullptr, &g_mainRenderTargetView))) { back_buffer->Release(); return false; }
     back_buffer->Release(); return true;
 }
 
@@ -208,8 +177,7 @@ static LRESULT CALLBACK wnd_proc(HWND hw, UINT msg, WPARAM wp, LPARAM lp) {
     if (msg == WM_SIZE && wp != SIZE_MINIMIZED && g_pSwapChain) {
         ImGui_ImplDX11_InvalidateDeviceObjects();
         if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = nullptr; }
-        if (SUCCEEDED(g_pSwapChain->ResizeBuffers(0, LOWORD(lp), HIWORD(lp), DXGI_FORMAT_UNKNOWN, 0)))
-            create_render_target();
+        if (SUCCEEDED(g_pSwapChain->ResizeBuffers(0, LOWORD(lp), HIWORD(lp), DXGI_FORMAT_UNKNOWN, 0))) create_render_target();
         ImGui_ImplDX11_CreateDeviceObjects();
     }
     return DefWindowProc(hw, msg, wp, lp);
@@ -217,22 +185,14 @@ static LRESULT CALLBACK wnd_proc(HWND hw, UINT msg, WPARAM wp, LPARAM lp) {
 
 static bool create_device(HWND hw) {
     DXGI_SWAP_CHAIN_DESC sd = {};
-    sd.BufferCount = 2;
-    sd.BufferDesc.Width = 0; sd.BufferDesc.Height = 0;
-    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    sd.BufferDesc.RefreshRate.Numerator = 60;
-    sd.BufferDesc.RefreshRate.Denominator = 1;
-    sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.OutputWindow = hw;
-    sd.SampleDesc.Count = 1;
-    sd.Windowed = TRUE;
-    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-    D3D_FEATURE_LEVEL level;
-    UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+    sd.BufferCount = 2; sd.BufferDesc.Width = 0; sd.BufferDesc.Height = 0;
+    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; sd.BufferDesc.RefreshRate.Numerator = 60;
+    sd.BufferDesc.RefreshRate.Denominator = 1; sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; sd.OutputWindow = hw;
+    sd.SampleDesc.Count = 1; sd.Windowed = TRUE; sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    D3D_FEATURE_LEVEL level; UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
     if (FAILED(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags,
-        nullptr, 0, D3D11_SDK_VERSION, &sd, &g_pSwapChain,
-        &g_pd3dDevice, &level, &g_pd3dDeviceContext)))
+        nullptr, 0, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &level, &g_pd3dDeviceContext)))
         return false;
     return create_render_target();
 }
@@ -254,8 +214,7 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
     auto parent_pos = g_exe_dir.find_last_of("\\/", g_exe_dir.size() - 2);
     if (parent_pos != std::string::npos) {
         std::string parent_dir = g_exe_dir.substr(0, parent_pos + 1);
-        DWORD attr = GetFileAttributesA((parent_dir + "data").c_str());
-        if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
+        if (GetFileAttributesA((parent_dir + "data").c_str()) != INVALID_FILE_ATTRIBUTES)
             g_exe_dir = parent_dir;
     }
     g_settings_path = g_exe_dir + "settings.json";
@@ -290,8 +249,7 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
             TranslateMessage(&msg); DispatchMessage(&msg);
         }
         if (!running) break;
-
-        flush_pending_logs();
+        flush_log();
 
         ImGui_ImplDX11_NewFrame();
         ImGui_ImplWin32_NewFrame();
@@ -306,8 +264,7 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::MenuItem("Connect", nullptr, g_ipc.is_connected())) {
                 if (g_ipc.is_connected()) {
-                    g_ipc.disconnect();
-                    log("Disconnected");
+                    g_ipc.disconnect(); log("Disconnected");
                 } else {
                     std::thread([]() { auto_connect(); }).detach();
                 }
@@ -319,7 +276,37 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
                     log("Polling stopped");
                 } else if (g_ipc.is_connected()) {
                     g_polling = true;
-                    g_poll_thread = std::thread(poll_telegram);
+                    g_poll_thread = std::thread([]() {
+                        IPCClient poll_ipc;
+                        while (g_polling) {
+                            if (!poll_ipc.connect()) { std::this_thread::sleep_for(std::chrono::milliseconds(500)); continue; }
+                            json msg; msg["type"] = "get_telegram_updates"; msg["request_id"] = "poll"; msg["payload"] = json::object();
+                            auto resp = poll_ipc.send_message(msg);
+                            if (resp.contains("payload") && resp["payload"].contains("messages")) {
+                                for (auto& m : resp["payload"]["messages"]) {
+                                    long long uid = m.value("update_id", 0LL);
+                                    if (uid <= g_last_update_id) continue;
+                                    g_last_update_id = uid;
+                                    logl("Telegram from " + m.value("from_name", "Unknown") + ": " + m.value("text", ""));
+                                }
+                            }
+                            json r; r["type"] = "command"; r["request_id"] = "get_root_pw"; r["payload"] = {{"action", "get_root_password"}};
+                            auto rr = poll_ipc.send_message(r);
+                            if (rr.contains("payload") && rr["payload"].contains("password"))
+                                snprintf(g_root_password, sizeof(g_root_password), "%s", rr["payload"]["password"].get<std::string>().c_str());
+                            json u; u["type"] = "command"; u["request_id"] = "get_users"; u["payload"] = {{"action", "get_users"}};
+                            auto ur = poll_ipc.send_message(u);
+                            if (ur.contains("payload") && ur["payload"].contains("users")) {
+                                std::vector<GuiUser> fresh;
+                                for (auto& x : ur["payload"]["users"]) {
+                                    fresh.push_back({x.value("user_id",0LL),x.value("username",""),x.value("first_name",""),x.value("last_name",""),x.value("added_at",""),x.value("blocked",false)});
+                                }
+                                std::lock_guard<std::mutex> lk(g_users_mtx);
+                                g_users = std::move(fresh);
+                            }
+                            for (int i = 0; i < 20 && g_polling; i++) std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                        }
+                    });
                     log("Polling started");
                 } else log("Connect to agent first");
             }
@@ -335,8 +322,7 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
         if (ImGui::SmallButton(g_ipc.is_connected() ? "Disconnect" : "Connect")) {
             if (g_ipc.is_connected()) {
                 if (g_polling) { g_polling = false; if (g_poll_thread.joinable()) g_poll_thread.join(); }
-                g_ipc.disconnect();
-                log("Disconnected");
+                g_ipc.disconnect(); log("Disconnected");
             } else {
                 std::thread([]() { auto_connect(); }).detach();
             }
@@ -344,13 +330,10 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
         ImGui::Separator();
 
         if (ImGui::BeginTabBar("##MainTabs")) {
-
-            // ── TAB 1: Config ─────────────────────────────────────────────
             if (ImGui::BeginTabItem("Config")) {
                 ImGui::Text("Telegram Configuration");
                 ImGui::InputText("Bot Token", g_token, sizeof(g_token));
                 ImGui::InputText("Session Password", g_password, sizeof(g_password), ImGuiInputTextFlags_Password);
-
                 ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Pending Root Password (New Device)");
                 ImGui::InputText("##RootPw", g_root_password, sizeof(g_root_password), ImGuiInputTextFlags_ReadOnly);
 
@@ -361,26 +344,22 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
                     else {
                         log("Testing Telegram...");
                         std::thread([t]() {
-                            std::string url = "https://api.telegram.org/bot" + t + "/getMe";
-                            std::string cmd = "powershell -Command \"try{$r=Invoke-WebRequest -Uri '"
-                                + url + "' -UseBasicParsing;if($r.Content-match'\\\"ok\\\":true'){exit 0}else{exit 1}}catch{exit 2}\"";
+                            std::string cmd = "powershell -Command \"try{$r=Invoke-WebRequest -Uri 'https://api.telegram.org/bot"
+                                + t + "/getMe' -UseBasicParsing;if($r.Content-match'\\\"ok\\\":true'){exit 0}else{exit 1}}catch{exit 2}\"";
                             int r = system(cmd.c_str());
-                            if (r == 0) log_threadsafe("Telegram API: Connected!");
-                            else if (r == 1) log_threadsafe("Telegram API: Invalid token");
-                            else log_threadsafe("Telegram API: Connection failed");
+                            if (r == 0) logl("Telegram API: Connected!");
+                            else if (r == 1) logl("Telegram API: Invalid token");
+                            else logl("Telegram API: Connection failed");
                             if (r == 0 && g_ipc.is_connected()) {
                                 g_ipc.send_command("reload_config", g_cfg);
-                                log_threadsafe("Agent reloaded with new token");
+                                logl("Agent reloaded with new config");
                             }
                         }).detach();
                     }
                 }
                 ImGui::Separator();
-
-                ImGui::Text("Native mode");
-                ImGui::Separator();
                 if (ImGui::Button("Save Config")) {
-                    save_cfg(); log("Saved to settings.json");
+                    save_cfg(); log("Saved to " + g_settings_path);
                     if (g_ipc.is_connected()) {
                         g_ipc.send_command("reload_config", g_cfg);
                         log("Config sent to agent");
@@ -389,77 +368,49 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
                 ImGui::EndTabItem();
             }
 
-            // ── TAB 2: Users ──────────────────────────────────────────────
             if (ImGui::BeginTabItem("Users")) {
                 ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Trusted User Management");
                 ImGui::Spacing();
-
-                std::lock_guard<std::mutex> lk(g_users_mutex);
+                std::lock_guard<std::mutex> lk(g_users_mtx);
                 if (g_users.empty()) {
                     ImGui::TextDisabled("No trusted users yet. A new device connecting will appear here.");
                 } else {
-                    // Table header
                     if (ImGui::BeginTable("##UsersTable", 6,
                             ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
                             ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp,
                             ImVec2(0, -50))) {
-                        ImGui::TableSetupColumn("ID",          ImGuiTableColumnFlags_WidthFixed, 110);
-                        ImGui::TableSetupColumn("Name",        ImGuiTableColumnFlags_WidthStretch);
-                        ImGui::TableSetupColumn("@Username",   ImGuiTableColumnFlags_WidthStretch);
-                        ImGui::TableSetupColumn("Added At",    ImGuiTableColumnFlags_WidthStretch);
-                        ImGui::TableSetupColumn("Status",      ImGuiTableColumnFlags_WidthFixed,  70);
-                        ImGui::TableSetupColumn("Action",      ImGuiTableColumnFlags_WidthFixed,  80);
+                        ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed, 110);
+                        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
+                        ImGui::TableSetupColumn("@Username", ImGuiTableColumnFlags_WidthStretch);
+                        ImGui::TableSetupColumn("Added At", ImGuiTableColumnFlags_WidthStretch);
+                        ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, 70);
+                        ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, 80);
                         ImGui::TableHeadersRow();
-
                         for (auto& u : g_users) {
                             ImGui::TableNextRow();
-                            ImGui::TableSetColumnIndex(0);
-                            ImGui::Text("%lld", u.user_id);
-
+                            ImGui::TableSetColumnIndex(0); ImGui::Text("%lld", u.user_id);
                             ImGui::TableSetColumnIndex(1);
                             std::string full = u.first_name;
                             if (!u.last_name.empty()) full += " " + u.last_name;
                             ImGui::TextUnformatted(full.c_str());
-
-                            ImGui::TableSetColumnIndex(2);
-                            ImGui::TextUnformatted(u.username.empty() ? "-" : ("@" + u.username).c_str());
-
-                            ImGui::TableSetColumnIndex(3);
-                            // Show only date portion
-                            std::string ts = u.added_at.size() >= 10 ? u.added_at.substr(0, 10) : u.added_at;
-                            ImGui::TextUnformatted(ts.c_str());
-
-                            ImGui::TableSetColumnIndex(4);
-                            if (u.blocked)
-                                ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "BLOCKED");
-                            else
-                                ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.4f, 1.0f), "OK");
-
+                            ImGui::TableSetColumnIndex(2); ImGui::TextUnformatted(u.username.c_str());
+                            ImGui::TableSetColumnIndex(3); ImGui::TextUnformatted(u.added_at.c_str());
+                            ImGui::TableSetColumnIndex(4); ImGui::TextUnformatted(u.blocked ? "Blocked" : "Active");
                             ImGui::TableSetColumnIndex(5);
                             ImGui::PushID((int)u.user_id);
                             if (u.blocked) {
                                 if (ImGui::SmallButton("Unblock")) {
-                                    long long uid = u.user_id;
-                                    std::thread([uid]() {
-                                        json msg;
-                                        msg["type"] = "command";
-                                        msg["request_id"] = "unblock";
-                                        msg["payload"] = {{"action","unblock_user"},{"user_id", uid}};
-                                        g_ipc.send_message(msg);
-                                        log_threadsafe("Unblocked user " + std::to_string(uid));
+                                    std::thread([uid=u.user_id]() {
+                                        g_ipc.send_command("unblock_user", {{"user_id", uid}});
+                                        logl("Unblocked user " + std::to_string(uid));
                                     }).detach();
                                 }
                             } else {
                                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f,0.15f,0.15f,1.0f));
                                 if (ImGui::SmallButton("Block")) {
-                                    long long uid = u.user_id;
-                                    std::thread([uid]() {
-                                        json msg;
-                                        msg["type"] = "command";
-                                        msg["request_id"] = "block";
-                                        msg["payload"] = {{"action","block_user"},{"user_id", uid}};
-                                        g_ipc.send_message(msg);
-                                        log_threadsafe("Blocked user " + std::to_string(uid));
+                                    std::thread([uid=u.user_id]() {
+                                        g_ipc.send_command("block_user", {{"user_id", uid}});
+                                        logl("Blocked user " + std::to_string(uid));
                                     }).detach();
                                 }
                                 ImGui::PopStyleColor();
@@ -472,22 +423,17 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
                 ImGui::EndTabItem();
             }
 
-            // ── TAB 3: Log ────────────────────────────────────────────────
             if (ImGui::BeginTabItem("Log")) {
-                if (ImGui::SmallButton("Clear")) { g_log_buf.clear(); }
+                if (ImGui::SmallButton("Clear")) { g_log.clear(); }
                 ImGui::BeginChild("LogScrolling", ImVec2(0, 0), true);
-                ImGui::TextUnformatted(g_log_buf.c_str());
-                if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-                    ImGui::SetScrollHereY(1.0f);
+                ImGui::TextUnformatted(g_log.c_str());
+                if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) ImGui::SetScrollHereY(1.0f);
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             }
-
             ImGui::EndTabBar();
         }
-
         ImGui::End();
-
 
         ImGui::Render();
         g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
