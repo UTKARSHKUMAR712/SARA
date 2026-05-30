@@ -277,9 +277,13 @@ int main(int argc, char* argv[]) {
 
     // ── Main loop ─────────────────────────────────────────────────────────
     while (g_running) {
-        Sleep(1000);
-        g_runtime.set_ws_clients(g_ws_server.client_count());
-        g_runtime.set_active_tasks((int)g_scheduler.list_tasks().size());
+        if (RuntimeState::instance().is_sleeping()) {
+            Sleep(5000);
+        } else {
+            Sleep(1000);
+            g_runtime.set_ws_clients(g_ws_server.client_count());
+            g_runtime.set_active_tasks((int)g_scheduler.list_tasks().size());
+        }
     }
 
     // ── Shutdown ──────────────────────────────────────────────────────────

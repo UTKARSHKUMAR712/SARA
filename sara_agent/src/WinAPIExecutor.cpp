@@ -13,6 +13,8 @@
 #include <shellapi.h>
 #include <sstream>
 #include <thread>
+#include <vector>
+#include <filesystem>
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
 #include <cstdlib>
@@ -743,16 +745,108 @@ ActionResult WinAPIExecutor::play_youtube(const std::string& query) {
 }
 
 ActionResult WinAPIExecutor::search_google(const std::string& query) {
+    // Legacy shim — now routes to the search plugin instead of opening Google.
+    // The actual formatting and Telegram response is handled by NativeCommandRouter::handle_search.
+    // Here we just run the plugin and return the raw JSON answer for any caller that needs it.
     if (query.empty()) return {false, "No search query provided", {}};
-    std::string url = "https://www.google.com/search?q=";
-    for (char c : query) {
-        if (std::isalnum((unsigned char)c)) url += c;
-        else if (c == ' ') url += '+';
-        else { char buf[4]; sprintf_s(buf, "%%%02X", (unsigned char)c); url += buf; }
+
+    // Build JSON request for the plugin
+    std::string json_input =
+        "{\"plugin\":\"search\",\"action\":\"search\",\"query\":\"" + query +
+        "\",\"scrape\":false,\"max_urls\":5}";
+
+    // Locate search_plugin.exe
+    char exe_path_buf[MAX_PATH];
+    GetModuleFileNameA(NULL, exe_path_buf, MAX_PATH);
+    std::string exe_dir(exe_path_buf);
+    auto slash = exe_dir.find_last_of("\\/");
+    if (slash != std::string::npos) exe_dir = exe_dir.substr(0, slash);
+
+    std::string plugin_exe = exe_dir + "\\search_plugin.exe";
+    if (!std::filesystem::exists(plugin_exe))
+        plugin_exe = exe_dir + "\\plugins\\search_plugin\\search_plugin.exe";
+    if (!std::filesystem::exists(plugin_exe))
+        plugin_exe = "C:\\Users\\utkarsh_kumar\\Desktop\\sara\\plugins\\search_plugin\\search_plugin.exe";
+    if (!std::filesystem::exists(plugin_exe)) {
+        // Hard fallback: open browser if plugin missing
+        std::string url = "https://www.google.com/search?q=";
+        for (char c : query) {
+            if (std::isalnum((unsigned char)c)) url += c;
+            else if (c == ' ') url += '+';
+            else { char buf[4]; sprintf_s(buf, "%%%02X", (unsigned char)c); url += buf; }
+        }
+        ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+        return {true, "Opened browser search (plugin not found): " + query, {{"url", url}}};
     }
-    HINSTANCE res = ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-    if ((INT_PTR)res <= 32) return {false, "Failed to open Google search", {}};
-    return {true, "Opened Google search: " + query, {{"url", url}}};
+
+    // Use pipes to send JSON via stdin and read output
+    SECURITY_ATTRIBUTES sa = {};
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = TRUE;
+
+    HANDLE h_out_read = NULL, h_out_write = NULL;
+    if (!CreatePipe(&h_out_read, &h_out_write, &sa, 0))
+        return {false, "Search pipe failed", {}};
+    SetHandleInformation(h_out_read, HANDLE_FLAG_INHERIT, 0);
+
+    HANDLE h_in_read = NULL, h_in_write = NULL;
+    if (!CreatePipe(&h_in_read, &h_in_write, &sa, 0)) {
+        CloseHandle(h_out_read); CloseHandle(h_out_write);
+        return {false, "Search pipe failed", {}};
+    }
+    SetHandleInformation(h_in_write, HANDLE_FLAG_INHERIT, 0);
+
+    STARTUPINFOA si = {};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    si.hStdOutput = h_out_write;
+    si.hStdError  = h_out_write;
+    si.hStdInput  = h_in_read;
+
+    PROCESS_INFORMATION pi = {};
+    std::string cmd_line = "\"" + plugin_exe + "\"";
+    std::vector<char> cmd_buf(cmd_line.begin(), cmd_line.end());
+    cmd_buf.push_back('\0');
+
+    bool created = CreateProcessA(NULL, cmd_buf.data(), NULL, NULL, TRUE,
+        CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+
+    CloseHandle(h_out_write);
+    CloseHandle(h_in_read);
+
+    if (!created) {
+        CloseHandle(h_out_read); CloseHandle(h_in_write);
+        return {false, "Failed to start search plugin", {}};
+    }
+
+    DWORD written = 0;
+    WriteFile(h_in_write, json_input.c_str(), (DWORD)json_input.size(), &written, NULL);
+    CloseHandle(h_in_write);
+
+    std::string output;
+    char buf[4096];
+    DWORD bytes_read = 0;
+    while (ReadFile(h_out_read, buf, sizeof(buf) - 1, &bytes_read, NULL) && bytes_read > 0) {
+        buf[bytes_read] = '\0';
+        output += buf;
+    }
+    WaitForSingleObject(pi.hProcess, 20000);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    CloseHandle(h_out_read);
+
+    if (output.empty()) return {false, "Search plugin returned no output", {}};
+
+    try {
+        auto j = nlohmann::json::parse(output);
+        if (!j.value("success", false))
+            return {false, "Search failed: " + j.value("error", "unknown"), {}};
+        std::string answer = j.value("answer", "");
+        return {true, answer.empty() ? "Search complete: " + query : answer, j};
+    } catch (...) {
+        return {false, "Search plugin parse error", {}};
+    }
 }
 
 ActionResult WinAPIExecutor::open_website(const std::string& url) {

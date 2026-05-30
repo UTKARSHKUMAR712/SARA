@@ -6,6 +6,14 @@
 #include "../include/plugins/mcp/MCPRegistry.h"
 #include "../../plugins/spotify/spotify_plugin.hpp"
 #include <sstream>
+#include <filesystem>
+#include <vector>
+#include <thread>
+#ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+
 
 extern sara::TelegramGateway g_telegram;
 extern sara::WinAPIExecutor g_executor;
@@ -68,6 +76,8 @@ bool NativeCommandRouter::handle(const std::string& chat_id, const std::string& 
     if (handle_file(chat_id, text)) return true;
     if (handle_automation(chat_id, text)) return true;
     if (handle_hotkey(chat_id, text)) return true;
+    if (handle_search(chat_id, text)) return true;
+    if (handle_news(chat_id, text)) return true;
 
     // ── MCP Management Commands ─────────────────────────────────────────
     if (text.find("/mcp connect ") == 0) {
@@ -286,7 +296,8 @@ bool NativeCommandRouter::handle_monitoring(const std::string& chat_id, const st
                         std::string name = p.value("Name", "Unknown");
                         int pid = p.value("Id", 0);
                         double ram = p.value("RAM", 0.0);
-                        
+                        std::string content = p.value("content", "");
+                        if (content.size() > 1500) content = content.substr(0, 1500) + "...";
                         msg += "• `" + name + "` (" + std::to_string(pid) + ") - " + std::to_string(ram).substr(0, std::to_string(ram).find('.') + 3) + " MB\n";
                         kb.push_back(nlohmann::json::array({{{"text", "💀 Kill " + name}, {"callback_data", "dock_mon:kill_" + std::to_string(pid)}}}));
                     }
@@ -326,6 +337,292 @@ bool NativeCommandRouter::handle_automation(const std::string& chat_id, const st
 bool NativeCommandRouter::handle_hotkey(const std::string& chat_id, const std::string& text) {
     if (text == "/hotkeys") { return true; }
     return false;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Search Plugin integration
+// ─────────────────────────────────────────────────────────────────────────────
+
+static std::string run_search_plugin(const std::string& json_input) {
+    char exe_path_buf[MAX_PATH];
+    GetModuleFileNameA(NULL, exe_path_buf, MAX_PATH);
+    std::string exe_dir(exe_path_buf);
+    auto slash = exe_dir.find_last_of("\\/");
+    if (slash != std::string::npos) exe_dir = exe_dir.substr(0, slash);
+
+    std::string plugin_exe = exe_dir + "\\search_plugin.exe";
+    if (!std::filesystem::exists(plugin_exe))
+        plugin_exe = exe_dir + "\\plugins\\search_plugin\\search_plugin.exe";
+    if (!std::filesystem::exists(plugin_exe))
+        plugin_exe = "C:\\Users\\utkarsh_kumar\\Desktop\\sara\\plugins\\search_plugin\\search_plugin.exe";
+    if (!std::filesystem::exists(plugin_exe))
+        return "{\"success\":false,\"error\":\"search_plugin.exe not found\"}";
+
+    SECURITY_ATTRIBUTES sa = {};
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = TRUE;
+
+    HANDLE h_out_read = NULL, h_out_write = NULL;
+    if (!CreatePipe(&h_out_read, &h_out_write, &sa, 0)) return "{\"success\":false,\"error\":\"CreatePipe failed\"}";
+    SetHandleInformation(h_out_read, HANDLE_FLAG_INHERIT, 0);
+
+    HANDLE h_in_read = NULL, h_in_write = NULL;
+    if (!CreatePipe(&h_in_read, &h_in_write, &sa, 0)) {
+        CloseHandle(h_out_read); CloseHandle(h_out_write);
+        return "{\"success\":false,\"error\":\"CreatePipe failed\"}";
+    }
+    SetHandleInformation(h_in_write, HANDLE_FLAG_INHERIT, 0);
+
+    STARTUPINFOA si = {};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    si.hStdOutput = h_out_write;
+    si.hStdError  = h_out_write;
+    si.hStdInput  = h_in_read;
+
+    PROCESS_INFORMATION pi = {};
+    std::string cmd_line = "\"" + plugin_exe + "\"";
+    std::vector<char> cmd_buf(cmd_line.begin(), cmd_line.end());
+    cmd_buf.push_back('\0');
+
+    bool created = CreateProcessA(NULL, cmd_buf.data(), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+    CloseHandle(h_out_write);
+    CloseHandle(h_in_read);
+
+    if (!created) {
+        CloseHandle(h_out_read); CloseHandle(h_in_write);
+        return "{\"success\":false,\"error\":\"CreateProcess failed\"}";
+    }
+
+    DWORD written = 0;
+    WriteFile(h_in_write, json_input.c_str(), (DWORD)json_input.size(), &written, NULL);
+    CloseHandle(h_in_write);
+
+    std::string output;
+    char buf[4096];
+    DWORD bytes_read = 0;
+    while (ReadFile(h_out_read, buf, sizeof(buf) - 1, &bytes_read, NULL) && bytes_read > 0) {
+        buf[bytes_read] = '\0';
+        output += buf;
+    }
+
+    WaitForSingleObject(pi.hProcess, 30000);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    CloseHandle(h_out_read);
+    return output.empty() ? "{\"success\":false,\"error\":\"No output\"}" : output;
+}
+
+bool NativeCommandRouter::handle_search(const std::string& chat_id, const std::string& text) {
+    bool scrape = false;
+    std::string query;
+
+    if (text.find("/searchscrape ") == 0) {
+        query = text.substr(14);
+        scrape = true;
+    } else if (text.find("/search ") == 0) {
+        query = text.substr(8);
+        scrape = false;
+    } else if (text == "/search" || text == "/searchscrape") {
+        g_telegram.send_message(chat_id, "🔍 Usage:\n/search <query> — Fast web search\n/searchscrape <query> — Deep search with page content");
+        return true;
+    } else {
+        return false;
+    }
+
+    if (query.empty()) return true;
+
+    std::string mode_label = scrape ? "🔍 *Deep Search + Scrape*" : "🔍 *Searching the web...*";
+    g_telegram.send_message(chat_id, mode_label + "\n\nQuery: `" + query + "`\n\nPlease wait...");
+
+    nlohmann::json req = {
+        {"plugin", "search"},
+        {"action", "search"},
+        {"query",  query},
+        {"scrape", scrape},
+        {"max_urls", 5}
+    };
+    std::string json_arg = req.dump();
+
+    std::thread([chat_id, json_arg, query, scrape]() {
+        std::string raw = run_search_plugin(json_arg);
+        nlohmann::json resp;
+        try { resp = nlohmann::json::parse(raw); } catch (...) { return; }
+
+        if (!resp.value("success", false)) {
+            g_telegram.send_message(chat_id, "❌ Search failed: " + resp.value("error", "Unknown error"));
+            return;
+        }
+
+        std::string msg;
+        if (!scrape) {
+            msg = "🔍 **Search Results** for: `" + query + "`\n\n";
+            auto& results = resp["results"];
+            if (results.is_array() && !results.empty()) {
+                int idx = 1;
+                for (auto& r : results) {
+                    std::string title   = r.value("title",   "Untitled");
+                    std::string url     = r.value("url",     "");
+                    std::string snippet = r.value("snippet", "");
+                    if (snippet.size() > 1000) snippet = snippet.substr(0, 1000) + "...";
+                    msg += std::to_string(idx++) + ". **" + title + "**\n";
+                    if (!snippet.empty()) msg += "   " + snippet + "\n";
+                    msg += "   🔗 " + url + "\n\n";
+                    if (msg.size() > 3800) break;
+                }
+            } else { msg += "_No results found._"; }
+        } else {
+            msg = "🔍 **Deep Search** for: `" + query + "`\n\n";
+            auto& sources = resp["sources"];
+            if (sources.is_array() && !sources.empty()) {
+                int idx = 1;
+                for (auto& s : sources) {
+                    std::string title   = s.value("title",   "Untitled");
+                    std::string url     = s.value("url",     "");
+                    std::string content = s.value("content", "");
+                    if (content.size() > 1500) content = content.substr(0, 1500) + "...";
+                    msg += std::to_string(idx++) + ". **" + title + "**\n";
+                    msg += "   🔗 " + url + "\n";
+                    if (!content.empty()) msg += "   " + content + "\n\n";
+                    if (msg.size() > 3800) break;
+                }
+            } else { msg += "_No scraped content found._"; }
+        }
+        g_telegram.send_message(chat_id, msg);
+    }).detach();
+    return true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// News Plugin integration
+// ─────────────────────────────────────────────────────────────────────────────
+
+std::string run_news_plugin(const std::string& json_input) {
+    char exe_path_buf[MAX_PATH];
+    GetModuleFileNameA(NULL, exe_path_buf, MAX_PATH);
+    std::string exe_dir(exe_path_buf);
+    auto slash = exe_dir.find_last_of("\\/");
+    if (slash != std::string::npos) exe_dir = exe_dir.substr(0, slash);
+
+    std::string plugin_exe = exe_dir + "\\news_plugin.exe";
+    if (!std::filesystem::exists(plugin_exe)) {
+        plugin_exe = exe_dir + "\\plugins\\news_plugin\\news_plugin.exe";
+    }
+    if (!std::filesystem::exists(plugin_exe)) {
+        plugin_exe = "C:\\Users\\utkarsh_kumar\\Desktop\\sara\\plugins\\news_plugin\\news_plugin.exe";
+    }
+
+    SECURITY_ATTRIBUTES sa = {};
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = TRUE;
+
+    HANDLE h_out_read = NULL, h_out_write = NULL;
+    if (!CreatePipe(&h_out_read, &h_out_write, &sa, 0)) return "{\"success\":false,\"error\":\"Pipe fail\"}";
+    SetHandleInformation(h_out_read, HANDLE_FLAG_INHERIT, 0);
+
+    HANDLE h_in_read = NULL, h_in_write = NULL;
+    if (!CreatePipe(&h_in_read, &h_in_write, &sa, 0)) {
+        CloseHandle(h_out_read); CloseHandle(h_out_write);
+        return "{\"success\":false,\"error\":\"Pipe fail\"}";
+    }
+    SetHandleInformation(h_in_write, HANDLE_FLAG_INHERIT, 0);
+
+    STARTUPINFOA si = {};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    si.hStdOutput = h_out_write;
+    si.hStdError  = h_out_write;
+    si.hStdInput  = h_in_read;
+
+    PROCESS_INFORMATION pi = {};
+    std::string cmd_line = "\"" + plugin_exe + "\"";
+    std::vector<char> cmd_buf(cmd_line.begin(), cmd_line.end());
+    cmd_buf.push_back('\0');
+
+    bool created = CreateProcessA(NULL, cmd_buf.data(), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+    CloseHandle(h_out_write);
+    CloseHandle(h_in_read);
+
+    if (!created) {
+        CloseHandle(h_out_read); CloseHandle(h_in_write);
+        return "{\"success\":false,\"error\":\"Failed to start news plugin\"}";
+    }
+
+    DWORD written = 0;
+    WriteFile(h_in_write, json_input.c_str(), (DWORD)json_input.size(), &written, NULL);
+    CloseHandle(h_in_write);
+
+    std::string output;
+    char buf[4096];
+    DWORD bytes_read = 0;
+    while (ReadFile(h_out_read, buf, sizeof(buf) - 1, &bytes_read, NULL) && bytes_read > 0) {
+        buf[bytes_read] = '\0';
+        output += buf;
+    }
+
+    WaitForSingleObject(pi.hProcess, 15000);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    CloseHandle(h_out_read);
+    return output.empty() ? "{\"success\":false,\"error\":\"No output from news plugin\"}" : output;
+}
+
+bool NativeCommandRouter::handle_news(const std::string& chat_id, const std::string& text) {
+    std::string category;
+    if (text.size() > 6 && text.substr(0, 6) == "/news ") {
+        category = text.substr(6);
+    } else if (text == "/news") {
+        category = "general";
+    } else {
+        return false;
+    }
+
+    std::string pretty_cat = category;
+    pretty_cat[0] = toupper(pretty_cat[0]);
+    g_telegram.send_message(chat_id, "📰 *Fetching Top News...*\n\nCategory: `" + pretty_cat + "`\n\nPlease wait...");
+
+    nlohmann::json req = {
+        {"plugin", "news"},
+        {"action", "get_news"},
+        {"category", category},
+        {"max_items", 10}
+    };
+    std::string json_arg = req.dump();
+
+    std::thread([chat_id, json_arg, pretty_cat]() {
+        std::string raw = run_news_plugin(json_arg);
+        nlohmann::json resp;
+        try { resp = nlohmann::json::parse(raw); } catch (...) { return; }
+
+        if (!resp.value("success", false)) {
+            g_telegram.send_message(chat_id, "❌ News fetch failed");
+            return;
+        }
+
+        std::string msg = "📰 **Top " + pretty_cat + " News**\n\n";
+        auto& articles = resp["articles"];
+        if (articles.is_array() && !articles.empty()) {
+            int idx = 1;
+            for (auto& a : articles) {
+                std::string title   = a.value("title",   "Untitled");
+                std::string url     = a.value("url",     "");
+                std::string source  = a.value("source",  "Link");
+                std::string desc    = a.value("description", "");
+                
+                msg += std::to_string(idx++) + ". **" + title + "**\n";
+                if (!desc.empty() && desc != title) msg += "   " + desc + "\n";
+                msg += "   🔗 [" + source + "](" + url + ")\n\n";
+                
+                if (msg.size() > 3800) break;
+            }
+        } else {
+            msg += "_No news found._";
+        }
+        g_telegram.send_message(chat_id, msg);
+    }).detach();
+    return true;
 }
 
 }

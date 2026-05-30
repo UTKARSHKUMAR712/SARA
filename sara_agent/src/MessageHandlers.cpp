@@ -11,6 +11,13 @@
 #include "../include/CommandMap.h"
 #include "../include/ConfigManager.h"
 #include "../include/WinAPIExecutor.h"
+#include "../include/WebSocketServer.h"
+#include "../include/ProcessMonitor.h"
+#include "../include/NetworkMonitor.h"
+#include "../include/IPCServer.h"
+#include "../include/HotkeyManager.h"
+#include "../include/SQLiteStore.h"
+#include "../../plugins/spotify/spotify_plugin.hpp"
 #include <mutex>
 #include <unordered_map>
 #include <fstream>
@@ -28,6 +35,11 @@ extern RuntimeState&          g_runtime;
 extern EventAutomationEngine  g_event_engine;
 extern ConfigManager          g_config;
 extern WinAPIExecutor         g_executor;
+extern WebSocketServer        g_ws_server;
+extern ProcessMonitor         g_proc_monitor;
+extern NetworkMonitor         g_net_monitor;
+extern IPCServer              g_ipc;
+extern SQLiteStore            g_store;
 
 extern std::unordered_map<std::string, std::string> g_pending_outputs;
 extern std::mutex g_pending_mutex;
@@ -150,6 +162,67 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
         return;
     }
 
+    // ── Sleep mode: block non-wake commands ────────────────────────────────
+    if (g_runtime.is_sleeping()) {
+        std::string lower = text;
+        for (auto& c : lower) if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';
+        bool is_wake = (lower == "wake" || lower == "wake up" || lower == "sara wake"
+            || lower == "sara wake up" || lower == "wake sara"
+            || lower == "good morning" || lower == "resume sara"
+            || lower == "power on" || lower == "boot up"
+            || lower == "/sararestart");
+        if (is_wake) {
+            g_telegram.send_message(chat_id, "☀️ Waking up... restarting all subsystems.");
+            // Restart WebSocket server
+            g_ws_server.start(9080);
+            g_runtime.set_websocket_ready(true);
+            // Restart Terminal HTTP server
+            auto& cfg2 = g_config.get();
+            std::string frontend_dir = resolve_path("remote_runtime\\frontend");
+            int ports[] = { 9081, 9082, 9083, 9084, 9085 };
+            for (int p : ports) {
+                if (sara::remote::TerminalHttpServer::instance().start(p, frontend_dir)) {
+                    sara::remote::TerminalSessionManager::instance().start_cleanup_thread(60);
+                    g_actual_terminal_port = p;
+                    break;
+                }
+            }
+            // Restart Cloudflare tunnel
+            if (cfg2.cloudflare_mode != "disabled") {
+                std::string cf_dir = cfg2.cloudflare_exe_dir.empty()
+                    ? resolve_path("runtime") : cfg2.cloudflare_exe_dir;
+                std::string cf_exe = sara::remote::CloudflaredManager::ensure_cloudflared(cf_dir);
+                if (!cf_exe.empty()) {
+                    std::string cur_path(32768, '\0');
+                    DWORD plen = GetEnvironmentVariableA("PATH", cur_path.data(), (DWORD)cur_path.size());
+                    cur_path.resize(plen);
+                    SetEnvironmentVariableA("PATH", (cf_dir + ";" + cur_path).c_str());
+                }
+            }
+            // Restart subsystems
+            g_proc_monitor.start();
+            g_event_engine.set_store(&g_store);
+            g_event_engine.set_notify_callback([](const std::string& msg) {
+                auto chats = g_config.get().telegram.allowed_user_ids;
+                if (chats.empty()) return;
+                std::string cid = std::to_string(chats[0]);
+                g_telegram.send_message(cid, "[Event] " + msg);
+            });
+            g_event_engine.start(&g_executor, &g_proc_monitor);
+            SpotifyPlugin::instance().start();
+            g_net_monitor.start();
+            HotkeyManager::instance().start();
+            g_ipc.set_handler(handle_ipc_message);
+            g_ipc.start();
+            g_runtime.wake();
+            g_telegram.send_message(chat_id, "☀️ Good morning! All systems online. Ready for commands.");
+            Logger::instance().info("SARA woke up from sleep mode");
+            return;
+        }
+        g_telegram.send_message(chat_id, "😴 Sleeping... Send 'wake up' to wake me.");
+        return;
+    }
+
     std::string clean_text;
     long long delay_seconds = parse_delay_suffix(text, clean_text);
     if (delay_seconds > 0) {
@@ -242,6 +315,9 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
             "/killterminal <id> — Stop a terminal session\n"
             "/sararestart — Restart SARA and Cloudflare completely\n"
             "/sarashutdown — Kill SARA completely (no restart)\n\n"
+            "🔍 **Web Search**\n"
+            "/search <query>       — Search the web (fast)\n"
+            "/searchscrape <query> — Deep search with page content\n\n"
             "💬 You can also just type: open spotify, my ram usage, etc.\n"
             "/dock        — Dashboard\n"
             "/system      — System dock\n"
@@ -618,6 +694,25 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
                 g_telegram.send_message(chat_id, res.success ? "✅ Brightness set to " + std::to_string(level) + "%" : "❌ " + res.message);
                 return;
             }
+            if (e.action == "sleep_sara") {
+                g_telegram.send_message(chat_id, "😴 Going to sleep... stopping all subsystems.");
+                // Stop non-essential subsystems
+                g_ws_server.stop();
+                g_runtime.set_websocket_ready(false);
+                sara::remote::TerminalSessionManager::instance().shutdown_all();
+                sara::remote::TerminalSessionManager::instance().stop_cleanup_thread();
+                sara::remote::TerminalHttpServer::instance().stop();
+                sara::remote::CloudflaredManager::instance().stop();
+                SpotifyPlugin::instance().stop();
+                g_event_engine.stop();
+                g_proc_monitor.stop();
+                g_net_monitor.stop();
+                HotkeyManager::instance().stop();
+                g_ipc.stop();
+                g_runtime.enter_sleep();
+                Logger::instance().info("SARA entered sleep mode");
+                return;
+            }
             if (e.action == "open_app") {
                 auto res = g_executor.execute("open_app", params);
                 g_telegram.send_message(chat_id, res.success ? "✅ Opening " + params.value("name","") + "..." : "❌ " + res.message);
@@ -642,11 +737,22 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
                     g_telegram.send_message(chat_id, "❌ " + res.message);
                 return;
             }
-            if (e.action == "search_google") {
-                std::string q = params.value("query", "");
-                if (q.empty()) { send_file_result(chat_id, dispatch_action("take_screenshot", {}), ""); return; }
-                auto res = g_executor.execute("open_website", {{"url", "https://www.google.com/search?q=" + q}});
-                g_telegram.send_message(chat_id, res.success ? "✅ Searching..." : "❌ " + res.message);
+            if (e.action == "search_google" || e.action == "search_plugin" || e.action == "search_plugin_scrape") {
+                std::string q = params.value("query", mr.captured);
+                if (q.empty()) q = mr.captured;
+                if (q.empty()) {
+                    g_telegram.send_message(chat_id, "🔍 What do you want me to search for?");
+                    return;
+                }
+                // Route through search plugin — use scrape mode for deep search action
+                bool scrape = (e.action == "search_plugin_scrape");
+                std::string cmd = scrape ? "/searchscrape " + q : "/search " + q;
+                NativeCommandRouter::handle(chat_id, cmd);
+                return;
+            }
+            if (e.action == "news_plugin") {
+                std::string cat = params.value("category", "general");
+                NativeCommandRouter::handle(chat_id, "/news " + cat);
                 return;
             }
             dispatch_action(e.action, params);

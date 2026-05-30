@@ -24,6 +24,8 @@ private:
     static bool handle_automation(const std::string& chat_id, const std::string& text);
     static bool handle_file(const std::string& chat_id, const std::string& text);
     static bool handle_hotkey(const std::string& chat_id, const std::string& text);
+    static bool handle_search(const std::string& chat_id, const std::string& text);
+    static bool handle_news(const std::string& chat_id, const std::string& text);
 
     // Helpers
     static void execute_and_reply(const std::string& chat_id, const std::string& action, const nlohmann::json& params = nlohmann::json::object(), bool send_reply = true);

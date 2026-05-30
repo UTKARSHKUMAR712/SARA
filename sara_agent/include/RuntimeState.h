@@ -48,6 +48,10 @@ public:
 
     std::string format_status() const;
 
+    bool is_sleeping() const { return sleeping_.load(); }
+    void enter_sleep() { sleeping_.store(true); }
+    void wake() { sleeping_.store(false); }
+
 private:
     RuntimeState() = default;
 
@@ -56,6 +60,7 @@ private:
     std::atomic<bool> websocket_ready_{false};
     std::atomic<int> active_tasks_{0};
     std::atomic<int> ws_clients_{0};
+    std::atomic<bool> sleeping_{false};
 };
 
 } // namespace sara

@@ -1,0 +1,65 @@
+{
+  "commands": [
+    {
+      "type": "regex",
+      "phrases": [
+        "^.*(top|latest|find).*news.*india.*$",
+        "^.*news.*in india.*$",
+        "^.*news.*of india.*$"
+      ],
+      "action": "news_plugin",
+      "params": { "category": "india" }
+    },
+    {
+      "type": "regex",
+      "phrases": [
+        "^.*(international|world|global).*news.*$"
+      ],
+      "action": "news_plugin",
+      "params": { "category": "world" }
+    },
+    {
+      "type": "regex",
+      "phrases": [
+        "^.*(tech|technology|it).*news.*$"
+      ],
+      "action": "news_plugin",
+      "params": { "category": "technology" }
+    },
+    {
+      "type": "regex",
+      "phrases": [
+        "^.*(business|market|finance|economy).*news.*$"
+      ],
+      "action": "news_plugin",
+      "params": { "category": "business" }
+    },
+    {
+      "type": "regex",
+      "phrases": [
+        "^.*(sports|cricket|football).*news.*$"
+      ],
+      "action": "news_plugin",
+      "params": { "category": "sports" }
+    },
+    {
+      "type": "regex",
+      "phrases": [
+        "^.*(entertainment|bollywood|hollywood|movies).*news.*$"
+      ],
+      "action": "news_plugin",
+      "params": { "category": "entertainment" }
+    },
+    {
+      "type": "regex",
+      "phrases": [
+        "^.*(top|latest|today's|todays).*news.*$",
+        "^.*news.*headlines.*$",
+        "^.*what('s|s| is) the news.*$",
+        "^.*(tell me|get|read|show me) the news.*$"
+      ],
+      "action": "news_plugin",
+      "params": { "category": "general" }
+    }
+  ]
+}

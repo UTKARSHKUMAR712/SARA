@@ -1,33 +1,14 @@
 {
   "commands": [
     {
-      "type": "exact",
-      "phrases": [
-        "search google", "google search", "search the web",
-        "look up", "search internet", "google that",
-        "search for", "do a google search",
-        "search on google", "web search",
-        "google something", "look it up online",
-        "search online"
-      ],
-      "action": "search_plugin",
-      "params": { "query": "" }
-    },
-    {
       "type": "prefix",
       "phrases": [
-        "search google for ", "search for ",
-        "google ", "look up ", "search the web for ",
-        "google search ", "find on google ",
-        "search ", "find ", "what is ", "who is ",
-        "tell me about ", "explain ", "how to ",
-        "what are ", "where is ",
-        
-        "what was ", "what were ", "what will ", "what would ",
+
+        "what is ", "what are ", "what was ", "what were ", "what will ", "what would ",
         "what does ", "what did ", "what do ", "what can ", "what should ",
         "what's ", "whats ",
 
-        "who are ", "who was ", "who were ", "who made ", "who created ",
+        "who is ", "who are ", "who was ", "who were ", "who made ", "who created ",
         "who invented ", "who founded ", "who built ", "who developed ", "who discovered ",
         "who wrote ", "who directed ", "who owns ", "who runs ", "who leads ",
         "who is the owner of ", "who is the ceo of ", "who is the founder of ",
@@ -37,14 +18,14 @@
         "who sang ", "who composed ", "who painted ", "who designed ",
         "who starred in ", "who acted in ",
 
-        "where are ", "where was ", "where were ", "where can i find ",
+        "where is ", "where are ", "where was ", "where were ", "where can i find ",
         "where to find ", "where to get ", "where do i find ", "where do i get ",
         "where is the ", "where can i buy ", "where to buy ", "where to download ",
 
         "when is ", "when are ", "when was ", "when were ", "when did ", "when will ",
         "when does ", "when do ", "when can ", "when is the ",
 
-        "how do i ", "how does ", "how did ", "how can i ", "how can ",
+        "how to ", "how do i ", "how does ", "how did ", "how can i ", "how can ",
         "how much ", "how many ", "how old ", "how big ", "how tall ", "how long ",
         "how far ", "how fast ", "how deep ", "how high ", "how wide ",
         "how much does ", "how much is ", "how much are ", "how much was ",
@@ -59,14 +40,14 @@
         "which is the largest ", "which is the fastest ", "which is the cheapest ",
         "which is the most ",
 
-        "tell me more about ", "tell me the ", "tell me what ",
+        "tell me about ", "tell me more about ", "tell me the ", "tell me what ",
         "tell me how ", "tell me why ", "tell me who ", "tell me when ", "tell me where ",
 
         "can you find ", "can you search ", "can you look up ", "can you tell me ",
         "can you tell me about ", "can you explain ", "can you describe ",
         "can you check ", "can you get me info on ",
 
-        "explain to me ", "explain what is ", "explain how ",
+        "explain ", "explain to me ", "explain what is ", "explain how ",
         "explain why ", "please explain ",
 
         "describe ", "describe what ", "describe how ",
@@ -76,7 +57,7 @@
 
         "tell me the meaning of ", "give me the definition of ",
 
-        "find me ", "find out ", "find out about ", "find out what ",
+        "find ", "find me ", "find out ", "find out about ", "find out what ",
         "find out who ", "find out when ", "find out where ", "find out how ",
         "find information on ", "find information about ", "find details on ",
         "find details about ", "find facts about ", "find facts on ",
@@ -95,10 +76,11 @@
         "give me information about ", "give me details on ", "give me details about ",
         "give me facts about ", "give me a summary of ", "give me an overview of ",
 
-        "look for ", "lookup ", "look into ",
+        "look up ", "look for ", "lookup ", "look into ",
 
-        "search about ", "search on ", "search regarding ",
-        "look up on google ", "search the internet for ",
+        "search for ", "search about ", "search on ", "search regarding ",
+        "search google for ", "search google ", "google for ", "google ",
+        "look up on google ", "search the web for ", "search the internet for ",
         "search online for ", "search web for ",
 
         "information about ", "info on ", "info about ", "information on ",
@@ -173,105 +155,26 @@
 
         "sara search ", "sara find ", "sara look up ", "sara tell me about ",
         "sara what is ", "sara who is ", "sara explain "
+
       ],
       "action": "search_plugin",
       "params": {}
     },
     {
-      "type": "exact",
-      "phrases": [
-        "deep search", "scrape search", "search and read"
-      ],
-      "action": "search_plugin_scrape",
-      "params": {}
-    },
-    {
       "type": "prefix",
       "phrases": [
-        "deep search ", "search and read ", "scrape search ",
-        "deep search for ", "search and summarize ", "search and read about ",
-        "scrape and search ", "detailed search for ", "detailed info on ",
-        "read and search ", "fetch and read ", "full search on ",
-        "comprehensive search for ", "research on ", "research about ",
-        "do research on ", "in depth search for ", "in depth info on ",
-        "search with content for ", "get full details on ", "get complete info on "
+        "deep search for ", "deep search ",
+        "search and summarize ", "search and read about ",
+        "search and read ", "scrape and search ",
+        "detailed search for ", "detailed info on ",
+        "read and search ", "fetch and read ",
+        "full search on ", "comprehensive search for ",
+        "research on ", "research about ", "do research on ",
+        "in depth search for ", "in depth info on ",
+        "search with content for ", "get full details on ",
+        "get complete info on "
       ],
       "action": "search_plugin_scrape",
-      "params": {}
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "open youtube", "launch youtube", "youtube",
-        "open youtube website", "go to youtube",
-        "youtube com"
-      ],
-      "action": "open_url",
-      "params": { "url": "https://www.youtube.com" }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "open github", "github", "open github website",
-        "github com"
-      ],
-      "action": "open_url",
-      "params": { "url": "https://github.com" }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "open stackoverflow", "stackoverflow",
-        "stack overflow", "open stack overflow"
-      ],
-      "action": "open_url",
-      "params": { "url": "https://stackoverflow.com" }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "open reddit", "reddit", "open reddit website",
-        "reddit com"
-      ],
-      "action": "open_url",
-      "params": { "url": "https://www.reddit.com" }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "open gmail", "gmail", "gmail com",
-        "open gmail website", "my email"
-      ],
-      "action": "open_url",
-      "params": { "url": "https://mail.google.com" }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "open amazon", "amazon", "amazon com",
-        "open amazon website", "amazon shopping"
-      ],
-      "action": "open_url",
-      "params": { "url": "https://www.amazon.in" }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "open google drive", "google drive", "drive google",
-        "my drive"
-      ],
-      "action": "open_url",
-      "params": { "url": "https://drive.google.com" }
-    },
-    {
-      "type": "prefix",
-      "phrases": [
-        "open website ", "open url ", "go to ",
-        "navigate to ", "open the website ",
-        "take me to ", "visit ", "browse to ",
-        "open site "
-      ],
-      "action": "open_url",
       "params": {}
     }
   ]
