@@ -162,65 +162,30 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
         return;
     }
 
-    // ── Sleep mode: block non-wake commands ────────────────────────────────
+    // ── Sleep mode: any message wakes SARA + executes that command ──────────
     if (g_runtime.is_sleeping()) {
-        std::string lower = text;
-        for (auto& c : lower) if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';
-        bool is_wake = (lower == "wake" || lower == "wake up" || lower == "sara wake"
-            || lower == "sara wake up" || lower == "wake sara"
-            || lower == "good morning" || lower == "resume sara"
-            || lower == "power on" || lower == "boot up"
-            || lower == "/sararestart");
-        if (is_wake) {
-            g_telegram.send_message(chat_id, "☀️ Waking up... restarting all subsystems.");
-            // Restart WebSocket server
-            g_ws_server.start(9080);
-            g_runtime.set_websocket_ready(true);
-            // Restart Terminal HTTP server
-            auto& cfg2 = g_config.get();
-            std::string frontend_dir = resolve_path("remote_runtime\\frontend");
-            int ports[] = { 9081, 9082, 9083, 9084, 9085 };
-            for (int p : ports) {
-                if (sara::remote::TerminalHttpServer::instance().start(p, frontend_dir)) {
-                    sara::remote::TerminalSessionManager::instance().start_cleanup_thread(60);
-                    g_actual_terminal_port = p;
-                    break;
-                }
-            }
-            // Restart Cloudflare tunnel
-            if (cfg2.cloudflare_mode != "disabled") {
-                std::string cf_dir = cfg2.cloudflare_exe_dir.empty()
-                    ? resolve_path("runtime") : cfg2.cloudflare_exe_dir;
-                std::string cf_exe = sara::remote::CloudflaredManager::ensure_cloudflared(cf_dir);
-                if (!cf_exe.empty()) {
-                    std::string cur_path(32768, '\0');
-                    DWORD plen = GetEnvironmentVariableA("PATH", cur_path.data(), (DWORD)cur_path.size());
-                    cur_path.resize(plen);
-                    SetEnvironmentVariableA("PATH", (cf_dir + ";" + cur_path).c_str());
-                }
-            }
-            // Restart subsystems
-            g_proc_monitor.start();
-            g_event_engine.set_store(&g_store);
-            g_event_engine.set_notify_callback([](const std::string& msg) {
-                auto chats = g_config.get().telegram.allowed_user_ids;
-                if (chats.empty()) return;
-                std::string cid = std::to_string(chats[0]);
-                g_telegram.send_message(cid, "[Event] " + msg);
-            });
-            g_event_engine.start(&g_executor, &g_proc_monitor);
-            SpotifyPlugin::instance().start();
-            g_net_monitor.start();
-            HotkeyManager::instance().start();
-            g_ipc.set_handler(handle_ipc_message);
-            g_ipc.start();
-            g_runtime.wake();
-            g_telegram.send_message(chat_id, "☀️ Good morning! All systems online. Ready for commands.");
-            Logger::instance().info("SARA woke up from sleep mode");
-            return;
-        }
-        g_telegram.send_message(chat_id, "😴 Sleeping... Send 'wake up' to wake me.");
-        return;
+        g_telegram.send_message(chat_id, "☀️ Waking up... restarting subsystems.");
+        // Restart WebSocket server
+        g_ws_server.start(9080);
+        g_runtime.set_websocket_ready(true);
+        // Restart subsystems (TerminalHttp + Cloudflare never stopped)
+        g_proc_monitor.start();
+        g_event_engine.set_store(&g_store);
+        g_event_engine.set_notify_callback([](const std::string& msg) {
+            auto chats = g_config.get().telegram.allowed_user_ids;
+            if (chats.empty()) return;
+            std::string cid = std::to_string(chats[0]);
+            g_telegram.send_message(cid, "[Event] " + msg);
+        });
+        g_event_engine.start(&g_executor, &g_proc_monitor);
+        SpotifyPlugin::instance().start();
+        g_net_monitor.start();
+        HotkeyManager::instance().start();
+        g_ipc.set_handler(handle_ipc_message);
+        g_ipc.start();
+        g_runtime.wake();
+        Logger::instance().info("SARA woke up from sleep mode — executing command: " + text);
+        // Fall through to process the message that triggered wake
     }
 
     std::string clean_text;
@@ -695,14 +660,10 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
                 return;
             }
             if (e.action == "sleep_sara") {
-                g_telegram.send_message(chat_id, "😴 Going to sleep... stopping all subsystems.");
-                // Stop non-essential subsystems
+                g_telegram.send_message(chat_id, "😴 Going to sleep... stopping subsystems. Terminal + Cloudflare stay online.");
+                // Stop non-essential subsystems (keep TerminalHttp + Cloudflare alive)
                 g_ws_server.stop();
                 g_runtime.set_websocket_ready(false);
-                sara::remote::TerminalSessionManager::instance().shutdown_all();
-                sara::remote::TerminalSessionManager::instance().stop_cleanup_thread();
-                sara::remote::TerminalHttpServer::instance().stop();
-                sara::remote::CloudflaredManager::instance().stop();
                 SpotifyPlugin::instance().stop();
                 g_event_engine.stop();
                 g_proc_monitor.stop();
@@ -710,7 +671,7 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
                 HotkeyManager::instance().stop();
                 g_ipc.stop();
                 g_runtime.enter_sleep();
-                Logger::instance().info("SARA entered sleep mode");
+                Logger::instance().info("SARA entered sleep mode (terminal + cloudflare still running)");
                 return;
             }
             if (e.action == "open_app") {
