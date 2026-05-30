@@ -1,0 +1,9 @@
+{
+  "plugins": [
+    {
+      "name": "spotify",
+      "path": "plugins/spotify/spotify_plugin.dll",
+      "enabled": true
+    }
+  ]
+}

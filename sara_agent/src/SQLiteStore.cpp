@@ -37,6 +37,7 @@ bool SQLiteStore::init_schema() {
         CREATE TABLE IF NOT EXISTS tasks (
             id TEXT PRIMARY KEY,
             source TEXT DEFAULT '',
+            source_id TEXT DEFAULT '',
             type TEXT DEFAULT 'task',
             action TEXT NOT NULL,
             target TEXT DEFAULT '',
@@ -46,6 +47,8 @@ bool SQLiteStore::init_schema() {
             execute_at INTEGER DEFAULT 0,
             repeat INTEGER DEFAULT 0,
             interval_seconds INTEGER DEFAULT 0,
+            cron_expression TEXT DEFAULT '',
+            heartbeat_check_id TEXT DEFAULT '',
             priority TEXT DEFAULT 'normal',
             status TEXT DEFAULT 'pending'
         );
@@ -54,18 +57,6 @@ bool SQLiteStore::init_schema() {
             permission TEXT NOT NULL,
             allowed INTEGER DEFAULT 0,
             PRIMARY KEY (plugin, permission)
-        );
-        CREATE TABLE IF NOT EXISTS sessions (
-            session_id TEXT PRIMARY KEY,
-            platform TEXT NOT NULL,
-            chat_id TEXT DEFAULT '',
-            context TEXT DEFAULT '{}',
-            created_at INTEGER DEFAULT 0,
-            last_activity INTEGER DEFAULT 0
-        );
-        CREATE TABLE IF NOT EXISTS memory (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS event_rules (
             id TEXT PRIMARY KEY,
@@ -97,9 +88,10 @@ bool SQLiteStore::add(const Task& task) {
 
     const char* sql = R"(
         INSERT OR REPLACE INTO tasks
-        (id, source, type, action, target, parameters, requires_approval,
-         created_at, execute_at, repeat, interval_seconds, priority, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        (id, source, source_id, type, action, target, parameters, requires_approval,
+         created_at, execute_at, repeat, interval_seconds, cron_expression,
+         heartbeat_check_id, priority, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     )";
 
     sqlite3_stmt* stmt;
@@ -111,17 +103,20 @@ bool SQLiteStore::add(const Task& task) {
 
     sqlite3_bind_text(stmt, 1, task.id.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 2, task.source.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 3, task.type.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 4, task.action.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 5, task.target.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 6, params_str.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(stmt, 7, task.requires_approval ? 1 : 0);
-    sqlite3_bind_int64(stmt, 8, task.created_at);
-    sqlite3_bind_int64(stmt, 9, task.execute_at);
-    sqlite3_bind_int(stmt, 10, task.repeat ? 1 : 0);
-    sqlite3_bind_int(stmt, 11, task.interval_seconds);
-    sqlite3_bind_text(stmt, 12, task.priority.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 13, task.status.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, task.source_id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 4, task.type.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 5, task.action.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 6, task.target.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 7, params_str.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 8, task.requires_approval ? 1 : 0);
+    sqlite3_bind_int64(stmt, 9, task.created_at);
+    sqlite3_bind_int64(stmt, 10, task.execute_at);
+    sqlite3_bind_int(stmt, 11, task.repeat ? 1 : 0);
+    sqlite3_bind_int(stmt, 12, task.interval_seconds);
+    sqlite3_bind_text(stmt, 13, task.cron_expression.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 14, task.heartbeat_check_id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 15, task.priority.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 16, task.status.c_str(), -1, SQLITE_TRANSIENT);
 
     bool ok = sqlite3_step(stmt) == SQLITE_DONE;
     sqlite3_finalize(stmt);
@@ -145,9 +140,9 @@ bool SQLiteStore::remove(const std::string& id) {
 
 bool SQLiteStore::update(const Task& task) {
     const char* sql = R"(
-        UPDATE tasks SET source=?, type=?, action=?, target=?, parameters=?,
+        UPDATE tasks SET source=?, source_id=?, type=?, action=?, target=?, parameters=?,
         requires_approval=?, execute_at=?, repeat=?, interval_seconds=?,
-        priority=?, status=? WHERE id=?;
+        cron_expression=?, heartbeat_check_id=?, priority=?, status=? WHERE id=?;
     )";
     sqlite3_stmt* stmt;
     if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) return false;
@@ -156,17 +151,20 @@ bool SQLiteStore::update(const Task& task) {
     std::string params_str = j.value("parameters", json::object()).dump();
 
     sqlite3_bind_text(stmt, 1, task.source.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 2, task.type.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 3, task.action.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 4, task.target.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 5, params_str.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(stmt, 6, task.requires_approval ? 1 : 0);
-    sqlite3_bind_int64(stmt, 7, task.execute_at);
-    sqlite3_bind_int(stmt, 8, task.repeat ? 1 : 0);
-    sqlite3_bind_int(stmt, 9, task.interval_seconds);
-    sqlite3_bind_text(stmt, 10, task.priority.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 11, task.status.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 12, task.id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, task.source_id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, task.type.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 4, task.action.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 5, task.target.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 6, params_str.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 7, task.requires_approval ? 1 : 0);
+    sqlite3_bind_int64(stmt, 8, task.execute_at);
+    sqlite3_bind_int(stmt, 9, task.repeat ? 1 : 0);
+    sqlite3_bind_int(stmt, 10, task.interval_seconds);
+    sqlite3_bind_text(stmt, 11, task.cron_expression.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 12, task.heartbeat_check_id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 13, task.priority.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 14, task.status.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 15, task.id.c_str(), -1, SQLITE_TRANSIENT);
 
     bool ok = sqlite3_step(stmt) == SQLITE_DONE;
     sqlite3_finalize(stmt);
@@ -182,67 +180,31 @@ std::vector<Task> SQLiteStore::load_all() {
     }
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         Task t;
-        t.id = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-        t.source = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-        t.type = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
-        t.action = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
-        t.target = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
-        auto params_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5));
-        if (params_str) t.parameters = json::parse(params_str);
-        t.requires_approval = sqlite3_column_int(stmt, 6) != 0;
-        t.created_at = sqlite3_column_int64(stmt, 7);
-        t.execute_at = sqlite3_column_int64(stmt, 8);
-        t.repeat = sqlite3_column_int(stmt, 9) != 0;
-        t.interval_seconds = sqlite3_column_int(stmt, 10);
-        t.priority = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 11));
-        t.status = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 12));
+        auto col = [&](int c) -> const char* {
+            auto txt = sqlite3_column_text(stmt, c);
+            return txt ? reinterpret_cast<const char*>(txt) : "";
+        };
+        t.id = col(0);
+        t.source = col(1);
+        t.source_id = col(2);
+        t.type = col(3);
+        t.action = col(4);
+        t.target = col(5);
+        auto params_str = col(6);
+        if (*params_str) t.parameters = json::parse(params_str);
+        t.requires_approval = sqlite3_column_int(stmt, 7) != 0;
+        t.created_at = sqlite3_column_int64(stmt, 8);
+        t.execute_at = sqlite3_column_int64(stmt, 9);
+        t.repeat = sqlite3_column_int(stmt, 10) != 0;
+        t.interval_seconds = sqlite3_column_int(stmt, 11);
+        t.cron_expression = col(12);
+        t.heartbeat_check_id = col(13);
+        t.priority = col(14);
+        t.status = col(15);
         tasks.push_back(t);
     }
     sqlite3_finalize(stmt);
     return tasks;
-}
-
-bool SQLiteStore::memory_set(const std::string& key, const std::string& value) {
-    const char* sql = "INSERT OR REPLACE INTO memory (key, value) VALUES (?, ?);";
-    sqlite3_stmt* stmt;
-    if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) return false;
-    sqlite3_bind_text(stmt, 1, key.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 2, value.c_str(), -1, SQLITE_TRANSIENT);
-    bool ok = sqlite3_step(stmt) == SQLITE_DONE;
-    sqlite3_finalize(stmt);
-    return ok;
-}
-
-std::string SQLiteStore::memory_get(const std::string& key) {
-    const char* sql = "SELECT value FROM memory WHERE key = ?;";
-    sqlite3_stmt* stmt;
-    if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) return "";
-    sqlite3_bind_text(stmt, 1, key.c_str(), -1, SQLITE_TRANSIENT);
-    std::string val;
-    if (sqlite3_step(stmt) == SQLITE_ROW) {
-        auto txt = sqlite3_column_text(stmt, 0);
-        if (txt) val = reinterpret_cast<const char*>(txt);
-    }
-    sqlite3_finalize(stmt);
-    return val;
-}
-
-std::vector<std::pair<std::string, std::string>> SQLiteStore::memory_get_all() {
-    std::vector<std::pair<std::string, std::string>> entries;
-    const char* sql = "SELECT key, value FROM memory;";
-    sqlite3_stmt* stmt;
-    if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) return entries;
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        auto k = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-        auto v = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-        if (k && v) entries.emplace_back(k, v);
-    }
-    sqlite3_finalize(stmt);
-    return entries;
-}
-
-void SQLiteStore::memory_clear() {
-    execute("DELETE FROM memory;");
 }
 
 std::vector<Task> SQLiteStore::load_due(long long now) {
@@ -255,20 +217,27 @@ std::vector<Task> SQLiteStore::load_due(long long now) {
     sqlite3_bind_int64(stmt, 1, now);
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         Task t;
-        t.id = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-        t.source = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-        t.type = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
-        t.action = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
-        t.target = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
-        auto params_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5));
-        if (params_str) t.parameters = json::parse(params_str);
-        t.requires_approval = sqlite3_column_int(stmt, 6) != 0;
-        t.created_at = sqlite3_column_int64(stmt, 7);
-        t.execute_at = sqlite3_column_int64(stmt, 8);
-        t.repeat = sqlite3_column_int(stmt, 9) != 0;
-        t.interval_seconds = sqlite3_column_int(stmt, 10);
-        t.priority = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 11));
-        t.status = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 12));
+        auto col = [&](int c) -> const char* {
+            auto txt = sqlite3_column_text(stmt, c);
+            return txt ? reinterpret_cast<const char*>(txt) : "";
+        };
+        t.id = col(0);
+        t.source = col(1);
+        t.source_id = col(2);
+        t.type = col(3);
+        t.action = col(4);
+        t.target = col(5);
+        auto params_str = col(6);
+        if (*params_str) t.parameters = json::parse(params_str);
+        t.requires_approval = sqlite3_column_int(stmt, 7) != 0;
+        t.created_at = sqlite3_column_int64(stmt, 8);
+        t.execute_at = sqlite3_column_int64(stmt, 9);
+        t.repeat = sqlite3_column_int(stmt, 10) != 0;
+        t.interval_seconds = sqlite3_column_int(stmt, 11);
+        t.cron_expression = col(12);
+        t.heartbeat_check_id = col(13);
+        t.priority = col(14);
+        t.status = col(15);
         tasks.push_back(t);
     }
     sqlite3_finalize(stmt);

@@ -9,7 +9,7 @@ using json = nlohmann::json;
 struct ActionResult {
     bool        success = false;
     std::string message;
-    json        data;
+    json        data = json::object();
 };
 
 class WinAPIExecutor {
@@ -26,7 +26,7 @@ public:
     // Input
     ActionResult send_keys(const std::string& keys);
 
-    // Shell (internal — not AI-visible directly)
+    // Shell (internal)
     ActionResult run_cmd(const std::string& command, int timeout_sec);
     ActionResult run_powershell(const std::string& command, int timeout_sec);
 

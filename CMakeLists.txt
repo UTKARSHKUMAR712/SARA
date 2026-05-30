@@ -1,34 +1,46 @@
 cmake_minimum_required(VERSION 3.20)
 project(sara_agent VERSION 1.0.0 LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+endif()
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -flto -s")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -flto -s")
 
 add_definitions(-DUNICODE -D_UNICODE)
 
 add_executable(sara_agent
     sara_agent/src/main.cpp
+    sara_agent/src/AgentInitializer.cpp
     sara_agent/src/Logger.cpp
     sara_agent/src/ConfigManager.cpp
+    sara_agent/src/ActionDispatcher.cpp
+    sara_agent/src/MessageHandlers.cpp
     sara_agent/src/Scheduler.cpp
     sara_agent/src/SQLiteStore.cpp
     sara_agent/src/WinAPIExecutor.cpp
     sara_agent/src/TelegramGateway.cpp
     sara_agent/src/IPCServer.cpp
-    sara_agent/src/AIWorkerLauncher.cpp
-    sara_agent/src/SessionManager.cpp
     sara_agent/src/ActionValidator.cpp
     sara_agent/src/PermissionManager.cpp
     sara_agent/src/SystemMonitor.cpp
     sara_agent/src/ScreenshotCapture.cpp
     sara_agent/src/CameraCapture.cpp
     # v2.0 — New subsystems
-    sara_agent/src/IntentEngine.cpp
     sara_agent/src/ProcessMonitor.cpp
     sara_agent/src/EventAutomation.cpp
     sara_agent/src/HotkeyManager.cpp
     sara_agent/src/NetworkMonitor.cpp
     sara_agent/src/ToolRegistry.cpp
+    sara_agent/src/CommandMap.cpp
+    
+    # v3.0 — Core Runtime
+    sara_agent/src/WebSocketServer.cpp
+    sara_agent/src/RuntimeState.cpp
+    
     # Telegram Dock System
     sara_agent/src/DockRouter.cpp
     sara_agent/src/MediaDock.cpp
@@ -50,10 +62,20 @@ add_executable(sara_agent
     plugins/spotify/spotify_dock.cpp
     plugins/spotify/spotify_plugin.cpp
 
+    # Plugin System
+    sara_agent/src/PluginManager.cpp
+    
     # MCP Adapter Layer
     sara_agent/src/plugins/mcp/MCPClient.cpp
     sara_agent/src/plugins/mcp/MCPRegistry.cpp
     sara_agent/src/plugins/mcp/MCPTransport.cpp
+
+    # ── Remote Terminal Runtime (Phase 1–4) ───────────────────────────────────
+    remote_runtime/src/TerminalToken.cpp
+    remote_runtime/src/ConPTYSession.cpp
+    remote_runtime/src/TerminalSessionManager.cpp
+    remote_runtime/src/TerminalHttpServer.cpp
+    remote_runtime/src/CloudflaredManager.cpp
 )
 
 # Compile sqlite3.c as C, not C++
@@ -63,6 +85,7 @@ target_include_directories(sara_agent PRIVATE
     sara_agent/include
     shared
     plugins/spotify
+    remote_runtime/include
 )
 
 target_link_options(sara_agent PRIVATE -static-libstdc++ -static-libgcc -mwindows)
@@ -85,7 +108,25 @@ target_link_libraries(sara_agent PRIVATE
     mfreadwrite
     mfuuid
     shlwapi
+    bcrypt
 )
+
+# Embed UAC admin manifest so sara_agent.exe always requests elevation
+if(WIN32)
+    target_sources(sara_agent PRIVATE sara_agent/sara_agent.manifest)
+    set_source_files_properties(sara_agent/sara_agent.manifest PROPERTIES
+        VS_TOOL_OVERRIDE "MT"
+    )
+    # For MinGW/GCC: embed manifest via windres
+    if(MINGW)
+        set(MANIFEST_RC "${CMAKE_BINARY_DIR}/sara_agent_manifest.rc")
+        file(WRITE "${MANIFEST_RC}"
+            "#include <windows.h>\n"
+            "CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST \"${CMAKE_SOURCE_DIR}/sara_agent/sara_agent.manifest\"\n"
+        )
+        target_sources(sara_agent PRIVATE "${MANIFEST_RC}")
+    endif()
+endif()
 
 target_sources(sara_agent PRIVATE shared/sqlite3.c)
 

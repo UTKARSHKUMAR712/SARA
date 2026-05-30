@@ -48,6 +48,13 @@ public:
         const std::string& caption = "");
     bool send_action(const std::string& chat_id, const std::string& action);
 
+    // Live streaming / progress methods
+    int send_progress(const std::string& chat_id, const std::string& text, int progress_pct = -1);
+    bool edit_progress_message(const std::string& chat_id, int message_id,
+                                const std::string& text, int progress_pct = -1);
+    bool send_chunked_log(const std::string& chat_id, const std::string& log_text,
+                           const std::string& header = "");
+
     json get_recent_messages(int count = 20);
 
     json api_call(const std::string& method, const json& payload);

@@ -6,7 +6,7 @@ namespace sara {
 
 class NativeCommandRouter {
 public:
-    // Returns true if the command was natively handled, false if it should be passed to the AI.
+    // Returns true if the command was natively handled, false otherwise.
     static bool handle(const std::string& chat_id, const std::string& text);
 
 private:

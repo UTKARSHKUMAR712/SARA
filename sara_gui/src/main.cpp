@@ -26,25 +26,8 @@ static ID3D11RenderTargetView* g_mainRenderTargetView = nullptr;
 static HWND g_hwnd = nullptr;
 static WNDCLASSEXW g_wc = {};
 static std::string g_log_buf;
-static char g_token[4096] = {}, g_endpoint[4096] = {};
-static char g_apikey[4096] = {}, g_model[4096] = {};
-static char g_password[256] = {};
-static char g_root_password[256] = {};
-static char g_profile_name[256] = "default";
-
-// User management state
-struct GuiUser {
-    long long   user_id    = 0;
-    std::string username;
-    std::string first_name;
-    std::string last_name;
-    std::string added_at;
-    bool        blocked    = false;
-};
-static std::vector<GuiUser>  g_users;
-static std::mutex            g_users_mutex;
-static int g_provider_idx = 0;
-static const char* g_providers[] = {"openai", "claude", "gemini", "groq", "ollama", "custom"};
+static char g_token[4096] = {};
+static char g_password[4096] = "test1234";
 static std::atomic<bool> g_polling{false};
 static std::thread g_poll_thread;
 static std::mutex g_log_mutex;
@@ -53,6 +36,10 @@ static long long g_last_update_id = 0;
 static std::string g_settings_path;
 static std::string g_exe_dir;
 static std::string g_bin_dir;
+static char g_root_password[4096] = {};
+static std::mutex g_users_mutex;
+struct GuiUser { long long user_id = 0; std::string username, first_name, last_name, added_at; bool blocked = false; };
+static std::vector<GuiUser> g_users;
 
 static void log(const std::string& msg) {
     auto t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -89,37 +76,12 @@ static void ui_from_cfg() {
     snprintf(g_token, sizeof(g_token), "%s", tg.value("token", "").c_str());
     snprintf(g_password, sizeof(g_password), "%s", tg.value("password", "test123f").c_str());
     
-    std::string active = g_cfg.value("active_profile", "default");
-    snprintf(g_profile_name, sizeof(g_profile_name), "%s", active.c_str());
-    
-    auto ai = g_cfg.value("ai_primary", json::object());
-    if (g_cfg.contains("ai_profiles") && g_cfg["ai_profiles"].contains(active)) {
-        ai = g_cfg["ai_profiles"][active];
-    }
-    
-    snprintf(g_endpoint, sizeof(g_endpoint), "%s", ai.value("endpoint", "").c_str());
-    snprintf(g_apikey, sizeof(g_apikey), "%s", ai.value("api_key", "").c_str());
-    snprintf(g_model, sizeof(g_model), "%s", ai.value("model", "").c_str());
-    auto p = ai.value("provider", "openai");
-    for (int i = 0; i < 6; i++)
-        if (p == g_providers[i]) { g_provider_idx = i; break; }
 }
 
 static void cfg_from_ui() {
     g_cfg["telegram"]["token"] = g_token;
     g_cfg["telegram"]["password"] = g_password;
     
-    std::string prof = g_profile_name;
-    if (prof.empty()) prof = "default";
-    g_cfg["active_profile"] = prof;
-    
-    if (!g_cfg.contains("ai_profiles")) g_cfg["ai_profiles"] = json::object();
-    g_cfg["ai_profiles"][prof]["provider"] = g_providers[g_provider_idx];
-    g_cfg["ai_profiles"][prof]["endpoint"] = g_endpoint;
-    g_cfg["ai_profiles"][prof]["api_key"] = g_apikey;
-    g_cfg["ai_profiles"][prof]["model"] = g_model;
-    
-    g_cfg["ai_primary"] = g_cfg["ai_profiles"][prof];
 }
 
 static void poll_telegram() {
@@ -403,55 +365,14 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
                 }
                 ImGui::Separator();
 
-                ImGui::Text("AI Provider Profiles");
-                if (ImGui::InputText("Profile Name", g_profile_name, sizeof(g_profile_name), ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    std::string prof = g_profile_name;
-                    if (g_cfg.contains("ai_profiles") && g_cfg["ai_profiles"].contains(prof)) {
-                        auto ai = g_cfg["ai_profiles"][prof];
-                        snprintf(g_endpoint, sizeof(g_endpoint), "%s", ai.value("endpoint", "").c_str());
-                        snprintf(g_apikey, sizeof(g_apikey), "%s", ai.value("api_key", "").c_str());
-                        snprintf(g_model, sizeof(g_model), "%s", ai.value("model", "").c_str());
-                        auto p = ai.value("provider", "openai");
-                        for (int i = 0; i < 6; i++)
-                            if (p == g_providers[i]) { g_provider_idx = i; break; }
-                    }
-                }
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Type a profile name and press Enter to load it, or type a new name to create one.");
-                
-                ImGui::Combo("Provider", &g_provider_idx, g_providers, IM_ARRAYSIZE(g_providers));
-                ImGui::InputText("Endpoint", g_endpoint, sizeof(g_endpoint));
-                ImGui::InputText("API Key", g_apikey, sizeof(g_apikey), ImGuiInputTextFlags_Password);
-                ImGui::InputText("Model", g_model, sizeof(g_model));
-
-                if (ImGui::Button("Save & Apply")) {
-                    cfg_from_ui(); save_cfg(); log("Saved to settings.json");
+                ImGui::Text("Native mode");
+                ImGui::Separator();
+                if (ImGui::Button("Save Config")) {
+                    save_cfg(); log("Saved to settings.json");
                     if (g_ipc.is_connected()) {
                         g_ipc.send_command("reload_config", g_cfg);
                         log("Config sent to agent");
                     } else log("Connect to agent to send config.");
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Test AI")) {
-                    cfg_from_ui(); save_cfg();
-                    if (!g_ipc.is_connected()) { log("ERROR: Connect to agent first"); }
-                    else {
-                        log("Testing AI provider...");
-                        std::thread([]() {
-                            json msg;
-                            msg["type"] = "test_ai";
-                            msg["request_id"] = "test_ai";
-                            msg["payload"] = json::object();
-                            auto resp = g_ipc.send_message(msg);
-                            if (resp.contains("payload")) {
-                                auto& p = resp["payload"];
-                                bool ok = p.value("success", false);
-                                std::string err = p.value("error", "");
-                                std::string resp_text = p.value("response", "");
-                                if (ok) log_threadsafe("AI Test: SUCCESS - " + resp_text);
-                                else log_threadsafe("AI Test: FAILED - " + err);
-                            } else log_threadsafe("AI Test: No response from agent");
-                        }).detach();
-                    }
                 }
                 ImGui::EndTabItem();
             }

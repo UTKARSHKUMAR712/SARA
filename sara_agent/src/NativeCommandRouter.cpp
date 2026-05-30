@@ -3,7 +3,9 @@
 #include "../include/WinAPIExecutor.h"
 #include "../include/Logger.h"
 #include "../include/ConfigManager.h"
+#include "../include/plugins/mcp/MCPRegistry.h"
 #include "../../plugins/spotify/spotify_plugin.hpp"
+#include <sstream>
 
 extern sara::TelegramGateway g_telegram;
 extern sara::WinAPIExecutor g_executor;
@@ -66,20 +68,53 @@ bool NativeCommandRouter::handle(const std::string& chat_id, const std::string& 
     if (handle_file(chat_id, text)) return true;
     if (handle_automation(chat_id, text)) return true;
     if (handle_hotkey(chat_id, text)) return true;
-    
-    if (text.find("/switch_api ") == 0) {
-        std::string target = text.substr(12);
-        auto& cfg = g_config.get();
-        if (cfg.ai_profiles.count(target)) {
-            cfg.active_profile = target;
-            cfg.ai_primary = cfg.ai_profiles[target];
-            g_config.save("settings.json");
-            g_telegram.send_message(chat_id, "✅ API Profile switched to: " + target);
-        } else {
-            g_telegram.send_message(chat_id, "❌ Profile not found: " + target);
+
+    // ── MCP Management Commands ─────────────────────────────────────────
+    if (text.find("/mcp connect ") == 0) {
+        std::string args = text.substr(13);
+        auto space = args.find(' ');
+        std::string name = (space != std::string::npos) ? args.substr(0, space) : args;
+        std::string cmd = (space != std::string::npos) ? args.substr(space + 1) : "uvx";
+        std::vector<std::string> cmd_args = {cmd};
+        // Parse remaining as args
+        if (space != std::string::npos) {
+            cmd_args.clear();
+            std::istringstream iss(args);
+            std::string token;
+            while (iss >> token) cmd_args.push_back(token);
         }
+        bool ok = MCPRegistry::instance().connect_server(name, cmd_args[0],
+            std::vector<std::string>(cmd_args.begin() + 1, cmd_args.end()));
+        g_telegram.send_message(chat_id, ok ? "✅ MCP connected: " + name : "❌ MCP connect failed: " + name);
         return true;
     }
+    if (text.find("/mcp disconnect ") == 0) {
+        std::string name = text.substr(16);
+        bool ok = MCPRegistry::instance().disconnect_server(name);
+        g_telegram.send_message(chat_id, ok ? "✅ MCP disconnected: " + name : "❌ MCP not found: " + name);
+        return true;
+    }
+    if (text == "/mcp list" || text == "/mcp status") {
+        auto servers = MCPRegistry::instance().list_servers();
+        if (servers.empty()) {
+            g_telegram.send_message(chat_id, "No MCP servers connected.");
+            return true;
+        }
+        std::string reply = "📡 MCP Servers (" + std::to_string(servers.size()) + "):\n";
+        for (auto& s : servers) {
+            reply += "• " + s.name + " (" + std::to_string(s.tool_count) + " tools, "
+                   + (s.connected ? "✅" : "❌") + ")\n";
+        }
+        g_telegram.send_message(chat_id, reply);
+        return true;
+    }
+    if (text.find("/mcp reconnect ") == 0) {
+        std::string name = text.substr(15);
+        bool ok = MCPRegistry::instance().reconnect_server(name);
+        g_telegram.send_message(chat_id, ok ? "✅ MCP reconnected: " + name : "❌ MCP reconnect failed: " + name);
+        return true;
+    }
+
     
     // Apps last to prevent dynamic /app1 from overriding other commands
     if (handle_apps(chat_id, text)) return true;
@@ -99,6 +134,7 @@ bool NativeCommandRouter::handle(const std::string& chat_id, const std::string& 
                                 "📸 **Screenshot**: /ss0, /ss1, /ssw0, /ssm1\n"
                                 "📷 **Camera**: /cam0, /cam1, /camv0, /camoff\n"
                                 "💻 **System**: /lock, /sleep, /shutdown, /restart, /logoff, /desktop, /monitoroff, /screensaver\n"
+                                "🔄 **Restart**: /sararestart (Restart SARA and Cloudflare completely)\n"
                                 "📊 **Monitor**: /cpu, /ram, /gpu, /bat, /disk, /temp, /uptime, /idle\n"
                                 "🌐 **Network**: /wifi0, /wifi1, /bt0, /bt1, /ip, /pubip, /net, /ping\n"
                                 "🎵 **Media**: /play, /pause, /next, /prev, /stop, /ff, /rew, /yt <query>\n"
@@ -110,16 +146,12 @@ bool NativeCommandRouter::handle(const std::string& chat_id, const std::string& 
                                 "⚙️ **Processes**: /proc, /proc0 (List & Kill)\n"
                                 "🤖 **Automation**: /rules, /tasks, /ruleoff, /ruleon\n"
                                 "⌨️ **Hotkeys**: /hotkeys, /hotkeyadd, /hotkeyremove\n"
-                                "\n⚡ *All commands execute instantly, bypassing AI.*";
+                                "🖥️ **Terminal**: /terminal, /terminal admin, /terminals, /killterminal <id>\n"
+                                "\n⚡ *All commands execute instantly.*";
         g_telegram.send_message(chat_id, help_text);
         return true;
     }
-    if (text == "/memory") {
-        execute_and_reply(chat_id, "get_system_stats", nlohmann::json::object(), true);
-        return true;
-    }
-
-    return false; // Not handled, falls through to AI
+    return false; // Not handled
 }
 
 bool NativeCommandRouter::handle_volume(const std::string& chat_id, const std::string& text) {

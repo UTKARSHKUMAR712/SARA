@@ -26,13 +26,23 @@ double SystemMonitor::get_cpu_usage() {
 
     if (!query || !counter) return 0.0;
 
-    PdhCollectQueryData(query);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    static DWORD last_time = 0;
+    static double last_val = 0.0;
+    DWORD now = GetTickCount();
+
+    // Cache the value if polled too rapidly (less than 500ms)
+    if (now - last_time < 500 && last_time != 0) {
+        return last_val;
+    }
+
     PdhCollectQueryData(query);
 
     PDH_FMT_COUNTERVALUE value;
-    PdhGetFormattedCounterValue(counter, PDH_FMT_DOUBLE, nullptr, &value);
-    return value.doubleValue;
+    if (PdhGetFormattedCounterValue(counter, PDH_FMT_DOUBLE, nullptr, &value) == ERROR_SUCCESS) {
+        last_val = value.doubleValue;
+    }
+    last_time = now;
+    return last_val;
 }
 
 double SystemMonitor::get_ram_usage() {
@@ -161,15 +171,23 @@ double SystemMonitor::get_gpu_usage() {
 
     if (!query || !counter) return -1.0;
 
-    PdhCollectQueryData(query);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    static DWORD last_time = 0;
+    static double last_val = -1.0;
+    DWORD now = GetTickCount();
+
+    if (now - last_time < 500 && last_time != 0) {
+        return last_val;
+    }
+
     PdhCollectQueryData(query);
 
     PDH_FMT_COUNTERVALUE val;
     DWORD fmt = PDH_FMT_DOUBLE | PDH_FMT_NOCAP100;
-    if (PdhGetFormattedCounterValue(counter, fmt, nullptr, &val) != ERROR_SUCCESS)
-        return -1.0;
-    return std::min(val.doubleValue, 100.0);
+    if (PdhGetFormattedCounterValue(counter, fmt, nullptr, &val) == ERROR_SUCCESS) {
+        last_val = std::min(val.doubleValue, 100.0);
+    }
+    last_time = now;
+    return last_val;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

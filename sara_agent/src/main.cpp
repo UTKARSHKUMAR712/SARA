@@ -1,6 +1,5 @@
-// SARA Agent v2.0 — Main Entry Point
-// Upgraded: Intent Engine, Execution Planner, EventAutomation, ProcessMonitor,
-//           NetworkMonitor, HotkeyManager, semantic tool dispatch.
+// SARA Agent v4.0 — Native Runtime
+#include "../include/AgentInitializer.h"
 #include "../include/Logger.h"
 #include "../include/ConfigManager.h"
 #include "../include/Scheduler.h"
@@ -9,12 +8,8 @@
 #include "../include/TelegramGateway.h"
 #include "../include/IPCServer.h"
 #include "../include/plugins/mcp/MCPRegistry.h"
-#include <iostream>
-#include "../include/AIWorkerLauncher.h"
-#include "../include/SessionManager.h"
 #include "../include/ActionValidator.h"
 #include "../include/PermissionManager.h"
-#include "../include/IntentEngine.h"
 #include "../include/ProcessMonitor.h"
 #include "../include/EventAutomation.h"
 #include "../include/NetworkMonitor.h"
@@ -24,21 +19,38 @@
 #include "../include/SecurityManager.h"
 #include "../include/NativeCommandRouter.h"
 #include "../include/ToolRegistry.h"
+#include "../include/CommandMap.h"
+#include "../include/ActionDispatcher.h"
+#include "../include/MessageHandlers.h"
+// Remote Terminal Runtime
+#include "../../remote_runtime/include/TerminalHttpServer.h"
+#include "../../remote_runtime/include/TerminalSessionManager.h"
+#include "../../remote_runtime/include/CloudflaredManager.h"
+#include <fstream>
+namespace sara { extern void register_default_tools(WinAPIExecutor& ex); }
+#include "../include/WebSocketServer.h"
+#include "../include/RuntimeState.h"
 #include "../../plugins/spotify/spotify_plugin.hpp"
 #include "../../plugins/spotify/spotify_commands.hpp"
 #include "../../plugins/spotify/spotify_dock.hpp"
+#include "../../plugins/spotify/spotify_ws.hpp"
+#include "../../plugins/spotify/spotify_state.hpp"
 #include <windows.h>
 #include <csignal>
 #include <atomic>
 #include <sstream>
 #include <chrono>
+#include <thread>
+#include <set>
+#include <unordered_map>
+#include <mutex>
 
 using namespace sara;
 
 static std::atomic<bool> g_running{true};
 static std::string       g_exe_dir;
 
-static std::string resolve_path(const std::string& path) {
+std::string resolve_path(const std::string& path) {
     if (path.empty() || path[0] == '/' || path[0] == '\\'
         || (path.size() > 2 && path[1] == ':'))
         return path;
@@ -52,733 +64,31 @@ SQLiteStore            g_store;
 WinAPIExecutor         g_executor;
 TelegramGateway        g_telegram;
 IPCServer              g_ipc;
-AIWorkerLauncher       g_ai_worker;
-SessionManager         g_sessions;
 ProcessMonitor         g_proc_monitor;
 EventAutomationEngine  g_event_engine;
 NetworkMonitor         g_net_monitor;
 
-void signal_handler(int) { g_running = false; }
+WebSocketServer         g_ws_server;
+RuntimeState&           g_runtime      = RuntimeState::instance();
 
-// ── Helper: send file or photo back via Telegram ──────────────────────────────
-static void send_file_result(const std::string& chat_id,
-                              const ActionResult& res,
-                              const std::string& action_name)
-{
-    if (!res.success || !res.data.contains("path")) return;
-    std::string path = res.data["path"].get<std::string>();
-    bool is_image = action_name == "take_screenshot"
-                 || action_name == "capture_camera"
-                 || action_name == "take_photo";
-    if (is_image)
-        g_telegram.send_photo(chat_id, path, res.message);
-    else
-        g_telegram.send_document(chat_id, path, res.message);
-}
+// Actual port the terminal HTTP server ended up using (may differ from config after port rotation)
+int g_actual_terminal_port = 0;
 
-// ── Generic Action Dispatcher (handles plugins and native commands) ──────────
-static ActionResult dispatch_action(const std::string& act, const json& params) {
-    if (ToolRegistry::instance().has_tool(act)) {
-        json jres = ToolRegistry::instance().execute(act, params);
-        ActionResult res;
-        res.success = jres.value("success", false);
-        res.message = jres.value("message", jres.value("error", ""));
-        if (jres.contains("data")) res.data = jres["data"];
-        return res;
-    }
-    return g_executor.execute(act, params);
-}
+static void signal_handler(int) { g_running = false; }
 
-// ── Execute a single plan step from the execution_plan ───────────────────────
-static std::pair<std::string, json> execute_plan_step(const std::string& chat_id,
-                                      const json& step,
-                                      const std::string& session_id)
-{
-    if (!step.contains("action")) return {"", {}};
-    std::string act    = step.value("action", "");
-    std::string target = step.value("target", "");
-    json params        = step.value("parameters", json::object());
-    
-    // Normalize target parameter for semantic mapping
-    if (!target.empty() && !params.contains("target")) {
-        params["target"] = target;
-    }
-
-    if (act == "execute_multiple_actions") {
-        return {"✅ Internal router step (execute_multiple_actions)\n", {{"success", true}}};
-    }
-
-    // Record the command so the AI has context of what it just did
-    g_sessions.add_command(session_id, step);
-
-    // Handle delay before execution
-    int delay = params.value("delay_seconds", 0);
-    if (delay > 0) {
-        params.erase("delay_seconds");
-        // Schedule it instead of blocking
-        Task task;
-        task.source    = "telegram";
-        task.source_id = chat_id;
-        task.action    = act;
-        task.target    = target;
-        task.parameters = params;
-        auto now = std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::system_clock::now().time_since_epoch()).count();
-        task.execute_at = now + delay;
-        g_scheduler.add_task(task);
-        return {"⏱ Scheduled '" + act + "' in " + std::to_string(delay) + "s\n", {{"success", true}}};
-    }
-
-    // ── Special: remember ───────────────────────────────────────────────────
-    if (act == "remember") {
-        std::string k = params.value("key", "");
-        std::string v = params.value("value", "");
-        if (!k.empty() && !v.empty()) {
-            g_store.memory_set(k, v);
-            return {"Remembered: " + k + " = " + v + "\n", {{"success", true}}};
-        }
-        return {"", {}};
-    }
-
-    // ── Special: event rule management ─────────────────────────────────────
-    if (act == "add_event_rule") {
-        EventRule rule;
-        rule.trigger_type  = params.value("trigger_type", "");
-        rule.trigger_value = params.value("trigger_value", "");
-        rule.description   = params.value("description", "Custom rule");
-        std::string acts   = params.value("actions_json", "[]");
-        try { rule.actions = json::parse(acts); }
-        catch (...) { rule.actions = json::array(); }
-
-        if (rule.trigger_type.empty())
-            return {"❌ Error: trigger_type is required for event rules\n", {{"success", false}}};
-
-        g_event_engine.add_rule(rule);
-        return {"✅ Rule added: " + rule.description
-             + " (trigger: " + rule.trigger_type + ":" + rule.trigger_value + ")\n", {{"success", true}}};
-    }
-    if (act == "remove_event_rule") {
-        std::string rid = params.value("rule_id", "");
-        if (g_event_engine.remove_rule(rid))
-            return {"✅ Rule removed\n", {{"success", true}}};
-        return {"❌ Rule not found\n", {{"success", false}}};
-    }
-    if (act == "remove_all_event_rules") {
-        auto rules = g_event_engine.list_rules();
-        for (auto& r : rules) {
-            g_event_engine.remove_rule(r.id);
-        }
-        return {"✅ All event rules removed (" + std::to_string(rules.size()) + " total)\n", {{"success", true}}};
-    }
-    if (act == "list_event_rules") {
-        auto rules = g_event_engine.list_rules();
-        if (rules.empty()) return {"No event rules active.\n", {{"success", true}, {"rules", 0}}};
-        std::string out = "Active rules (" + std::to_string(rules.size()) + "):\n";
-        for (auto& r : rules) {
-            out += (r.enabled ? "✅ " : "❌ ");
-            out += "[" + r.id.substr(0, 8) + "] " + r.description
-                 + " (" + r.trigger_type + ":" + r.trigger_value + ")\n";
-        }
-        return {out, {{"success", true}, {"rules", rules.size()}}};
-    }
-
-    // ── Permission check ────────────────────────────────────────────────────
-    if (!PermissionManager::instance().check_action(act, target, "telegram", params)) {
-        return {"🔒 Permission denied for: " + act + "\n", {{"success", false}, {"error", "Permission denied"}}};
-    }
-
-    // ── Execute via Dispatcher (Plugin or Native) ───────────────────────────
-    auto res = dispatch_action(act, params);
-
-    Logger::instance().info("Step [" + act + "]: "
-        + (res.success ? "OK" : "FAIL") + " - " + res.message);
-
-    // Visual capture → send photo/document automatically
-    if (res.success && res.data.contains("path")) {
-        send_file_result(chat_id, res, act);
-        return {res.message + "\n", res.data};
-    }
-
-    // Command output
-    if (res.success && res.data.contains("output")) {
-        std::string out = res.data["output"].get<std::string>();
-        if (out.find_first_not_of(" \t\n\r") == std::string::npos) {
-            return {res.message + "\n", res.data};
-        }
-        if (out.size() > 3000) out = out.substr(0, 3000) + "\n...(truncated)";
-        return {res.message + "\n```\n" + out + "\n```\n", res.data};
-    }
-
-    // JSON data (stats, IP, etc.)
-    if (res.success && !res.data.is_null() && !res.data.empty()) {
-        return {res.message + "\n" + res.data.dump(2) + "\n", res.data};
-    }
-
-    return {(res.success ? "✅ " : "❌ ") + res.message + "\n", res.data};
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN TELEGRAM MESSAGE HANDLER
-// ─────────────────────────────────────────────────────────────────────────────
-void handle_telegram_message(const std::string& chat_id, const std::string& text, const json& raw_message) {
-    long long user_id = raw_message.value("sara_user_id", 0LL);
-    if (user_id == 0) {
-        try { user_id = std::stoll(chat_id); } catch (...) {}
-    }
-
-    if (user_id == 0) {
-        Logger::instance().warning("Failed to extract user_id, dropping message");
-        return;
-    }
-    std::string from_name = raw_message.contains("from") ? raw_message["from"].value("first_name", "Unknown") : "Unknown";
-
-    Logger::instance().info("Telegram: [" + std::to_string(user_id) + " | " + from_name + "] " + text);
-
-    // 1. Rate Limiting Check
-    if (!SecurityManager::instance().check_rate_limit(user_id)) {
-        return; // Drop silently to avoid spamming the user
-    }
-
-    // 2. Authentication Flow
-    if (!SecurityManager::instance().is_trusted_user(user_id)) {
-        int msg_id = raw_message.value("message_id", 0);
-        if (msg_id > 0) g_telegram.api_call("deleteMessage", {{"chat_id", chat_id}, {"message_id", msg_id}});
-
-        // Extract identity details for rich storage
-        std::string tg_username   = "";
-        std::string tg_first_name = "";
-        std::string tg_last_name  = "";
-        if (raw_message.contains("from")) {
-            auto& from = raw_message["from"];
-            tg_username   = from.value("username",   "");
-            tg_first_name = from.value("first_name", "");
-            tg_last_name  = from.value("last_name",  "");
-        }
-
-        if (SecurityManager::instance().authenticate_root(user_id, text,
-                tg_username, tg_first_name, tg_last_name)) {
-            g_telegram.send_message(chat_id, "🔓 Device authorized. You are now a trusted user.\nPlease enter the Session Password to begin.");
-        } else {
-            if (SecurityManager::instance().trigger_root_auth_flow(user_id)) {
-                g_telegram.send_message(chat_id, "🔒 Untrusted device.\nPlease provide the Root Password shown on the host computer.");
-            } else {
-                g_telegram.send_message(chat_id, "🔒 Incorrect Root Password or already pending. Please check the host computer.");
-            }
-        }
-        return;
-    }
-
-    if (!SecurityManager::instance().is_session_authenticated(user_id)) {
-        int msg_id = raw_message.value("message_id", 0);
-        if (msg_id > 0) g_telegram.api_call("deleteMessage", {{"chat_id", chat_id}, {"message_id", msg_id}});
-
-        if (SecurityManager::instance().authenticate_session(user_id, text)) {
-            g_telegram.send_message(chat_id, "🔓 Session authenticated. Welcome to SARA Runtime.");
-        } else {
-            g_telegram.send_message(chat_id, "🔒 Session locked.\nPlease authenticate using your Session Password.");
-            Logger::instance().warning("Unauthorized session access attempt by user: " + std::to_string(user_id));
-        }
-        return;
-    }
-    
-    // ── Handle Inline Keyboard Callbacks ────────────────────────────────────
-    if (raw_message.contains("callback_data")) {
-        std::string callback_data = raw_message["callback_data"].get<std::string>();
-        std::string callback_query_id = raw_message["callback_query_id"].get<std::string>();
-        int message_id = raw_message.value("message_id", 0);
-        
-        if (DockRouter::handle_callback(chat_id, callback_data, callback_query_id, message_id)) {
-            return; // Successfully handled by DockRouter, bypass AI
-        }
-    }
-
-    auto& session = g_sessions.get_or_create("telegram", chat_id);
-
-    // ── Built-in commands ───────────────────────────────────────────────────
-    if (text.rfind("/dock", 0) == 0 || text.rfind("/system", 0) == 0 || 
-        text.rfind("/monitor", 0) == 0 || text.rfind("/tasks", 0) == 0 || text.rfind("/rules", 0) == 0) {
-        if (DockRouter::handle_command(chat_id, text)) {
-            return; // Handled
-        }
-    }
-
-    if (!text.empty() && text[0] == '/') {
-        if (NativeCommandRouter::handle(chat_id, text)) {
-            return; // Handled by Native OS
-        }
-    }
-
-    if (text == "/start") {
-        g_telegram.send_message(chat_id,
-            "🤖 SARA v2.0 — AI Orchestration Runtime\n\n"
-            "I'm your intelligent Windows assistant. Talk naturally!\n\n"
-            "Examples:\n"
-            "• play Jungkook on YouTube\n"
-            "• take screenshot when Discord opens\n"
-            "• set volume to 50\n"
-            "• what's my CPU usage?\n"
-            "• remind me in 10 minutes\n\n"
-            "Type /help for commands.");
-        return;
-    }
-    if (text == "/help") {
-        g_telegram.send_message(chat_id,
-            "📋 SARA Commands:\n"
-            "/start       — Welcome\n"
-            "/status      — Runtime status\n"
-            "/tasks       — Scheduled tasks\n"
-            "/rules       — Event automation rules\n"
-            "/memory      — Stored user memory\n"
-            "/monitor     — Live system stats\n"
-            "/screenshot  — Take screenshot\n"
-            "/photo       — Webcam photo\n"
-            "/ping        — Latency check\n"
-            "/test        — System diagnostic\n"
-            "/show_config — AI configuration\n"
-            "/set_ai key val — Change AI setting\n"
-            "/clear       — Clear chat history\n"
-            "/master clear— Clear chat and memory\n\n"
-            "Or just talk naturally! 💬");
-        return;
-    }
-    if (text == "/clear") {
-        Session& session = g_sessions.get_or_create("telegram", chat_id);
-        g_sessions.clear_history(session.session_id);
-        std::string spaces = "🧹 Chat history cleared.\n";
-        for (int i = 0; i < 40; i++) spaces += "\n";
-        spaces += "(Old messages pushed out of view)";
-        g_telegram.send_message(chat_id, spaces);
-        return;
-    }
-    if (text == "/master clear" || text == "/master_clear") {
-        Session& session = g_sessions.get_or_create("telegram", chat_id);
-        g_sessions.clear_history(session.session_id);
-        g_store.memory_clear();
-        std::string spaces = "🔥 Master clear complete. Chat history and user memory erased.\n";
-        for (int i = 0; i < 40; i++) spaces += "\n";
-        spaces += "(Old messages pushed out of view)";
-        g_telegram.send_message(chat_id, spaces);
-        return;
-    }
-    if (text == "/sp help" || text == "/sp_help") {
-        g_telegram.send_message(chat_id,
-            "🎵 Spotify Commands:\n"
-            "/sp play <song> — Play a song\n"
-            "/sp pause — Pause playback\n"
-            "/sp resume — Resume playback\n"
-            "/sp next — Skip to next song\n"
-            "/sp prev — Go to previous song\n"
-            "/sp volume <0-100> — Set volume\n"
-            "/sp status — View playing track\n"
-            "/sp heart — Add to Liked Songs\n"
-            "/sp shuffle <on/off> — Toggle shuffle\n"
-            "/sp repeat <off/all/one> — Toggle repeat\n"
-            "/sp seek <sec> — Jump to second\n"
-            "/sp dock — Open Telegram dock");
-        return;
-    }
-    if (text == "/status") {
-        SystemMonitor mon;
-        auto stats = mon.get_all();
-        std::ostringstream oss;
-        oss << "🟢 SARA v2.0 — Online\n"
-            << "CPU: " << (int)stats.cpu_percent << "%  "
-            << "RAM: " << (int)stats.ram_percent << "%\n";
-        if (stats.gpu_percent >= 0)
-            oss << "GPU: " << (int)stats.gpu_percent << "%\n";
-        if (stats.battery_percent >= 0)
-            oss << "Battery: " << stats.battery_percent << "% "
-                << (stats.on_ac_power ? "(AC)" : "(BAT)") << "\n";
-        oss << "Tasks: " << g_scheduler.list_tasks().size()
-            << "  Rules: " << g_event_engine.list_rules().size() << "\n"
-            << "Telegram: " << (g_telegram.is_running() ? "✅" : "❌") << "\n"
-            << "Network: " << (g_net_monitor.get_status().connected ? "✅ " + g_net_monitor.get_status().ip : "❌ disconnected");
-        g_telegram.send_message(chat_id, oss.str());
-        return;
-    }
-    if (text == "/ping") {
-        g_telegram.send_message(chat_id, "🏓 pong");
-        return;
-    }
-    if (text == "/tasks") {
-        auto tasks = g_scheduler.list_tasks();
-        if (tasks.empty()) { g_telegram.send_message(chat_id, "No scheduled tasks."); return; }
-        std::string reply = "📋 Scheduled Tasks (" + std::to_string(tasks.size()) + "):\n";
-        for (auto& t : tasks) {
-            reply += "[" + t.id.substr(0, 8) + "] " + t.action;
-            if (!t.target.empty()) reply += " → " + t.target;
-            reply += " (" + t.status + ")\n";
-        }
-        g_telegram.send_message(chat_id, reply);
-        return;
-    }
-    if (text.rfind("/cancel ", 0) == 0) {
-        std::string id = text.substr(8);
-        bool ok = g_scheduler.cancel_task(id);
-        g_telegram.send_message(chat_id, ok ? "✅ Task cancelled: " + id : "❌ Task not found: " + id);
-        return;
-    }
-    if (text == "/rules") {
-        auto rules = g_event_engine.list_rules();
-        if (rules.empty()) { g_telegram.send_message(chat_id, "No event rules active."); return; }
-        std::string reply = "⚡ Event Rules (" + std::to_string(rules.size()) + "):\n";
-        for (auto& r : rules) {
-            reply += (r.enabled ? "✅ " : "❌ ");
-            reply += "[" + r.id.substr(0, 8) + "] " + r.description + "\n";
-            reply += "    Trigger: " + r.trigger_type + ":" + r.trigger_value + "\n";
-        }
-        g_telegram.send_message(chat_id, reply);
-        return;
-    }
-    if (text == "/memory") {
-        auto mem = g_store.memory_get_all();
-        if (mem.empty()) { g_telegram.send_message(chat_id, "No memory stored."); return; }
-        std::string reply = "🧠 Stored Memory (" + std::to_string(mem.size()) + "):\n";
-        for (auto& [k, v] : mem) reply += "• " + k + " = " + v + "\n";
-        g_telegram.send_message(chat_id, reply);
-        return;
-    }
-    if (text == "/monitor") {
-        SystemMonitor mon;
-        auto j = mon.get_system_summary();
-        std::ostringstream oss;
-        oss << "📊 System Monitor\n"
-            << "CPU: " << (int)j.value("cpu_percent", 0.0) << "%\n"
-            << "RAM: " << (int)j.value("ram_percent", 0.0) << "% ("
-                << j.value("ram_used_mb", 0) << "/" << j.value("ram_total_mb", 0) << " MB)\n";
-        if (j.contains("gpu_percent"))
-            oss << "GPU: " << (int)j["gpu_percent"].get<double>() << "%\n";
-        if (j.contains("battery_percent"))
-            oss << "Battery: " << j["battery_percent"].get<int>() << "%\n";
-        if (j.contains("idle_seconds"))
-            oss << "Idle: " << j["idle_seconds"].get<int>() << "s\n";
-        oss << "Processes: " << j.value("process_count", 0);
-        auto net = g_net_monitor.get_status_json();
-        oss << "\nNetwork: " << (net.value("connected", false) ? net.value("ip", "?") : "disconnected");
-        g_telegram.send_message(chat_id, oss.str());
-        return;
-    }
-    if (text == "/screenshot" || text == "/photo") {
-        std::string action = (text == "/photo") ? "capture_camera" : "take_screenshot";
-        g_telegram.send_action(chat_id, "upload_photo");
-        auto res = dispatch_action(action, json::object());
-        if (res.success && res.data.contains("path")) {
-            g_telegram.send_photo(chat_id, res.data["path"].get<std::string>(), "");
-        } else {
-            g_telegram.send_message(chat_id, res.message);
-        }
-        return;
-    }
-    if (text == "/show_config") {
-        auto& cfg = g_config.get();
-        std::string reply = "⚙️ AI Configuration\n"
-            "Provider: " + cfg.ai_primary.provider + "\n"
-            "Model: " + cfg.ai_primary.model + "\n"
-            "Endpoint: " + cfg.ai_primary.endpoint + "\n"
-            "Key: " + (cfg.ai_primary.api_key.size() > 12
-                ? cfg.ai_primary.api_key.substr(0, 12) + "..." : cfg.ai_primary.api_key);
-        g_telegram.send_message(chat_id, reply);
-        return;
-    }
-    if (text.rfind("/set_ai ", 0) == 0) {
-        auto& cfg = g_config.get();
-        std::string args  = text.substr(8);
-        auto space = args.find(' ');
-        if (space == std::string::npos) {
-            g_telegram.send_message(chat_id, "Usage: /set_ai provider|model|endpoint|key <value>");
-            return;
-        }
-        std::string param = args.substr(0, space);
-        std::string val   = args.substr(space + 1);
-        if (param == "provider")       cfg.ai_primary.provider = val;
-        else if (param == "model")     cfg.ai_primary.model    = val;
-        else if (param == "endpoint")  cfg.ai_primary.endpoint = val;
-        else if (param == "key")       cfg.ai_primary.api_key  = val;
-        else { g_telegram.send_message(chat_id, "Unknown: " + param); return; }
-        g_config.save(resolve_path("settings.json"));
-        g_telegram.send_message(chat_id, "✅ AI " + param + " updated to: " + val);
-        return;
-    }
-    if (text == "/think") {
-        g_config.get().ai_primary.thinking_enabled = true;
-        g_config.save(resolve_path("settings.json"));
-        g_telegram.send_message(chat_id, "🧠 Deep thinking mode ENABLED. SARA will take longer but provide smarter answers.");
-        return;
-    }
-    if (text == "/nothink") {
-        g_config.get().ai_primary.thinking_enabled = false;
-        g_config.save(resolve_path("settings.json"));
-        g_telegram.send_message(chat_id, "⚡ Deep thinking mode DISABLED. SARA will respond instantly.");
-        return;
-    }
-    if (text == "/test") {
-        g_telegram.send_message(chat_id, "🔬 Running SARA v2.0 diagnostic...");
-        auto& cfg = g_config.get();
-        std::string report;
-        auto ai = g_ai_worker.test_provider(cfg.ai_primary);
-        report += "AI: " + std::string(ai["success"].get<bool>() ? "✅ OK" : "❌ FAIL") + "\n";
-        auto ss = dispatch_action("take_screenshot", {});
-        report += "Screenshot: " + std::string(ss.success ? "✅ OK" : "❌ FAIL") + "\n";
-        auto nt = dispatch_action("notify", {{"target", "SARA Test"}, {"message", "Diagnostic v2.0"}});
-        report += "Notify: " + std::string(nt.success ? "✅ OK" : "❌ FAIL") + "\n";
-        SystemMonitor mon;
-        auto stats = mon.get_all();
-        report += "CPU: " + std::to_string((int)stats.cpu_percent) + "% "
-                + "RAM: " + std::to_string((int)stats.ram_percent) + "%\n";
-        if (stats.gpu_percent >= 0)
-            report += "GPU: " + std::to_string((int)stats.gpu_percent) + "%\n";
-        report += "Rules: " + std::to_string(g_event_engine.list_rules().size()) + "\n";
-        report += "Network: " + (g_net_monitor.get_status().connected
-            ? g_net_monitor.get_status().ip : "disconnected");
-        g_telegram.send_message(chat_id, report);
-        return;
-    }
-
-    // ── AI Planner Pipeline ─────────────────────────────────────────────────
-    std::string memory_prompt;
-    auto mem = g_store.memory_get_all();
-    if (!mem.empty()) {
-        memory_prompt = "Known user context:\n";
-        for (auto& [k, v] : mem) memory_prompt += "- " + k + ": " + v + "\n";
-    }
-
-    g_telegram.send_action(chat_id, "typing");
-    auto& cfg = g_config.get();
-
-    // Always show thinking indicator for agentic tasks
-    int thinking_msg_id = g_telegram.send_message(chat_id, "🧠 Thinking...");
-
-    if (cfg.ai_primary.api_key.empty()) {
-        std::string msg = "⚠️ No AI configured.\nUse /set_ai key <your_api_key> to set up.\nOr /show_config to check current settings.";
-        g_telegram.edit_message_text(chat_id, thinking_msg_id, msg);
-        return;
-    }
-
-    g_sessions.add_history(session.session_id, "user", text);
-
-    // Classify intent for logging
-    auto intent = IntentEngine::instance().classify(text);
-    Logger::instance().info("Intent: " + intent.category_name
-        + " (conf=" + std::to_string(intent.confidence) + ")");
-
-    std::string current_text = text;
-    for (int iter = 0; iter < 15; ++iter) {
-        auto ctx    = g_sessions.get_context(session.session_id);
-        auto result = g_ai_worker.plan_command_with_fallback(
-            current_text, cfg.ai_primary, cfg.ai_fallback, ctx, memory_prompt);
-
-        if (result.needs_clarification) {
-            g_telegram.edit_message_text(chat_id, thinking_msg_id, result.clarification_question);
-            thinking_msg_id = 0;
-            return;
-        }
-        if (!result.success) {
-            std::string err = "❌ AI error: " + result.error + "\nUse /show_config to check settings.";
-            g_telegram.edit_message_text(chat_id, thinking_msg_id, err);
-            Logger::instance().err("AI plan failed: " + result.error);
-            return;
-        }
-
-        // Show response_text as live status (plan summaries, thinking, confirmations)
-        if (!result.response_text.empty()) {
-            g_sessions.add_history(session.session_id, "assistant", result.response_text);
-            if (thinking_msg_id > 0) {
-                g_telegram.edit_message_text(chat_id, thinking_msg_id, result.response_text);
-                thinking_msg_id = 0;
-            } else {
-                g_telegram.send_message(chat_id, result.response_text);
-            }
-        }
-
-        // Execute plan steps — only run the FIRST tool (agent sends one at a time)
-        if (result.execution_plan.is_null() || !result.execution_plan.is_array() || result.execution_plan.empty()) {
-            break; // No tools to run
-        }
-
-        // Check for task_complete signal — stop loop
-        bool task_done = false;
-        for (auto& step : result.execution_plan) {
-            if (step.value("action", "") == "task_complete") {
-                task_done = true;
-                break;
-            }
-        }
-        if (task_done) break;
-
-        json tool_results = json::array();
-        std::string combined;
-        for (auto& step : result.execution_plan) {
-            // Respect delay_seconds before executing step
-            int delay = step.value("delay_seconds", 0);
-            if (delay > 0 && delay <= 300) {
-                std::string wait_msg = "⏳ Waiting " + std::to_string(delay) + " seconds...";
-                g_telegram.send_message(chat_id, wait_msg);
-                Sleep(static_cast<DWORD>(delay) * 1000);
-            }
-
-            auto pair_res = execute_plan_step(chat_id, step, session.session_id);
-            combined += pair_res.first;
-
-            // Normalize result to {success, data, error} format
-            json tr_compact;
-            tr_compact["tool"]    = step.value("action", "");
-
-            bool ok = pair_res.second.value("success", true);
-            tr_compact["success"] = ok;
-
-            if (ok) {
-                // Extract message from data.message (normalized format)
-                std::string msg;
-                if (pair_res.second.contains("data") && pair_res.second["data"].is_object()) {
-                    msg = pair_res.second["data"].value("message", "");
-                    std::string data_str = pair_res.second["data"].dump();
-                    if (data_str.size() > 600) data_str = data_str.substr(0, 600) + "...";
-                    tr_compact["data"] = data_str;
-                }
-                // Legacy fallback: old tools still have "message" at top level
-                if (msg.empty()) msg = pair_res.second.value("message", "");
-                if (msg.size() > 600) msg = msg.substr(0, 600) + "...";
-                tr_compact["output"] = msg;
-            } else {
-                // Error path: use "error" field
-                std::string err = pair_res.second.value("error", pair_res.second.value("message", "unknown error"));
-                if (err.size() > 600) err = err.substr(0, 600) + "...";
-                tr_compact["error"] = err;
-            }
-            tool_results.push_back(tr_compact);
-        }
-
-        // Send compact status to Telegram
-        if (!combined.empty()) {
-            if (combined.size() > 2000) combined = combined.substr(0, 2000) + "\n...(truncated)";
-            g_telegram.send_message(chat_id, combined);
-        }
-
-        if (!result.needs_continue) {
-            break; // Agent said it's done
-        }
-
-        // Feed normalized tool result back and loop
-        g_sessions.add_history(session.session_id, "system",
-            "Tool result: " + tool_results.dump());
-        current_text = text; // Keep original request so intent classifier stays correct
-    }
-
-    if (thinking_msg_id > 0) {
-        g_telegram.api_call("deleteMessage", {{"chat_id", chat_id}, {"message_id", thinking_msg_id}});
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// IPC Handler (for GUI)
-// ─────────────────────────────────────────────────────────────────────────────
-json handle_ipc_message(const json& msg) {
-    auto type    = msg.value("type", "");
-    auto req_id  = msg.value("request_id", "");
-    auto payload = msg.value("payload", json::object());
-
-    if (type == "command") {
-        std::string action = payload.value("action", "");
-        std::string target = payload.value("target", "");
-        json params = payload.value("parameters", json::object());
-        params["target"] = target;
-
-        if (action == "reload_config") {
-            auto& cfg = g_config.get();
-            if (payload.contains("telegram")) {
-                cfg.telegram.token = payload["telegram"].value("token", cfg.telegram.token);
-                g_telegram.stop();
-                g_telegram.start(cfg.telegram.token, cfg.telegram.polling_interval_ms);
-            }
-            if (payload.contains("ai_primary")) {
-                auto& ai = payload["ai_primary"];
-                cfg.ai_primary.provider = ai.value("provider", cfg.ai_primary.provider);
-                cfg.ai_primary.endpoint = ai.value("endpoint", cfg.ai_primary.endpoint);
-                cfg.ai_primary.api_key  = ai.value("api_key",  cfg.ai_primary.api_key);
-                cfg.ai_primary.model    = ai.value("model",    cfg.ai_primary.model);
-            }
-            g_config.save(resolve_path("settings.json"));
-            return {{"type","response"}, {"request_id",req_id},
-                    {"payload", {{"success",true},{"message","Config updated"}}}};
-        }
-        if (action == "get_root_password") {
-            return {{"type","response"}, {"request_id",req_id},
-                    {"payload", {{"success",true},{"password", SecurityManager::instance().get_latest_root_password()}}}};
-        }
-        if (action == "get_users") {
-            json users_arr = json::array();
-            for (auto& u : SecurityManager::instance().get_trusted_users()) {
-                users_arr.push_back({
-                    {"user_id",    u.user_id},
-                    {"username",   u.username},
-                    {"first_name", u.first_name},
-                    {"last_name",  u.last_name},
-                    {"phone",      u.phone},
-                    {"added_at",   u.added_at},
-                    {"blocked",    u.blocked}
-                });
-            }
-            return {{"type","response"}, {"request_id",req_id},
-                    {"payload", {{"success",true},{"users", users_arr}}}};
-        }
-        if (action == "block_user") {
-            long long uid = payload.value("user_id", 0LL);
-            bool ok = SecurityManager::instance().block_user(uid);
-            return {{"type","response"}, {"request_id",req_id},
-                    {"payload", {{"success",ok}}}};
-        }
-        if (action == "unblock_user") {
-            long long uid = payload.value("user_id", 0LL);
-            bool ok = SecurityManager::instance().unblock_user(uid);
-            return {{"type","response"}, {"request_id",req_id},
-                    {"payload", {{"success",ok}}}};
-        }
-        if (action == "get_rules") {
-            json rules_json = json::array();
-            for (auto& r : g_event_engine.list_rules()) {
-                rules_json.push_back({
-                    {"id",r.id},{"trigger_type",r.trigger_type},
-                    {"trigger_value",r.trigger_value},{"enabled",r.enabled},
-                    {"description",r.description}});
-            }
-            return {{"type","response"}, {"request_id",req_id},
-                    {"payload",{{"success",true},{"rules",rules_json}}}};
-        }
-
-        auto res = dispatch_action(action, params);
-        return {{"type","response"}, {"request_id",req_id},
-                {"payload",{{"success",res.success},{"message",res.message},{"data",res.data}}}};
-    }
-
-    if (type == "status") {
-        SystemMonitor mon;
-        return {{"type","status"}, {"request_id",req_id},
-                {"payload",{{"running",true},
-                            {"tasks",(int)g_scheduler.list_tasks().size()},
-                            {"rules",(int)g_event_engine.list_rules().size()},
-                            {"telegram",g_telegram.is_running()},
-                            {"stats",mon.get_system_summary()}}}};
-    }
-    if (type == "get_telegram_updates") {
-        return {{"type","telegram_updates"}, {"request_id",req_id},
-                {"payload",{{"messages",g_telegram.get_recent_messages(20)}}}};
-    }
-    if (type == "test_ai") {
-        auto cfg = g_config.get();
-        return {{"type","ai_test_result"}, {"request_id",req_id},
-                {"payload",g_ai_worker.test_provider(cfg.ai_primary)}};
-    }
-    return {{"type","error"}, {"request_id",req_id},
-            {"payload",{{"error","unknown message type"}}}};
-}
+extern std::unordered_map<std::string, std::string> g_pending_outputs;
+extern std::mutex g_pending_mutex;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN
 // ─────────────────────────────────────────────────────────────────────────────
-int main() {
-    SetConsoleTitleA("SARA Agent v2.0");
+int main(int argc, char* argv[]) {
     signal(SIGINT,  signal_handler);
     signal(SIGTERM, signal_handler);
+
+    // --- Use AgentInitializer for lifecycle and path resolution ---
+    auto& init = AgentInitializer::instance();
+    init.initialize(argc, argv);
 
     char buf[MAX_PATH];
     GetModuleFileNameA(nullptr, buf, MAX_PATH);
@@ -794,69 +104,150 @@ int main() {
     }
 
     Logger::instance().init(resolve_path("logs"), LogLevel::INFO);
-    Logger::instance().info("=== SARA Agent v2.0 starting ===");
+    Logger::instance().info("=== SARA v4.0 starting ===");
+
+    // Mark runtime startup
+    g_runtime.mark_startup();
 
     if (!g_config.load(resolve_path("settings.json")))
         Logger::instance().warning("No settings.json — using defaults");
 
+    if (!CommandMap::instance().load(resolve_path("settings\\command_map.json")))
+        Logger::instance().warning("No command_map.json — natural language matching disabled");
+
     auto& cfg = g_config.get();
-    
-    // Initialize security system early
+
+    // Initialize security
     SecurityManager::instance().initialize(resolve_path(cfg.data_dir));
 
+    // Initialize database
     if (!g_store.open(resolve_path(cfg.data_dir) + "\\scheduler.db")) {
         Logger::instance().err("Failed to open database");
         return 1;
     }
 
+    // Register default tools
+    register_default_tools(g_executor);
+
+    // Start scheduler
     g_scheduler.set_store(&g_store);
     g_scheduler.start([&](const Task& task) {
-        json params = task.parameters;
+        std::string chat = task.source_id;
+        if (chat.empty()) return;
+
+        if (task.action == "delayed_message") {
+            std::string text_to_run = task.parameters.value("text", "");
+            nlohmann::json fake_msg;
+            try {
+                fake_msg["sara_user_id"] = std::stoll(chat);
+            } catch (...) {
+                fake_msg["sara_user_id"] = 0LL;
+            }
+            handle_telegram_message(chat, text_to_run, fake_msg);
+            return;
+        }
+
+        nlohmann::json params = task.parameters;
         if (!task.target.empty() && !params.contains("target"))
             params["target"] = task.target;
         auto res = dispatch_action(task.action, params);
-        std::string chat = task.source_id;
-        if (chat.empty()) return;
         if (res.success && res.data.contains("path"))
             send_file_result(chat, res, task.action);
         else if (res.success && res.data.contains("output")) {
             std::string out = res.data["output"].get<std::string>();
-            if (out.size() > 4000) out = out.substr(0, 4000) + "\n...(truncated)";
-            g_telegram.send_message(chat, res.message + "\n```\n" + out + "\n```");
+            if (out.size() > 3500) {
+                { std::lock_guard<std::mutex> lock(g_pending_mutex); g_pending_outputs[chat] = out; }
+                out = out.substr(0, 3500);
+                nlohmann::json btn = {{"text", "📄 Read Full Output"}, {"callback_data", "read_more:" + chat}};
+                nlohmann::json kb = {nlohmann::json::array({btn})};
+                if (!g_telegram.send_inline_keyboard(chat, res.message + " (truncated)\n`" + out + "`", kb))
+                    g_telegram.send_message(chat, res.message + " (truncated)\n`" + out + "`");
+            } else {
+                g_telegram.send_message(chat, res.message + "\n`" + out + "`");
+            }
         } else {
             g_telegram.send_message(chat, (res.success ? "✅ " : "❌ ") + res.message);
         }
     }, cfg.scheduler_interval_ms);
 
-    // Auto-approve Telegram, GUI, and AI commands
-    PermissionManager::instance().set_approval_callback(
-        [](const std::string&, const std::string&, const std::string& src) {
-            return src == "telegram" || src == "gui" || src == "ai" || src == "planner";
-        });
+    // ── Start WebSocket Server (GUI/plugins, port 9080) ─────────────────────
+    g_ws_server.start(9080);
+    g_runtime.set_websocket_ready(true);
+    Logger::instance().info("WebSocket server started on port 9080");
 
-    // ── Start subsystems ────────────────────────────────────────────────────
+    // ── Start Terminal HTTP+WS Server (random port rotation) ──────────────────
+    {
+        std::string frontend_dir = resolve_path("remote_runtime\\frontend");
+        // Shuffle port order so each restart uses a different port immediately
+        int all_ports[] = { 9081, 9082, 9083, 9084, 9085 };
+        // Simple Fisher-Yates shuffle using system tick count as seed
+        unsigned seed = (unsigned)(GetTickCount64() & 0xFFFFFFFF);
+        for (int i = 4; i > 0; i--) {
+            seed = seed * 1103515245 + 12345;
+            int j = (seed >> 16) % (i + 1);
+            std::swap(all_ports[i], all_ports[j]);
+        }
+        // Also try config port first if not in the shuffled list
+        bool started = false;
+        for (int i = 0; i < 5; i++) {
+            int port = all_ports[i];
+            if (sara::remote::TerminalHttpServer::instance().start(port, frontend_dir)) {
+                sara::remote::TerminalSessionManager::instance().start_cleanup_thread(60);
+                g_actual_terminal_port = port;
+                Logger::instance().info("Terminal HTTP server started on port " + std::to_string(port));
+                started = true;
+                break;
+            }
+            Logger::instance().warning("Port " + std::to_string(port) + " unavailable, trying next...");
+        }
+        if (!started) {
+            Logger::instance().err("Terminal HTTP server failed to start on any port");
+        }
+    }
+
+    // ── Prepare Cloudflare Tunnel ────────────────────────────────────────
+    if (cfg.cloudflare_mode != "disabled") {
+        std::string cf_dir = cfg.cloudflare_exe_dir.empty() 
+            ? resolve_path("runtime")
+            : cfg.cloudflare_exe_dir;
+
+        // Add cf_dir to PATH so cloudflared is findable
+        std::string cf_exe = sara::remote::CloudflaredManager::ensure_cloudflared(cf_dir);
+        if (!cf_exe.empty()) {
+            // Append to PATH so SearchPathA finds it
+            std::string cur_path(32768, '\0');
+            DWORD plen = GetEnvironmentVariableA("PATH", cur_path.data(), (DWORD)cur_path.size());
+            cur_path.resize(plen);
+            SetEnvironmentVariableA("PATH", (cf_dir + ";" + cur_path).c_str());
+
+            Logger::instance().info("cloudflared.exe found: " + cf_exe);
+            // Tunnel is NO LONGER started here. It is started on-demand in MessageHandlers.cpp
+        } else {
+            Logger::instance().warning("cloudflared.exe download failed — tunnel unavailable");
+        }
+    }
+
+    // ── Start subsystems ──────────────────────────────────────────────────
     g_proc_monitor.start();
 
     g_event_engine.set_store(&g_store);
     g_event_engine.set_notify_callback([](const std::string& msg) {
-        // Find the first telegram chat to notify (simple approach)
         auto chats = g_config.get().telegram.allowed_user_ids;
         if (chats.empty()) return;
         std::string chat_id = std::to_string(chats[0]);
-
         if (msg.rfind("__FILE__:", 0) == 0) {
             std::string path = msg.substr(9);
-            g_telegram.send_photo(chat_id, path, "📷 Event rule visual capture");
+            g_telegram.send_photo(chat_id, path, "📷 Event capture");
         } else {
-            g_telegram.send_message(chat_id, msg);
-            Logger::instance().info("EventEngine notify: " + msg);
+            g_telegram.send_message(chat_id, "[Event] " + msg);
         }
     });
     g_event_engine.start(&g_executor, &g_proc_monitor);
+
     SpotifyPlugin::instance().start();
 
     g_net_monitor.on_connect([](const NetworkStatus& s) {
-        Logger::instance().info("Network connected: " + s.ip);
+        Logger::instance().info("Network: " + s.ip);
     });
     g_net_monitor.on_disconnect([]() {
         Logger::instance().info("Network disconnected");
@@ -873,13 +264,27 @@ int main() {
 
     MCPRegistry::instance().load_config(resolve_path("settings\\mcp_servers.json"));
 
-    Logger::instance().info("=== SARA Agent v2.0 ready. All systems online. ===");
+    g_runtime.set_telegram_ready(g_telegram.is_running());
+    g_runtime.set_ws_clients(g_ws_server.client_count());
 
-    while (g_running) Sleep(1000);
+    Logger::instance().info("=== SARA ready. All systems online. ===");
 
+    // ── Main loop ─────────────────────────────────────────────────────────
+    while (g_running) {
+        Sleep(1000);
+        g_runtime.set_ws_clients(g_ws_server.client_count());
+        g_runtime.set_active_tasks((int)g_scheduler.list_tasks().size());
+    }
+
+    // ── Shutdown ──────────────────────────────────────────────────────────
+    Logger::instance().info("SARA shutting down...");
     MCPRegistry::instance().shutdown();
-
-    Logger::instance().info("SARA Agent shutting down...");
+    g_runtime.set_websocket_ready(false);
+    sara::remote::TerminalSessionManager::instance().shutdown_all();
+    sara::remote::TerminalSessionManager::instance().stop_cleanup_thread();
+    sara::remote::TerminalHttpServer::instance().stop();
+    sara::remote::CloudflaredManager::instance().stop();
+    g_ws_server.stop();
     SpotifyPlugin::instance().stop();
     g_event_engine.stop();
     g_proc_monitor.stop();
@@ -889,6 +294,8 @@ int main() {
     g_ipc.stop();
     g_scheduler.stop();
     g_store.close();
+    g_runtime.mark_shutdown();
+    init.shutdown();
     Logger::instance().shutdown();
     return 0;
 }

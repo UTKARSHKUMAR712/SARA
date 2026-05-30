@@ -26,12 +26,6 @@ public:
     std::vector<Task> load_all() override;
     std::vector<Task> load_due(long long now) override;
 
-    // Memory key-value
-    bool        memory_set(const std::string& key, const std::string& value);
-    std::string memory_get(const std::string& key);
-    std::vector<std::pair<std::string, std::string>> memory_get_all();
-    void        memory_clear();
-
     // Event rules CRUD
     bool                   event_rule_add(const EventRule& rule);
     bool                   event_rule_remove(const std::string& id);

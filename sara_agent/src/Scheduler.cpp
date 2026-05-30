@@ -32,6 +32,8 @@ json Task::to_json() const {
     j["execute_at"] = execute_at;
     j["repeat"] = repeat;
     j["interval_seconds"] = interval_seconds;
+    if (!cron_expression.empty()) j["cron_expression"] = cron_expression;
+    if (!heartbeat_check_id.empty()) j["heartbeat_check_id"] = heartbeat_check_id;
     j["priority"] = priority;
     j["status"] = status;
     return j;
@@ -51,6 +53,8 @@ Task Task::from_json(const json& j) {
     t.execute_at = j.value("execute_at", (long long)0);
     t.repeat = j.value("repeat", false);
     t.interval_seconds = j.value("interval_seconds", 0);
+    t.cron_expression = j.value("cron_expression", "");
+    t.heartbeat_check_id = j.value("heartbeat_check_id", "");
     t.priority = j.value("priority", "normal");
     t.status = j.value("status", "pending");
     return t;
@@ -141,10 +145,12 @@ void Scheduler::check_and_execute() {
 
     std::vector<Task> due_tasks;
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<std::mutex> lock(mutex_);
         auto it = std::remove_if(tasks_.begin(), tasks_.end(),
             [&](const Task& t) {
-                return t.status == "pending" && t.execute_at > 0 && t.execute_at <= now;
+                if (t.status != "pending") return false;
+                if (t.execute_at > 0 && t.execute_at <= now) return true;
+                return false;
             });
         due_tasks.assign(it, tasks_.end());
         tasks_.erase(it, tasks_.end());
@@ -164,10 +170,9 @@ void Scheduler::check_and_execute() {
             }
         }
 
+        // Re-schedule if repeating
         if (task.repeat && task.interval_seconds > 0) {
-            task.execute_at = std::chrono::duration_cast<std::chrono::seconds>(
-                std::chrono::system_clock::now().time_since_epoch()).count()
-                + task.interval_seconds;
+            task.execute_at = now + task.interval_seconds;
             task.status = "pending";
             {
                 std::lock_guard<std::mutex> lock(mutex_);

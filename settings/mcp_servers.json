@@ -3,7 +3,8 @@
     "duckduckgo": {
       "command": "uvx",
       "args": ["duckduckgo-mcp-server"],
-      "enabled": true
+      "enabled": false,
+      "categories": ["search", "web", "browser"]
     }
   }
 }

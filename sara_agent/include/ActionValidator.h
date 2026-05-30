@@ -11,6 +11,7 @@ enum class RiskLevel {
     LOW,
     MEDIUM,
     HIGH,
+    CRITICAL,
     UNKNOWN
 };
 

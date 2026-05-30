@@ -21,14 +21,12 @@ void SpotifyPlugin::start() {
     SpotifyWS::instance().start();
     Logger::instance().info("SpotifyPlugin: started");
 
-    auto register_sp = [](const std::string& sub, const std::string& desc, const json& schema = json::object()) {
+    auto register_sp = [](const std::string& sub, const std::string& desc, const json&) {
         ToolDef def;
         def.name = "spotify_" + sub;
         def.description = desc;
         def.category = ToolCategory::media;
         def.risk_level = "LOW";
-        def.ai_visible = true;
-        def.parameters_schema = schema;
         def.handler = [sub](const json& p) -> json {
             std::string args = "";
             int seek_sec = -1;

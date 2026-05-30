@@ -22,8 +22,7 @@ enum class ToolCategory {
     monitoring,
     communication,
     automation,
-    memory,
-    internal  // not exposed to AI directly
+    internal
 };
 
 // ── Tool Definition ────────────────────────────────────────────────────────────
@@ -32,17 +31,13 @@ struct ToolDef {
     std::string  description;
     ToolCategory category;
     std::string  risk_level;  // "LOW" | "MEDIUM" | "HIGH"
-    bool         ai_visible = true; // false = internal only
-    json         parameters_schema; // Full JSON schema for the AI planner
 
     // The actual executor function: receives params JSON, returns ActionResult JSON
     std::function<json(const json& params)> handler;
 };
 
 // ── Tool Registry ─────────────────────────────────────────────────────────────
-// Singleton. Dynamic semantic tool dispatch system.
-// All tools register here. WinAPIExecutor backends registered at startup.
-// Provides the tool list to the AI planner for function-calling definitions.
+// Singleton. Dynamic tool dispatch system.
 class ToolRegistry {
 public:
     static ToolRegistry& instance();
@@ -55,9 +50,6 @@ public:
 
     // Check if a tool exists
     bool has_tool(const std::string& name) const;
-
-    // Get all AI-visible tools as OpenAI function-calling definitions
-    json build_tool_definitions() const;
 
     // Get all tools in a category
     std::vector<ToolDef> get_by_category(ToolCategory cat) const;

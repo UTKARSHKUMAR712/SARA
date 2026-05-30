@@ -24,8 +24,10 @@ struct Task {
     long long execute_at = 0;
     bool repeat = false;
     int interval_seconds = 0;
+    std::string cron_expression; // cron-style: "*/5 * * * *" or "@every_30s"
     std::string priority = "normal";
     std::string status = "pending";
+    std::string heartbeat_check_id;
 
     json to_json() const;
     static Task from_json(const json& j);
@@ -48,7 +50,7 @@ public:
     Scheduler();
     ~Scheduler();
 
-    void start(TaskExecutor executor, int check_interval_ms = 500);
+    void start(TaskExecutor executor, int check_interval_ms = 1000);
     void stop();
     bool is_running() const { return running_; }
 
@@ -68,7 +70,7 @@ private:
     TaskExecutor executor_;
     TaskStore* store_ = nullptr;
     std::vector<Task> tasks_;
-    int check_interval_ms_ = 500;
+    int check_interval_ms_ = 1000;
 };
 
 }

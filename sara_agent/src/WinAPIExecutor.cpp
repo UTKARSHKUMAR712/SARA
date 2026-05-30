@@ -135,6 +135,28 @@ ActionResult WinAPIExecutor::execute(const std::string& action, const json& para
     if (action == "clipboard_read") {
         return clipboard_read();
     }
+    if (action == "open_url" || action == "open_file") {
+        std::string url = params.value("url", params.value("target", params.value("path", "")));
+        if (url.empty()) return {false, "No URL specified", {}};
+        HINSTANCE r = ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+        if ((INT_PTR)r > 32) return {true, "Opened: " + url, {}};
+        // Fallback: use cmd start for stubborn file/url opens
+        std::string cmd = "cmd.exe /c start \"\" \"" + url + "\"";
+        int sys_res = std::system(cmd.c_str());
+        if (sys_res == 0) return {true, "Opened (fallback): " + url, {}};
+        return {false, "Failed to open: " + url, {}};
+    }
+    // Handle media_command by dispatching to sub-action
+    if (action == "media_command") {
+        std::string sub_act = params.value("action", "");
+        if (sub_act.empty()) return {false, "media_command: missing 'action' field", {}};
+        json sub_params = params;
+        sub_params.erase("action");
+        return execute(sub_act, sub_params);
+    }
+    // Spotify sub-actions — handled by C++ after being dispatched here
+    // (spotify_play etc. are handled by ToolRegistry via SpotifyCommands)
+    // These pass-through to the Unknown action fallback so ToolRegistry picks them up
     if (action == "take_screenshot") {
         ScreenshotCapture sc;
         auto r = sc.capture_fullscreen(params.value("output_dir", "data\\screenshots"));
@@ -155,7 +177,7 @@ ActionResult WinAPIExecutor::execute(const std::string& action, const json& para
     if (action == "get_ip_address") {
         return get_ip_address();
     }
-    // ── New semantic actions ─────────────────────────────────────────────────
+    // ── New actions ─────────────────────────────────────────────────
     if (action == "play_youtube") {
         return play_youtube(params.value("query", params.value("target", "")));
     }
@@ -219,6 +241,21 @@ ActionResult WinAPIExecutor::open_app(const std::string& target, const json& par
         args.empty() ? nullptr : args.c_str(), nullptr, SW_SHOWNORMAL);
 
     if ((INT_PTR)result <= 32) {
+        // Fallback: use cmd /c start which uses Windows registry App Paths
+        std::string cmd_target = actual_target;
+        // Strip .exe for 'start' command (it works better with app names)
+        if (cmd_target.size() >= 4 &&
+            cmd_target.substr(cmd_target.size() - 4) == ".exe") {
+            cmd_target = cmd_target.substr(0, cmd_target.size() - 4);
+        }
+        std::string cmd = "cmd.exe /c start \"\" " + cmd_target;
+        if (!args.empty()) cmd += " " + args;
+        int sys_res = std::system(cmd.c_str());
+        if (sys_res == 0) {
+            Logger::instance().info("Opened app via cmd fallback: " + cmd_target);
+            return {true, "Opened (via shell): " + cmd_target, {}};
+        }
+        Logger::instance().warning("Failed to open app: " + target + " (ShellExecute + cmd both failed)");
         return {false, "Failed to open: " + target, {}};
     }
     Logger::instance().info("Opened app: " + actual_target);
@@ -423,7 +460,11 @@ ActionResult WinAPIExecutor::send_keys(const std::string& keys) {
 ActionResult WinAPIExecutor::run_cmd(const std::string& command, int timeout_sec) {
     if (command.empty()) return {false, "No command specified", {}};
 
-    std::string full_cmd = "cmd.exe /c " + command;
+    std::string escaped = command;
+    for (size_t i = 0; i < escaped.size(); i++) {
+        if (escaped[i] == '"') { escaped.insert(i, 1, '"'); i++; }
+    }
+    std::string full_cmd = "cmd.exe /S /C \"" + escaped + "\"";
     SECURITY_ATTRIBUTES sa = { sizeof(sa), nullptr, TRUE };
     HANDLE hstdout_r, hstdout_w;
     CreatePipe(&hstdout_r, &hstdout_w, &sa, 0);
@@ -447,17 +488,20 @@ ActionResult WinAPIExecutor::run_cmd(const std::string& command, int timeout_sec
         return {false, "Failed to start CMD", {}};
     }
 
+    std::string output;
+    std::thread reader([&]() {
+        char buf[4096];
+        DWORD read;
+        while (ReadFile(hstdout_r, buf, sizeof(buf) - 1, &read, nullptr) && read > 0) {
+            buf[read] = 0;
+            output += buf;
+        }
+    });
+
     WaitForSingleObject(pi.hProcess, timeout_sec * 1000);
     TerminateProcess(pi.hProcess, 0);
-
     CloseHandle(hstdout_w);
-    std::string output;
-    char buf[4096];
-    DWORD read;
-    while (ReadFile(hstdout_r, buf, sizeof(buf) - 1, &read, nullptr) && read > 0) {
-        buf[read] = 0;
-        output += buf;
-    }
+    reader.join();
     CloseHandle(hstdout_r);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -659,7 +703,7 @@ ActionResult WinAPIExecutor::get_ip_address() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// New semantic action implementations
+// New action implementations
 // ─────────────────────────────────────────────────────────────────────────────
 
 ActionResult WinAPIExecutor::play_youtube(const std::string& query) {

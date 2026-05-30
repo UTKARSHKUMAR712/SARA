@@ -6,6 +6,7 @@
 #include <chrono>
 #include <ctime>
 
+#include <thread>
 #pragma comment(lib, "winhttp.lib")
 
 namespace sara {
@@ -39,7 +40,13 @@ bool TelegramGateway::start(const std::string& token, long polling_interval_ms) 
     running_ = true;
     poll_thread_ = std::thread(&TelegramGateway::poll_loop, this);
     Logger::instance().info("Telegram gateway started");
-    set_my_commands();
+    try {
+        set_my_commands();
+    } catch (const std::exception& e) {
+        Logger::instance().err("Error setting Telegram commands: " + std::string(e.what()));
+    } catch (...) {
+        Logger::instance().err("Unknown error setting Telegram commands");
+    }
     return true;
 }
 
@@ -52,27 +59,35 @@ void TelegramGateway::stop() {
 }
 
 bool TelegramGateway::set_my_commands() {
-    json payload = {
-        {"commands", json::array({
-            {{"command", "dock"}, {"description", "Open Media Dock"}},
-            {{"command", "system"}, {"description", "Open System Dock"}},
-            {{"command", "status"}, {"description", "Runtime status"}},
-            {{"command", "help"}, {"description", "Show all commands"}},
-            {{"command", "screenshot"}, {"description", "Take screenshot"}},
-            {{"command", "photo"}, {"description", "Webcam photo"}},
-            {{"command", "monitor"}, {"description", "Live system stats"}},
-            {{"command", "tasks"}, {"description", "Scheduled tasks"}},
-            {{"command", "rules"}, {"description", "Event automation rules"}},
-            {{"command", "memory"}, {"description", "Stored user memory"}},
-            {{"command", "think"}, {"description", "Enable deep reasoning"}},
-            {{"command", "nothink"}, {"description", "Disable reasoning (instant)"}},
-            {{"command", "clear"}, {"description", "Clear AI chat history"}},
-            {{"command", "master_clear"}, {"description", "Clear chat & memory"}},
-            {{"command", "sp_help"}, {"description", "Spotify commands list"}}
-        })}
-    };
-    auto result = api_call("setMyCommands", payload);
-    return result.value("ok", false);
+    try {
+        json payload = {
+            {"commands", json::array({
+                {{"command", "dock"}, {"description", "Open Media Dock"}},
+                {{"command", "system"}, {"description", "Open System Dock"}},
+                {{"command", "status"}, {"description", "Runtime status"}},
+                {{"command", "help"}, {"description", "Show all commands"}},
+                {{"command", "terminal"}, {"description", "Start browser terminal"}},
+                {{"command", "terminal_admin"}, {"description", "Start admin browser terminal"}},
+                {{"command", "sararestart"}, {"description", "Restart SARA and Cloudflare completely"}},
+                {{"command", "sarashutdown"}, {"description", "Kill SARA completely (no restart)"}},
+                {{"command", "screenshot"}, {"description", "Take screenshot"}},
+                {{"command", "photo"}, {"description", "Webcam photo"}},
+                {{"command", "monitor"}, {"description", "Live system stats"}},
+                {{"command", "tasks"}, {"description", "Scheduled tasks"}},
+                {{"command", "rules"}, {"description", "Event automation rules"}},
+
+                {{"command", "sp_help"}, {"description", "Spotify commands list"}}
+            })}
+        };
+        auto result = api_call("setMyCommands", payload);
+        return result.value("ok", false);
+    } catch (const std::exception& e) {
+        Logger::instance().err("Exception in set_my_commands: " + std::string(e.what()));
+        return false;
+    } catch (...) {
+        Logger::instance().err("Unknown exception in set_my_commands");
+        return false;
+    }
 }
 
 std::string TelegramGateway::build_url(const std::string& method) const {
@@ -171,8 +186,73 @@ void TelegramGateway::handle_update(const json& update) {
             raw_msg["callback_data"] = callback_data;
             raw_msg["callback_query_id"] = callback_query_id;
         }
-        handler_(chat_id, text, raw_msg);
+        
+        // Execute the handler asynchronously in a detached thread
+        // to prevent blocking the Telegram Gateway poll loop.
+        std::thread([this, chat_id, text, raw_msg]() {
+            try {
+                handler_(chat_id, text, raw_msg);
+            } catch (const std::exception& e) {
+                Logger::instance().err("Exception in async message handler: " + std::string(e.what()));
+            } catch (...) {
+                Logger::instance().err("Unknown exception in async message handler");
+            }
+        }).detach();
     }
+}
+
+// ── Progress / Live Streaming ──────────────────────────────────────────────
+int TelegramGateway::send_progress(const std::string& chat_id,
+                                    const std::string& text,
+                                    int progress_pct) {
+    std::string msg = text;
+    if (progress_pct >= 0) {
+        int filled = progress_pct / 10;
+        msg += "\n`[";
+        for (int i = 0; i < 10; i++) msg += (i < filled) ? "█" : "░";
+        msg += "] " + std::to_string(progress_pct) + "%`";
+    }
+    return send_message(chat_id, msg);
+}
+
+bool TelegramGateway::edit_progress_message(const std::string& chat_id,
+                                              int message_id,
+                                              const std::string& text,
+                                              int progress_pct) {
+    std::string msg = text;
+    if (progress_pct >= 0) {
+        int filled = progress_pct / 10;
+        msg += "\n`[";
+        for (int i = 0; i < 10; i++) msg += (i < filled) ? "█" : "░";
+        msg += "] " + std::to_string(progress_pct) + "%`";
+    }
+    return edit_message_text(chat_id, message_id, msg);
+}
+
+bool TelegramGateway::send_chunked_log(const std::string& chat_id,
+                                        const std::string& log_text,
+                                        const std::string& header) {
+    // Telegram max message length is 4096 chars
+    const size_t MAX_MSG = 3900;
+    std::string remaining = log_text;
+
+    if (!header.empty()) {
+        std::string first = header + "\n```\n";
+        size_t chunk = MAX_MSG - first.size() - 4;
+        if (chunk > remaining.size()) chunk = remaining.size();
+        first += remaining.substr(0, chunk) + "\n```";
+        send_message(chat_id, first);
+        remaining = remaining.substr(chunk);
+    }
+
+    while (!remaining.empty()) {
+        size_t chunk = MAX_MSG - 8; // ```\n ... \n```
+        if (chunk > remaining.size()) chunk = remaining.size();
+        std::string part = "```\n" + remaining.substr(0, chunk) + "\n```";
+        send_message(chat_id, part);
+        remaining = remaining.substr(chunk);
+    }
+    return true;
 }
 
 json TelegramGateway::get_recent_messages(int count) {
@@ -312,6 +392,9 @@ bool TelegramGateway::send_photo(const std::string& chat_id,
         WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, nullptr, nullptr, 0);
     if (!session) return false;
 
+    // Prevent blocking indefinitely on network calls
+    WinHttpSetTimeouts(session, 10000, 10000, 10000, 15000);
+
     std::wstring whost(host.begin(), host.end());
     HINTERNET connect = WinHttpConnect(session, whost.c_str(),
         INTERNET_DEFAULT_HTTPS_PORT, 0);
@@ -423,6 +506,9 @@ bool TelegramGateway::send_document(const std::string& chat_id,
     HINTERNET session = WinHttpOpen(L"SARA/2.0",
         WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, nullptr, nullptr, 0);
     if (!session) return false;
+
+    // Prevent blocking indefinitely on network calls
+    WinHttpSetTimeouts(session, 10000, 10000, 10000, 15000);
     std::wstring whost(host.begin(), host.end());
     HINTERNET connect = WinHttpConnect(session, whost.c_str(),
         INTERNET_DEFAULT_HTTPS_PORT, 0);
@@ -464,6 +550,9 @@ json TelegramGateway::api_call(const std::string& method, const json& payload) {
     HINTERNET session = WinHttpOpen(L"SARA/1.0",
         WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, nullptr, nullptr, 0);
     if (!session) return {{"ok", false}};
+
+    // Prevent blocking indefinitely on network calls
+    WinHttpSetTimeouts(session, 10000, 10000, 10000, 15000);
 
     std::wstring whost(host.begin(), host.end());
     HINTERNET connect = WinHttpConnect(session, whost.c_str(),
@@ -511,7 +600,13 @@ json TelegramGateway::api_call(const std::string& method, const json& payload) {
     WinHttpCloseHandle(connect);
     WinHttpCloseHandle(session);
 
-    return json::parse(response);
+    try {
+        if (response.empty()) return {{"ok", false}};
+        return json::parse(response);
+    } catch (const std::exception& e) {
+        Logger::instance().err("Telegram API parse error: " + std::string(e.what()) + ", response was: " + response);
+        return {{"ok", false}};
+    }
 }
 
 }

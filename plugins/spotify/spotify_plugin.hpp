@@ -10,7 +10,7 @@ public:
     void start();
     void stop();
 
-    // Returns true if the command was handled (bypasses AI)
+    // Returns true if the command was handled
     bool handle_command(const std::string& chat_id, const std::string& text);
 
     // Called from DockRouter for button callbacks

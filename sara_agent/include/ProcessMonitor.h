@@ -63,7 +63,7 @@ private:
     // currently known processes: pid → lowercase name
     std::unordered_map<unsigned long, std::string> known_pids_;
 
-    int check_interval_ms_ = 500;
+    int check_interval_ms_ = 3000;
 };
 
 } // namespace sara

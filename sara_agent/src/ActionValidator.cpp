@@ -12,9 +12,8 @@ ActionValidator& ActionValidator::instance() {
 }
 
 ActionValidator::ActionValidator() {
-    // ── AI-visible semantic tools (what the planner can call) ────────────────
     allowed_actions_ = {
-        // Browser / media (semantic)
+        // Browser / media
         "play_youtube", "search_google", "open_website",
         "media_play_pause", "media_next", "media_prev", "media_stop",
         "spotify_play", "spotify_pause", "spotify_resume", "spotify_next",
@@ -38,7 +37,7 @@ ActionValidator::ActionValidator() {
         "schedule_task", "cancel_task", "list_tasks",
         // Config
         "reload_config", "get_plugin_info",
-        // INTERNAL — callable by orchestration engine only, NOT by AI directly
+        // INTERNAL — callable by orchestration engine only
         // (still listed here so the permission system works):
         "send_keys", "type_text", "run_cmd", "run_powershell", "run_bat",
         "mouse_move", "mouse_click",
@@ -70,7 +69,7 @@ void ActionValidator::remove_allowed_action(const std::string& action) {
 
 RiskLevel ActionValidator::classify_action(const std::string& action) const {
     static const std::unordered_map<std::string, RiskLevel> risk_map = {
-        // LOW — safe semantic tools
+        // LOW — safe tools
         {"play_youtube",      RiskLevel::LOW},
         {"spotify_play",      RiskLevel::LOW},
         {"spotify_pause",     RiskLevel::LOW},
