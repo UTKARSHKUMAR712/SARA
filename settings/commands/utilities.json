@@ -1,0 +1,239 @@
+{
+  "commands": [
+    {
+      "type": "exact",
+      "phrases": [
+        "save screenshot", "save screenshot to file",
+        "capture and save"
+      ],
+      "action": "take_screenshot",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open recent files", "recent documents",
+        "recent files", "recently used"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "shell:recent" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "show startup programs", "startup apps",
+        "startup programs", "startup items"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "shell:startup" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "show environment variables", "environment vars",
+        "env vars", "path variable",
+        "system environment"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "set" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "system restore", "create restore point",
+        "open system restore"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "rstrui" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "check windows version", "os version",
+        "windows version", "what windows do i have"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "winver" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "check directx version", "dxdiag",
+        "directx info", "run dxdiag"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "dxdiag /t dxdiag.txt && type dxdiag.txt" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "run command as admin", "admin command",
+        "run as administrator"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"Start-Process cmd -Verb RunAs\"" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "what time is it", "current time", "show time",
+        "tell me the time", "what is the time",
+        "time now"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "time /t" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "what is today's date", "current date",
+        "show date", "tell me the date",
+        "what date is it", "today's date"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "date /t" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "what day is it", "today's day",
+        "day of week"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"Get-Date -Format 'dddd'\"" }
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "installed programs", "installed software",
+        "list installed apps", "programs and features",
+        "installed applications"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "wmic product get name,version" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "clear command history", "clear history",
+        "delete history"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "doskey /listsize=0" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "what is my username", "who am i",
+        "current user", "logged in user",
+        "my username"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "whoami" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "list users on this pc", "all users",
+        "system users", "user accounts"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "net user" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "show wifi password", "wifi password",
+        "saved wifi passwords", "show saved wifi",
+        "wi fi password"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "netsh wlan show profile" }
+    },
+    {
+      "type": "prefix",
+      "phrases": [
+        "show wifi password for ", "wifi password for ",
+        "get wifi password "
+      ],
+      "action": "get_wifi_password",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "generate password", "random password",
+        "create password", "strong password",
+        "generate secure password"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"-join ((33..126) | Get-Random -Count 16 | ForEach-Object { [char]$_ })\"" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "generate uuid", "generate guid",
+        "new uuid", "create uuid",
+        "random uuid"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"[guid]::NewGuid().ToString()\"" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "encode base64", "base64 encode",
+        "base64 string"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes\"" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "decode base64", "base64 decode"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String\"" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "calculate", "calculator", "math",
+        "do math", "compute", "open calc app"
+      ],
+      "action": "open_app",
+      "params": { "name": "calc" }
+    },
+    {
+      "type": "prefix",
+      "phrases": [
+        "calculate ", "what is ", "math "
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"Write-Host ('Result: ' + " }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "who created you", "who made you",
+        "who is your developer", "who built you",
+        "what are you", "what is sara",
+        "tell me about yourself"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "echo I am SARA - System Runtime Autonomous Agent. I help you control your Windows PC via Telegram." }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "help", "help me", "what can you do",
+        "show commands", "list commands",
+        "available commands", "capabilities",
+        "what can i ask"
+      ],
+      "action": "show_help",
+      "params": {}
+    }
+  ]
+}

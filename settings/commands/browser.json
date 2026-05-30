@@ -1,0 +1,103 @@
+{
+  "commands": [
+    {
+      "type": "exact",
+      "phrases": [
+        "search google", "google search", "search the web",
+        "look up", "search internet", "google that",
+        "search for", "do a google search",
+        "search on google", "web search",
+        "google something", "look it up online",
+        "search online"
+      ],
+      "action": "search_google",
+      "params": { "query": "" }
+    },
+    {
+      "type": "prefix",
+      "phrases": [
+        "search google for ", "search for ",
+        "google ", "look up ", "search the web for ",
+        "google search ", "find on google ",
+        "search "
+      ],
+      "action": "search_google",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open youtube", "launch youtube", "youtube",
+        "open youtube website", "go to youtube",
+        "youtube com"
+      ],
+      "action": "search_google",
+      "params": { "query": "youtube.com" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open github", "github", "open github website",
+        "github com"
+      ],
+      "action": "search_google",
+      "params": { "query": "github.com" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open stackoverflow", "stackoverflow",
+        "stack overflow", "open stack overflow"
+      ],
+      "action": "search_google",
+      "params": { "query": "stackoverflow.com" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open reddit", "reddit", "open reddit website",
+        "reddit com"
+      ],
+      "action": "search_google",
+      "params": { "query": "reddit.com" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open gmail", "gmail", "gmail com",
+        "open gmail website", "my email"
+      ],
+      "action": "search_google",
+      "params": { "query": "gmail.com" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open amazon", "amazon", "amazon com",
+        "open amazon website", "amazon shopping"
+      ],
+      "action": "search_google",
+      "params": { "query": "amazon.com" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open google drive", "google drive", "drive google",
+        "my drive"
+      ],
+      "action": "search_google",
+      "params": { "query": "drive.google.com" }
+    },
+    {
+      "type": "prefix",
+      "phrases": [
+        "open website ", "open url ", "go to ",
+        "navigate to ", "open the website ",
+        "take me to ", "visit ", "browse to ",
+        "open site "
+      ],
+      "action": "open_url",
+      "params": {}
+    }
+  ]
+}

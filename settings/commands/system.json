@@ -1,0 +1,138 @@
+{
+  "commands": [
+    {
+      "type": "contains",
+      "phrases": [
+        "ram usage", "memory usage", "system memory",
+        "ram status", "memory status", "how much ram",
+        "ram", "memory utilization", "ram utilization",
+        "how much memory", "tell me ram usage",
+        "memory consumption"
+      ],
+      "action": "get_system_stats",
+      "params": {}
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "cpu usage", "processor usage", "cpu status",
+        "cpu utilization", "how is my cpu", "cpu load",
+        "processor load", "cpu performance",
+        "tell me cpu usage", "processor status"
+      ],
+      "action": "get_system_stats",
+      "params": {}
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "battery status", "battery level", "battery percentage",
+        "battery health", "how much battery", "battery life",
+        "battery remaining", "battery charge",
+        "power status", "battery", "remaining battery",
+        "charge level"
+      ],
+      "action": "get_system_stats",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "system status", "my system status", "system info",
+        "pc status", "computer status", "system overview",
+        "pc specs", "computer info", "my pc specs",
+        "tell me about my computer", "system summary",
+        "hardware info", "system specifications",
+        "specs", "computer specs", "my specs"
+      ],
+      "action": "get_system_stats",
+      "params": {}
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "screenshot", "capture screen", "screen capture",
+        "take screenshot", "take a screenshot",
+        "capture my screen", "grab screenshot",
+        "screenshot now", "do a screenshot",
+        "screen grab", "capture desktop", "print screen"
+      ],
+      "action": "take_screenshot",
+      "params": {}
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "take photo", "take picture", "capture camera",
+        "webcam photo", "take webcam", "take a photo",
+        "take a picture", "click a photo", "click photo",
+        "webcam picture", "capture from camera",
+        "camera capture", "take a webcam photo"
+      ],
+      "action": "capture_camera",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "brightness up", "increase brightness",
+        "screen brighter", "more brightness",
+        "brightness increase", "make screen brighter",
+        "turn up brightness", "raise brightness",
+        "increase screen brightness"
+      ],
+      "action": "change_brightness",
+      "params": { "level": 80 }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "brightness down", "decrease brightness",
+        "screen dimmer", "less brightness",
+        "brightness decrease", "make screen dimmer",
+        "turn down brightness", "lower brightness",
+        "decrease screen brightness"
+      ],
+      "action": "change_brightness",
+      "params": { "level": 30 }
+    },
+    {
+      "type": "prefix",
+      "phrases": [
+        "set brightness to ", "set brightness ",
+        "brightness to ", "brightness "
+      ],
+      "action": "set_brightness_level",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "max brightness", "full brightness",
+        "brightness max", "set brightness max",
+        "maximum brightness"
+      ],
+      "action": "change_brightness",
+      "params": { "level": 100 }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "min brightness", "minimum brightness",
+        "brightness min", "set brightness min",
+        "lowest brightness"
+      ],
+      "action": "change_brightness",
+      "params": { "level": 0 }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "turn off screen", "turn display off",
+        "screen off", "disable display"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"(Add-Type '[DllImport(\\\"user32.dll\\\")]public static extern int SendMessage(int h,int m,int w,int l);' -Name a -Pas)::SendMessage(-1,0x0112,0xF170,2)\"" }
+    }
+  ]
+}

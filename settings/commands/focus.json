@@ -1,0 +1,186 @@
+{
+  "commands": [
+    {
+      "type": "prefix",
+      "phrases": [
+        "focus window ", "switch to ", "focus ",
+        "bring to front ", "switch window ",
+        "activate window ", "open that window ",
+        "go to window ", "minimize others and focus "
+      ],
+      "action": "focus_app",
+      "params": {}
+    },
+    {
+      "type": "prefix",
+      "phrases": [
+        "close window ", "close app ", "close ",
+        "kill window ", "terminate "
+      ],
+      "action": "close_app",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "switch window", "alt tab", "switch app",
+        "cycle windows", "next window"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "alt+tab" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "close current window", "close active window",
+        "close this window"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "alt+f4" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "show desktop", "minimize all", "hide all windows",
+        "show my desktop"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+d" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "task view", "show task view",
+        "show all windows", "expose"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+tab" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open action center", "notification panel",
+        "show notifications"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+a" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open search", "windows search", "search bar",
+        "start search"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+s" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open run dialog", "run command", "open run",
+        "windows r"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+r" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "lock screen", "lock windows",
+        "lock workstation shortcut"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+l" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open emoji panel", "emoji picker",
+        "show emojis", "emoji keyboard"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+." }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open clipboard history", "clipboard manager",
+        "show clipboard history"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+v" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open snipping tool shortcut", "screen snip",
+        "open snip tool"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+shift+s" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "minimize window", "minimize",
+        "minimize current window"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+down" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "maximize window", "maximize",
+        "maximize current window"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+up" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "snap left", "snap window left",
+        "window to left side"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+left" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "snap right", "snap window right",
+        "window to right side"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+right" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "new virtual desktop", "add desktop",
+        "create new desktop"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+ctrl+d" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "switch virtual desktop", "switch desktop",
+        "next desktop"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+ctrl+right" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "close virtual desktop", "remove desktop",
+        "delete desktop"
+      ],
+      "action": "keyboard_shortcut",
+      "params": { "keys": "win+ctrl+f4" }
+    }
+  ]
+}

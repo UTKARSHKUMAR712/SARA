@@ -1,0 +1,76 @@
+{
+  "commands": [
+    {
+      "type": "contains",
+      "phrases": [
+        "list processes", "running processes",
+        "show processes", "what is running",
+        "process list", "running apps",
+        "active processes", "current processes",
+        "all processes", "show running apps",
+        "what apps are open"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "tasklist /fi \"status eq running\"" }
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "kill process", "stop process", "end task",
+        "terminate process", "kill app",
+        "force stop", "stop program",
+        "end process"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "taskkill /f /im" }
+    },
+    {
+      "type": "prefix",
+      "phrases": [
+        "kill ", "end process ", "stop process ",
+        "terminate "
+      ],
+      "action": "task_kill",
+      "params": {}
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "process count", "how many processes",
+        "number of processes", "processes running"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "tasklist | find /c /v \"\"" }
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "top process", "highest memory",
+        "most cpu usage", "high cpu",
+        "high memory usage", "which process uses most"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"Get-Process | Sort-Object WorkingSet64 -Descending | Select-Object -First 10 Name, WorkingSet64, CPU | Format-Table -AutoSize\"" }
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "services status", "running services",
+        "list services", "windows services",
+        "service status"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "sc query" }
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "start service", "stop service",
+        "restart service", "enable service",
+        "disable service"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "sc" }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "commands": [
+    {
+      "type": "prefix",
+      "phrases": [
+        "type this ", "type text ", "send keys ",
+        "type ", "type out ", "keyboard type ",
+        "input text ", "enter text "
+      ],
+      "action": "type_text",
+      "params": {}
+    },
+    {
+      "type": "prefix",
+      "phrases": [
+        "copy to clipboard ", "copy this ", "copy text ",
+        "clipboard copy ", "copy ", "copy this text ",
+        "add to clipboard ", "save to clipboard "
+      ],
+      "action": "clipboard_copy",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "read clipboard", "what is on clipboard",
+        "clipboard content", "get clipboard",
+        "show clipboard", "clipboard data",
+        "what's in my clipboard", "clipboard text",
+        "read my clipboard", "check clipboard"
+      ],
+      "action": "clipboard_read",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "clear clipboard", "empty clipboard",
+        "erase clipboard", "clipboard clear"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"Set-Clipboard -Value ''\"" }
+    }
+  ]
+}

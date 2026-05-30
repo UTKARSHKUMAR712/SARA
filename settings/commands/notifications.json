@@ -1,0 +1,44 @@
+{
+  "commands": [
+    {
+      "type": "prefix",
+      "phrases": [
+        "send notification ", "send notify ", "notify me ",
+        "show notification ", "send alert ", "alert ",
+        "notify ", "send a notification ",
+        "show a notification ", "pop up notification ",
+        "display notification ", "send a alert "
+      ],
+      "action": "notify_text",
+      "params": {}
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "notify me", "send notification", "notification",
+        "show notification", "send a notification",
+        "popup notification", "desktop notification"
+      ],
+      "action": "notify",
+      "params": { "title": "SARA", "message": "Notification triggered" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "get reminder", "set reminder", "remind me",
+        "create reminder"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"msg * 'Reminder from SARA'\"" }
+    },
+    {
+      "type": "prefix",
+      "phrases": [
+        "remind me to ", "remind me that ",
+        "set a reminder to ", "remind "
+      ],
+      "action": "notify_text",
+      "params": {}
+    }
+  ]
+}

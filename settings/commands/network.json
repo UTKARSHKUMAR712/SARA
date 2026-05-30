@@ -1,0 +1,122 @@
+{
+  "commands": [
+    {
+      "type": "contains",
+      "phrases": [
+        "my ip", "ip address", "show my ip",
+        "network ip", "local ip", "what is my ip",
+        "my public ip", "public ip", "external ip",
+        "ipv4 address", "ipv6 address", "tell me my ip",
+        "my ip address", "show ip"
+      ],
+      "action": "get_ip_address",
+      "params": {}
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "network status", "wifi status", "network info",
+        "connection status", "internet status",
+        "network connection", "am i connected",
+        "internet connection", "wifi signal",
+        "network strength", "connection info",
+        "network diagnostics"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "ipconfig /all" }
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "disk usage", "disk space", "storage",
+        "how much space", "drive status", "free space",
+        "disk free", "storage space", "remaining storage",
+        "disk capacity", "hard drive space",
+        "ssd space", "how much storage left",
+        "disk utilization"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "wmic logicaldisk get size,freespace,caption" }
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "system uptime", "how long has pc been on",
+        "uptime", "pc uptime", "how long has my pc been on",
+        "system running time", "last boot time",
+        "how long since restart", "uptime status",
+        "running since"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "systeminfo | find \"System Boot Time\"" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "test internet", "test connection",
+        "ping google", "speed test",
+        "check internet", "is internet working",
+        "internet speed", "check connection"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "ping -n 4 8.8.8.8" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "my hostname", "computer name", "device name",
+        "hostname", "what is my computer name",
+        "my device name"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "hostname" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "my mac address", "mac address", "physical address",
+        "network mac"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "getmac" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "dns cache", "flush dns", "clear dns cache",
+        "reset dns"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "ipconfig /flushdns" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "renew ip", "release ip", "renew dhcp",
+        "refresh ip address"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "ipconfig /renew" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "list wifi networks", "available networks",
+        "wifi networks near me", "show wifi networks",
+        "scan wifi"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "netsh wlan show networks" }
+    },
+    {
+      "type": "contains",
+      "phrases": [
+        "active connections", "network connections",
+        "open ports", "listening ports",
+        "tcp connections", "active ports"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "netstat -an" }
+    }
+  ]
+}

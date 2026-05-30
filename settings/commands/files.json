@@ -1,0 +1,130 @@
+{
+  "commands": [
+    {
+      "type": "exact",
+      "phrases": [
+        "create folder", "create directory", "new folder",
+        "make directory", "make a new folder",
+        "create a folder", "new directory",
+        "create new folder"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "cmd /c mkdir" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "clear temp files", "delete temp files", "clean temp",
+        "temporary files", "delete temporary files",
+        "clear temp folder", "clean temporary files",
+        "remove temp files", "clear temporary data",
+        "clean up temp"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "del /q /s %temp%\\* 2>nul & echo Temp cleaned" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "empty recycle bin", "clear recycle bin",
+        "recycle bin", "empty bin", "clear bin",
+        "empty trash", "clear trash",
+        "empty the recycle bin"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "rd /s /q C:\\$Recycle.bin 2>nul & echo Recycle bin emptied" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "clean disk", "disk cleanup", "run disk cleanup",
+        "cleanup disk", "free up disk space",
+        "clean up disk"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "cleanmgr /sagerun:1" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "list files", "show files", "list directory",
+        "dir listing", "show all files", "what files are here",
+        "list current directory"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "dir" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open downloads folder", "open downloads",
+        "go to downloads", "downloads directory"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "start %userprofile%\\Downloads" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open documents folder", "open documents",
+        "go to documents", "my documents"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "start %userprofile%\\Documents" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open desktop folder", "go to desktop",
+        "open desktop", "desktop directory"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "start %userprofile%\\Desktop" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "take ownership", "takeown file",
+        "take file ownership"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "takeown /f" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "check file integrity", "check disk", "scan disk",
+        "run chkdsk", "check disk for errors"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "chkdsk C:" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "defrag drive", "defragment", "run defrag",
+        "optimize drive", "defrag disk"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "defrag C: /U /V" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "compress folder", "zip this", "compress files",
+        "create zip"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"Compress-Archive\"" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "extract zip", "unzip", "extract archive",
+        "decompress files", "unzip files"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "powershell -Command \"Expand-Archive\"" }
+    }
+  ]
+}

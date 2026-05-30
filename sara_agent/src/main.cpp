@@ -1,4 +1,5 @@
 // SARA Agent v4.0 — Native Runtime
+#include <windows.h>
 #include "../include/AgentInitializer.h"
 #include "../include/Logger.h"
 #include "../include/ConfigManager.h"
@@ -112,8 +113,13 @@ int main(int argc, char* argv[]) {
     if (!g_config.load(resolve_path("settings.json")))
         Logger::instance().warning("No settings.json — using defaults");
 
-    if (!CommandMap::instance().load(resolve_path("settings\\command_map.json")))
-        Logger::instance().warning("No command_map.json — natural language matching disabled");
+    auto commands_dir = resolve_path("settings\\commands");
+    if (GetFileAttributesA(commands_dir.c_str()) == INVALID_FILE_ATTRIBUTES) {
+        CreateDirectoryA(commands_dir.c_str(), nullptr);
+        Logger::instance().warning("Created settings/commands/ directory");
+    }
+    if (!CommandMap::instance().load_directory(commands_dir))
+        Logger::instance().warning("No command files in settings/commands/ — natural language matching disabled");
 
     auto& cfg = g_config.get();
 

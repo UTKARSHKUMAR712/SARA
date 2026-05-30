@@ -27,6 +27,8 @@ public:
     static CommandMap& instance();
 
     bool load(const std::string& filepath);
+    bool load_directory(const std::string& dirpath);
+    void add_commands(const json& j);
 
     MatchResult match(const std::string& text) const;
 

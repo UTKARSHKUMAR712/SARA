@@ -1,0 +1,1957 @@
+{
+  "commands": [
+    {
+      "type": "exact",
+      "phrases": [
+        "open spotify", "launch spotify", "start spotify", "spotify open",
+        "run spotify", "open spotify app", "launch spotify app", "spotify launch"
+      ],
+      "action": "open_app",
+      "params": { "name": "Spotify" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open chrome", "launch chrome", "start chrome", "open google chrome",
+        "chrome browser", "run chrome", "launch google chrome", "google chrome open",
+        "start google chrome", "open chromium", "launch chromium"
+      ],
+      "action": "open_app",
+      "params": { "name": "chrome" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open edge", "launch edge", "start edge", "microsoft edge",
+        "run edge", "open ms edge", "launch ms edge", "edge browser",
+        "open microsoft edge", "start ms edge"
+      ],
+      "action": "open_app",
+      "params": { "name": "msedge" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open firefox", "launch firefox", "start firefox", "open mozilla",
+        "run firefox", "firefox browser", "launch mozilla firefox",
+        "open firefox browser", "start mozilla", "mozilla firefox open"
+      ],
+      "action": "open_app",
+      "params": { "name": "firefox" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open brave", "launch brave", "start brave", "brave browser",
+        "open brave browser", "run brave"
+      ],
+      "action": "open_app",
+      "params": { "name": "brave" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open opera", "launch opera", "start opera", "opera browser",
+        "open opera browser", "run opera"
+      ],
+      "action": "open_app",
+      "params": { "name": "opera" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open vivaldi", "launch vivaldi", "start vivaldi", "vivaldi browser"
+      ],
+      "action": "open_app",
+      "params": { "name": "vivaldi" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open calculator", "launch calc", "start calculator", "open calc",
+        "run calculator", "launch calculator", "open windows calculator",
+        "start calc", "open calc app", "calculator app"
+      ],
+      "action": "open_app",
+      "params": { "name": "calc" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open notepad", "launch notepad", "start notepad", "open text editor",
+        "run notepad", "launch text editor", "open notepad app",
+        "start notepad app", "open a text file", "open blank notepad",
+        "notepad open"
+      ],
+      "action": "open_app",
+      "params": { "name": "notepad" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open notepad plus plus", "open notepad++", "launch notepad++",
+        "start notepad++", "open npp", "launch npp", "npp open"
+      ],
+      "action": "open_app",
+      "params": { "name": "notepad++" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open explorer", "launch explorer", "open file manager", "open this pc",
+        "my files", "open file explorer", "launch file explorer",
+        "start explorer", "windows explorer", "open windows explorer",
+        "open my computer", "open my pc", "browse files", "file browser",
+        "show files", "open file browser"
+      ],
+      "action": "open_app",
+      "params": { "name": "explorer" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open task manager", "launch task manager", "start task manager",
+        "taskmgr", "open taskmgr", "run task manager", "launch taskmgr",
+        "show task manager", "open windows task manager"
+      ],
+      "action": "open_app",
+      "params": { "name": "taskmgr" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open settings", "open windows settings", "launch settings",
+        "start settings", "open system settings", "windows settings",
+        "open settings app", "launch windows settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open control panel", "control panel", "launch control panel",
+        "start control panel", "open classic control panel",
+        "windows control panel"
+      ],
+      "action": "open_app",
+      "params": { "name": "control" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open cmd", "open command prompt", "launch terminal",
+        "command prompt", "start cmd", "launch cmd", "open dos",
+        "run cmd", "open command line", "launch command prompt",
+        "start command prompt", "cmd open", "dos prompt",
+        "open dos prompt"
+      ],
+      "action": "open_app",
+      "params": { "name": "cmd" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open powershell", "launch powershell", "start powershell",
+        "pwsh", "open power shell", "launch pwsh", "run powershell",
+        "start pwsh", "open windows powershell"
+      ],
+      "action": "open_app",
+      "params": { "name": "powershell" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open windows terminal", "open terminal", "launch terminal",
+        "start windows terminal", "wt open", "launch wt",
+        "open wt", "start wt"
+      ],
+      "action": "open_app",
+      "params": { "name": "wt" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open discord", "launch discord", "start discord",
+        "run discord", "open discord app", "discord open",
+        "launch discord app", "start discord app"
+      ],
+      "action": "open_app",
+      "params": { "name": "Discord" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open vscode", "open visual studio code", "launch vscode",
+        "start vscode", "code editor", "open vs code",
+        "launch vs code", "run vscode", "visual studio code open",
+        "start code editor", "open code editor"
+      ],
+      "action": "open_app",
+      "params": { "name": "code" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open visual studio", "launch visual studio", "start visual studio",
+        "open vs", "launch vs", "run visual studio", "vs open"
+      ],
+      "action": "open_app",
+      "params": { "name": "devenv" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open steam", "launch steam", "start steam",
+        "run steam", "steam open", "open steam app"
+      ],
+      "action": "open_app",
+      "params": { "name": "steam" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open epic games", "launch epic games", "start epic games",
+        "open epic", "launch epic", "epic games launcher"
+      ],
+      "action": "open_app",
+      "params": { "name": "com.epicgames.launcher" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open word", "open microsoft word", "launch word",
+        "start word", "open ms word", "word processor",
+        "launch ms word", "microsoft word open"
+      ],
+      "action": "open_app",
+      "params": { "name": "WINWORD" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open excel", "open microsoft excel", "launch excel",
+        "start excel", "open ms excel", "spreadsheet",
+        "launch ms excel", "microsoft excel open"
+      ],
+      "action": "open_app",
+      "params": { "name": "EXCEL" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open powerpoint", "open microsoft powerpoint", "launch powerpoint",
+        "start powerpoint", "open ms powerpoint", "powerpoint presentation",
+        "launch ms powerpoint"
+      ],
+      "action": "open_app",
+      "params": { "name": "POWERPNT" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open outlook", "open microsoft outlook", "launch outlook",
+        "start outlook", "open ms outlook", "email client",
+        "launch ms outlook", "microsoft outlook open"
+      ],
+      "action": "open_app",
+      "params": { "name": "OUTLOOK" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open teams", "open microsoft teams", "launch teams",
+        "start teams", "open ms teams", "microsoft teams open"
+      ],
+      "action": "open_app",
+      "params": { "name": "Teams" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open zoom", "launch zoom", "start zoom",
+        "run zoom", "zoom app", "open zoom app"
+      ],
+      "action": "open_app",
+      "params": { "name": "Zoom" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open slack", "launch slack", "start slack",
+        "run slack", "open slack app", "slack workspace"
+      ],
+      "action": "open_app",
+      "params": { "name": "slack" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open telegram", "launch telegram", "start telegram",
+        "open telegram desktop", "telegram app", "run telegram"
+      ],
+      "action": "open_app",
+      "params": { "name": "Telegram" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open whatsapp", "launch whatsapp", "start whatsapp",
+        "open whatsapp desktop", "whatsapp app"
+      ],
+      "action": "open_app",
+      "params": { "name": "WhatsApp" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open obs", "open obs studio", "launch obs",
+        "start obs", "open obs studio", "streaming software",
+        "launch obs studio"
+      ],
+      "action": "open_app",
+      "params": { "name": "obs64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open paint", "open ms paint", "launch paint",
+        "start paint", "microsoft paint", "open paint app",
+        "paint open"
+      ],
+      "action": "open_app",
+      "params": { "name": "mspaint" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open snipping tool", "open snip", "launch snipping tool",
+        "snipping tool", "open snip and sketch"
+      ],
+      "action": "open_app",
+      "params": { "name": "SnippingTool" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open calculator", "open windows calculator", "launch calculator",
+        "calc open", "run calculator", "start calc"
+      ],
+      "action": "open_app",
+      "params": { "name": "calculator" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open calendar", "open windows calendar", "launch calendar",
+        "start calendar", "calendar app"
+      ],
+      "action": "open_app",
+      "params": { "name": "outlookcal:" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open camera", "open windows camera", "launch camera",
+        "start camera", "webcam app", "open webcam app"
+      ],
+      "action": "open_app",
+      "params": { "name": "WindowsCamera" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open alarm clock", "open alarms", "open windows alarms",
+        "launch alarms"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-clock:" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open clock", "open world clock", "clock app"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-clock:" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open maps", "open windows maps", "launch maps",
+        "start maps", "microsoft maps"
+      ],
+      "action": "open_app",
+      "params": { "name": "BingMaps" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open sticky notes", "open notes", "launch sticky notes",
+        "sticky notes", "open stickynotes"
+      ],
+      "action": "open_app",
+      "params": { "name": "Microsoft.StickyNotes_8wekyb3d8bbwe" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open registry editor", "open regedit", "launch regedit",
+        "registry editor", "start regedit", "open windows registry",
+        "run regedit"
+      ],
+      "action": "open_app",
+      "params": { "name": "regedit" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open device manager", "launch device manager",
+        "start device manager", "devmgmt", "open devmgmt"
+      ],
+      "action": "open_app",
+      "params": { "name": "devmgmt" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open services", "open windows services",
+        "launch services", "services msc", "open services panel",
+        "services panel"
+      ],
+      "action": "open_app",
+      "params": { "name": "services.msc" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open group policy", "open gpedit",
+        "launch group policy editor", "gpedit msc"
+      ],
+      "action": "open_app",
+      "params": { "name": "gpedit.msc" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open event viewer", "event viewer",
+        "launch event viewer", "eventvwr"
+      ],
+      "action": "open_app",
+      "params": { "name": "eventvwr" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open resource monitor", "resource monitor",
+        "launch resource monitor", "resmon"
+      ],
+      "action": "open_app",
+      "params": { "name": "resmon" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open performance monitor", "perfmon",
+        "launch performance monitor"
+      ],
+      "action": "open_app",
+      "params": { "name": "perfmon" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open disk management", "diskmgmt",
+        "launch disk management", "open disk manager",
+        "disk management console"
+      ],
+      "action": "open_app",
+      "params": { "name": "diskmgmt.msc" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open computer management", "compmgmt",
+        "launch computer management", "computer management console"
+      ],
+      "action": "open_app",
+      "params": { "name": "compmgmt.msc" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open task scheduler", "taskschd",
+        "launch task scheduler", "task scheduler"
+      ],
+      "action": "open_app",
+      "params": { "name": "taskschd.msc" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open print management", "printmanagement",
+        "launch print management"
+      ],
+      "action": "open_app",
+      "params": { "name": "printmanagement.msc" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open firewall", "open windows firewall",
+        "launch firewall", "firewall settings", "wf msc"
+      ],
+      "action": "open_app",
+      "params": { "name": "WF.msc" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open adobe reader", "open acrobat", "launch acrobat",
+        "open pdf reader", "launch adobe reader", "open pdf"
+      ],
+      "action": "open_app",
+      "params": { "name": "AcroRd32" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open photoshop", "launch photoshop", "start photoshop",
+        "open adobe photoshop", "ps open"
+      ],
+      "action": "open_app",
+      "params": { "name": "Photoshop" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open illustrator", "launch illustrator", "start illustrator",
+        "open adobe illustrator", "ai open"
+      ],
+      "action": "open_app",
+      "params": { "name": "Illustrator" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open premiere pro", "launch premiere", "start premiere",
+        "open adobe premiere", "premiere pro"
+      ],
+      "action": "open_app",
+      "params": { "name": "Adobe Premiere Pro" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open after effects", "launch after effects",
+        "start after effects", "ae open"
+      ],
+      "action": "open_app",
+      "params": { "name": "AfterFX" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open lightroom", "launch lightroom", "start lightroom",
+        "open adobe lightroom"
+      ],
+      "action": "open_app",
+      "params": { "name": "Lightroom" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open blender", "launch blender", "start blender",
+        "run blender", "blender 3d"
+      ],
+      "action": "open_app",
+      "params": { "name": "blender" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open unity", "launch unity", "start unity",
+        "unity editor", "open unity hub"
+      ],
+      "action": "open_app",
+      "params": { "name": "Unity" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open unreal engine", "launch unreal", "start unreal engine",
+        "open unreal editor", "ue5 open"
+      ],
+      "action": "open_app",
+      "params": { "name": "UE5" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open github desktop", "launch github desktop",
+        "start github desktop", "open github"
+      ],
+      "action": "open_app",
+      "params": { "name": "GitHubDesktop" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open git bash", "launch git bash", "start git bash",
+        "git bash open"
+      ],
+      "action": "open_app",
+      "params": { "name": "git-bash" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open mysql workbench", "launch mysql workbench",
+        "start mysql workbench", "open mysql"
+      ],
+      "action": "open_app",
+      "params": { "name": "MySQLWorkbench" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open postman", "launch postman", "start postman",
+        "run postman", "postman app"
+      ],
+      "action": "open_app",
+      "params": { "name": "Postman" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open docker", "launch docker", "start docker",
+        "docker desktop", "open docker desktop"
+      ],
+      "action": "open_app",
+      "params": { "name": "Docker Desktop" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open wireshark", "launch wireshark", "start wireshark",
+        "run wireshark"
+      ],
+      "action": "open_app",
+      "params": { "name": "Wireshark" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open putty", "launch putty", "start putty",
+        "run putty", "putty ssh"
+      ],
+      "action": "open_app",
+      "params": { "name": "putty" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open winrar", "launch winrar", "start winrar",
+        "open rar extractor", "winrar app"
+      ],
+      "action": "open_app",
+      "params": { "name": "WinRAR" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open 7zip", "launch 7zip", "start 7zip",
+        "7-zip", "open 7-zip"
+      ],
+      "action": "open_app",
+      "params": { "name": "7zFM" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open vlc", "launch vlc", "start vlc",
+        "vlc media player", "open vlc player",
+        "run vlc", "vlc player"
+      ],
+      "action": "open_app",
+      "params": { "name": "vlc" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open media player", "open windows media player",
+        "launch wmp", "windows media player",
+        "start media player"
+      ],
+      "action": "open_app",
+      "params": { "name": "wmplayer" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open spotube", "launch spotube", "start spotube",
+        "run spotube"
+      ],
+      "action": "open_app",
+      "params": { "name": "spotube" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open itunes", "launch itunes", "start itunes",
+        "run itunes", "apple itunes"
+      ],
+      "action": "open_app",
+      "params": { "name": "iTunes" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open virtualbox", "launch virtualbox", "start virtualbox",
+        "oracle virtualbox"
+      ],
+      "action": "open_app",
+      "params": { "name": "VirtualBox" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open vmware", "launch vmware", "start vmware",
+        "vmware workstation"
+      ],
+      "action": "open_app",
+      "params": { "name": "vmware" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open ccleaner", "launch ccleaner", "start ccleaner",
+        "run ccleaner"
+      ],
+      "action": "open_app",
+      "params": { "name": "CCleaner" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open malwarebytes", "launch malwarebytes",
+        "start malwarebytes", "run malwarebytes"
+      ],
+      "action": "open_app",
+      "params": { "name": "Malwarebytes" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open defender", "open windows defender",
+        "launch defender", "windows security",
+        "open windows security"
+      ],
+      "action": "open_app",
+      "params": { "name": "windowsdefender:" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open onenote", "launch onenote", "start onenote",
+        "microsoft onenote", "open ms onenote"
+      ],
+      "action": "open_app",
+      "params": { "name": "OneNote" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open onedrive", "launch onedrive", "start onedrive",
+        "microsoft onedrive", "open ms onedrive"
+      ],
+      "action": "open_app",
+      "params": { "name": "OneDrive" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open evernote", "launch evernote", "start evernote",
+        "run evernote"
+      ],
+      "action": "open_app",
+      "params": { "name": "Evernote" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open trello", "launch trello", "start trello",
+        "trello app"
+      ],
+      "action": "open_app",
+      "params": { "name": "Trello" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open figma", "launch figma", "start figma",
+        "figma app"
+      ],
+      "action": "open_app",
+      "params": { "name": "Figma" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open teamspeak", "launch teamspeak", "start teamspeak",
+        "teamspeak 3", "ts3 open"
+      ],
+      "action": "open_app",
+      "params": { "name": "ts3client_win64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open mumble", "launch mumble", "start mumble",
+        "mumble app"
+      ],
+      "action": "open_app",
+      "params": { "name": "mumble" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open obsidian", "launch obsidian", "start obsidian",
+        "obsidian notes", "open obsidian notes"
+      ],
+      "action": "open_app",
+      "params": { "name": "Obsidian" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open notion", "launch notion", "start notion",
+        "notion app", "notion notes"
+      ],
+      "action": "open_app",
+      "params": { "name": "Notion" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open anydesk", "launch anydesk", "start anydesk",
+        "anydesk remote"
+      ],
+      "action": "open_app",
+      "params": { "name": "AnyDesk" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open teamviewer", "launch teamviewer", "start teamviewer",
+        "teamviewer remote"
+      ],
+      "action": "open_app",
+      "params": { "name": "TeamViewer" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open nordvpn", "launch nordvpn", "start nordvpn",
+        "open vpn", "vpn app"
+      ],
+      "action": "open_app",
+      "params": { "name": "NordVPN" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open cloudflare warp", "launch warp", "start warp",
+        "cloudflare warp", "warp vpn"
+      ],
+      "action": "open_app",
+      "params": { "name": "Cloudflare WARP" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open powertoys", "launch powertoys",
+        "start powertoys", "microsoft powertoys"
+      ],
+      "action": "open_app",
+      "params": { "name": "PowerToys" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open cortana", "launch cortana", "start cortana",
+        "hey cortana", "cortana app"
+      ],
+      "action": "open_app",
+      "params": { "name": "Cortana" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open xbox", "open xbox app", "launch xbox",
+        "start xbox", "xbox console companion"
+      ],
+      "action": "open_app",
+      "params": { "name": "XboxApp" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open game bar", "open xbox game bar",
+        "launch game bar", "game bar"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-gamingoverlay:" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open nvidia control panel", "nvidia control panel",
+        "open nvidia settings", "nvidia settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "nvidia-settings" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open amd adrenaline", "amd adrenaline",
+        "open amd software", "radeon software"
+      ],
+      "action": "open_app",
+      "params": { "name": "radeonsoftware" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open character map", "charmap", "open charmap",
+        "character map app"
+      ],
+      "action": "open_app",
+      "params": { "name": "charmap" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open on screen keyboard", "osk",
+        "open virtual keyboard", "onscreen keyboard"
+      ],
+      "action": "open_app",
+      "params": { "name": "osk" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open narrator", "open windows narrator",
+        "launch narrator", "start narrator"
+      ],
+      "action": "open_app",
+      "params": { "name": "narrator" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open magnifier", "open windows magnifier",
+        "launch magnifier", "start magnifier"
+      ],
+      "action": "open_app",
+      "params": { "name": "magnify" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open sound settings", "open audio settings",
+        "launch sound settings", "sound control panel"
+      ],
+      "action": "open_app",
+      "params": { "name": "mmsys.cpl" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open mouse settings", "open mouse properties",
+        "launch mouse settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "main.cpl" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open display settings", "open screen settings",
+        "launch display settings", "resolution settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:display" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open bluetooth settings", "open bluetooth",
+        "launch bluetooth settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:bluetooth" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open wifi settings", "open network settings",
+        "launch wifi settings", "wi-fi settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:network-wifi" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open microphone", "open mic", "launch mic settings",
+        "microphone settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:privacy-microphone" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open camera settings", "open webcam settings",
+        "launch camera privacy", "camera privacy settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:privacy-webcam" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open notification settings", "open notifications",
+        "launch notification settings", "action center settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:notifications" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open storage settings", "open storage",
+        "launch storage settings", "disk storage"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:storagesense" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open apps and features", "open installed apps",
+        "launch apps settings", "app list"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:appsfeatures" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open default apps", "open default programs",
+        "launch default apps settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:defaultapps" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open battery saver", "open battery settings",
+        "launch battery settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:batterysaver" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open about pc", "open about", "open system info",
+        "about your pc", "pc info"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:about" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open troubleshooter", "open troubleshoot",
+        "launch troubleshooter", "troubleshoot settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:troubleshoot" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open recovery", "open recovery settings",
+        "launch recovery", "system recovery"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:recovery" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open bitlocker", "open bitlocker settings",
+        "launch bitlocker", "device encryption"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:bitlocker" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open clipboard settings", "open clipboard",
+        "launch clipboard settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:clipboard" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open multitasking", "open multitasking settings",
+        "snap settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:multitasking" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open tablet mode settings", "open tablet mode",
+        "tablet mode"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:tabletmode" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open printer settings", "open printers",
+        "launch printer settings", "printing settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:printers" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open region settings", "open language settings",
+        "region and language"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:regionformatting" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open date and time", "open time settings",
+        "launch date time settings", "clock settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:dateandtime" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open update settings", "open windows update",
+        "launch windows update", "check for updates",
+        "windows update"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:windowsupdate" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open backup settings", "open backup",
+        "launch backup settings", "file history"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:backup" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open sign in options", "open login settings",
+        "sign in settings", "password settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:signinoptions" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open accounts", "open account settings",
+        "your account settings", "microsoft account"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:yourinfo" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open focus assist", "open focus settings",
+        "focus assist", "do not disturb"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:quiethours" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open gaming settings", "open game mode",
+        "launch gaming settings", "game mode settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:gaming-gamemode" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open ease of access", "open accessibility",
+        "accessibility settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "ms-settings:easeofaccess-display" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open network and sharing center", "network sharing center",
+        "open network center"
+      ],
+      "action": "open_app",
+      "params": { "name": "control.exe /name Microsoft.NetworkAndSharingCenter" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open java control panel", "open java settings",
+        "java control panel", "configure java"
+      ],
+      "action": "open_app",
+      "params": { "name": "jcontrol" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open python idle", "launch python idle",
+        "start python idle", "python editor"
+      ],
+      "action": "open_app",
+      "params": { "name": "idle" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open matlab", "launch matlab", "start matlab",
+        "run matlab", "matlab app"
+      ],
+      "action": "open_app",
+      "params": { "name": "matlab" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open android studio", "launch android studio",
+        "start android studio", "android studio open"
+      ],
+      "action": "open_app",
+      "params": { "name": "studio64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open intellij", "launch intellij idea",
+        "start intellij", "intellij idea"
+      ],
+      "action": "open_app",
+      "params": { "name": "idea64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open pycharm", "launch pycharm",
+        "start pycharm", "python pycharm"
+      ],
+      "action": "open_app",
+      "params": { "name": "pycharm64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open webstorm", "launch webstorm",
+        "start webstorm", "webstorm ide"
+      ],
+      "action": "open_app",
+      "params": { "name": "webstorm64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open clion", "launch clion",
+        "start clion", "clion ide"
+      ],
+      "action": "open_app",
+      "params": { "name": "clion64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open rider", "launch rider",
+        "start rider", "jetbrains rider"
+      ],
+      "action": "open_app",
+      "params": { "name": "rider64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open datagrip", "launch datagrip",
+        "start datagrip", "datagrip database"
+      ],
+      "action": "open_app",
+      "params": { "name": "datagrip64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open sql server management studio", "open ssms",
+        "launch ssms", "sql server management studio"
+      ],
+      "action": "open_app",
+      "params": { "name": "Ssms" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open dbeaver", "launch dbeaver",
+        "start dbeaver", "dbeaver database"
+      ],
+      "action": "open_app",
+      "params": { "name": "dbeaver" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open tableau", "launch tableau",
+        "start tableau", "tableau desktop"
+      ],
+      "action": "open_app",
+      "params": { "name": "tableau" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open power bi", "launch power bi",
+        "start power bi", "microsoft power bi"
+      ],
+      "action": "open_app",
+      "params": { "name": "PBIDesktop" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open jupyter", "launch jupyter",
+        "start jupyter", "jupyter notebook",
+        "open jupyter notebook"
+      ],
+      "action": "open_app",
+      "params": { "name": "jupyter-notebook" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open anaconda navigator", "launch anaconda",
+        "start anaconda", "anaconda prompt"
+      ],
+      "action": "open_app",
+      "params": { "name": "anaconda-navigator" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open cmder", "launch cmder",
+        "start cmder", "cmder terminal"
+      ],
+      "action": "open_app",
+      "params": { "name": "Cmder" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open fxs app", "open filezilla", "launch filezilla",
+        "start filezilla", "filezilla ftp"
+      ],
+      "action": "open_app",
+      "params": { "name": "filezilla" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open winscp", "launch winscp",
+        "start winscp", "winscp ftp"
+      ],
+      "action": "open_app",
+      "params": { "name": "WinSCP" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open bitwarden", "launch bitwarden",
+        "start bitwarden", "bitwarden password manager"
+      ],
+      "action": "open_app",
+      "params": { "name": "Bitwarden" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open keepass", "launch keepass",
+        "start keepass", "keepass password manager"
+      ],
+      "action": "open_app",
+      "params": { "name": "KeePass" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open da vinci resolve", "open davinci",
+        "launch davinci resolve", "start davinci resolve"
+      ],
+      "action": "open_app",
+      "params": { "name": "Resolve" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open fl studio", "launch fl studio",
+        "start fl studio", "fl studio 21"
+      ],
+      "action": "open_app",
+      "params": { "name": "FL64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open ableton live", "launch ableton",
+        "start ableton live", "ableton live 11"
+      ],
+      "action": "open_app",
+      "params": { "name": "Ableton Live 11" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open audacity", "launch audacity",
+        "start audacity", "audacity audio"
+      ],
+      "action": "open_app",
+      "params": { "name": "audacity" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open handbrake", "launch handbrake",
+        "start handbrake", "handbrake video"
+      ],
+      "action": "open_app",
+      "params": { "name": "HandBrake" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open gimp", "launch gimp",
+        "start gimp", "gimp editor"
+      ],
+      "action": "open_app",
+      "params": { "name": "gimp-2.10" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open inkscape", "launch inkscape",
+        "start inkscape", "inkscape vector"
+      ],
+      "action": "open_app",
+      "params": { "name": "inkscape" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open kdenlive", "launch kdenlive",
+        "start kdenlive", "kdenlive video editor"
+      ],
+      "action": "open_app",
+      "params": { "name": "kdenlive" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open shotcut", "launch shotcut",
+        "start shotcut", "shotcut video"
+      ],
+      "action": "open_app",
+      "params": { "name": "shotcut" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open discord canary", "launch discord canary",
+        "start discord canary", "discord ptb"
+      ],
+      "action": "open_app",
+      "params": { "name": "DiscordCanary" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open skype", "launch skype",
+        "start skype", "skype app",
+        "microsoft skype"
+      ],
+      "action": "open_app",
+      "params": { "name": "Skype" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open messenger", "launch messenger",
+        "start messenger", "facebook messenger"
+      ],
+      "action": "open_app",
+      "params": { "name": "Messenger" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open signal", "launch signal",
+        "start signal", "signal app"
+      ],
+      "action": "open_app",
+      "params": { "name": "Signal" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open viber", "launch viber",
+        "start viber", "viber desktop"
+      ],
+      "action": "open_app",
+      "params": { "name": "Viber" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open line", "launch line",
+        "start line", "line messenger"
+      ],
+      "action": "open_app",
+      "params": { "name": "Line" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open thunderbird", "launch thunderbird",
+        "start thunderbird", "mozilla thunderbird"
+      ],
+      "action": "open_app",
+      "params": { "name": "thunderbird" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open foxit reader", "launch foxit",
+        "start foxit reader", "foxit pdf"
+      ],
+      "action": "open_app",
+      "params": { "name": "FoxitReader" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open sumatra pdf", "launch sumatra",
+        "start sumatra pdf", "sumatra pdf reader"
+      ],
+      "action": "open_app",
+      "params": { "name": "SumatraPDF" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open calibre", "launch calibre",
+        "start calibre", "calibre ebook"
+      ],
+      "action": "open_app",
+      "params": { "name": "calibre" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open torrent", "open qbittorrent",
+        "launch qbittorrent", "start qbittorrent",
+        "bit torrent"
+      ],
+      "action": "open_app",
+      "params": { "name": "qbittorrent" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open deluge", "launch deluge",
+        "start deluge", "deluge torrent"
+      ],
+      "action": "open_app",
+      "params": { "name": "deluge" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open utorrent", "launch utorrent",
+        "start utorrent", "u torrent"
+      ],
+      "action": "open_app",
+      "params": { "name": "utorrent" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open hwinfo", "open hwinfo64",
+        "launch hwinfo", "hardware info"
+      ],
+      "action": "open_app",
+      "params": { "name": "HWiNFO64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open cpuz", "open cpu z",
+        "launch cpuz", "cpu z app"
+      ],
+      "action": "open_app",
+      "params": { "name": "cpuz" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open gpu z", "open gpuz",
+        "launch gpuz", "gpu z app"
+      ],
+      "action": "open_app",
+      "params": { "name": "GPU-Z" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open msi afterburner", "launch afterburner",
+        "start msi afterburner", "afterburner app"
+      ],
+      "action": "open_app",
+      "params": { "name": "MSIAfterburner" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open crystaldiskinfo", "launch crystaldiskinfo",
+        "start crystaldiskinfo", "disk info"
+      ],
+      "action": "open_app",
+      "params": { "name": "CrystalDiskInfo" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open crystaldiskmark", "launch crystaldiskmark",
+        "start crystaldiskmark", "disk benchmark"
+      ],
+      "action": "open_app",
+      "params": { "name": "CrystalDiskMark" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open defraggler", "launch defraggler",
+        "start defraggler", "disk defrag"
+      ],
+      "action": "open_app",
+      "params": { "name": "Defraggler" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open speccy", "launch speccy",
+        "start speccy", "system spec"
+      ],
+      "action": "open_app",
+      "params": { "name": "Speccy" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open recuva", "launch recuva",
+        "start recuva", "file recovery"
+      ],
+      "action": "open_app",
+      "params": { "name": "Recuva" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open imgburn", "launch imgburn",
+        "start imgburn", "dvd burner"
+      ],
+      "action": "open_app",
+      "params": { "name": "ImgBurn" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open powertoys settings", "open powertoys",
+        "powertoys settings"
+      ],
+      "action": "open_app",
+      "params": { "name": "PowerToys.Settings" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open everything search", "open everything",
+        "launch everything", "everything search engine",
+        "start everything"
+      ],
+      "action": "open_app",
+      "params": { "name": "Everything" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open wox", "launch wox",
+        "start wox", "wox launcher"
+      ],
+      "action": "open_app",
+      "params": { "name": "Wox" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open autohotkey", "launch autohotkey",
+        "start autohotkey", "ahk"
+      ],
+      "action": "open_app",
+      "params": { "name": "AutoHotkey" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open sharex", "launch sharex",
+        "start sharex", "sharex screenshot"
+      ],
+      "action": "open_app",
+      "params": { "name": "ShareX" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open greenshot", "launch greenshot",
+        "start greenshot", "greenshot screenshot"
+      ],
+      "action": "open_app",
+      "params": { "name": "Greenshot" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open fiddler", "launch fiddler",
+        "start fiddler", "fiddler everywhere"
+      ],
+      "action": "open_app",
+      "params": { "name": "Fiddler" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open burp suite", "launch burp suite",
+        "start burpsuite", "burp community",
+        "burp professional"
+      ],
+      "action": "open_app",
+      "params": { "name": "BurpSuiteCommunity" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open nmap", "launch nmap",
+        "start nmap", "zenmap"
+      ],
+      "action": "open_app",
+      "params": { "name": "zenmap" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open metasploit", "launch metasploit",
+        "start metasploit", "msfconsole"
+      ],
+      "action": "open_app",
+      "params": { "name": "msfconsole" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open sqlmap", "launch sqlmap",
+        "start sqlmap", "sql map"
+      ],
+      "action": "open_app",
+      "params": { "name": "sqlmap" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open hashcat", "launch hashcat",
+        "start hashcat", "hashcat app"
+      ],
+      "action": "open_app",
+      "params": { "name": "hashcat" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open john the ripper", "launch john",
+        "start john the ripper", "johnny"
+      ],
+      "action": "open_app",
+      "params": { "name": "johnny" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open openvpn", "launch openvpn",
+        "start openvpn", "openvpn gui"
+      ],
+      "action": "open_app",
+      "params": { "name": "openvpn-gui" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open protonvpn", "launch protonvpn",
+        "start protonvpn", "proton vpn"
+      ],
+      "action": "open_app",
+      "params": { "name": "ProtonVPN" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open mullvad vpn", "launch mullvad",
+        "start mullvad", "mullvad vpn app"
+      ],
+      "action": "open_app",
+      "params": { "name": "Mullvad VPN" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open expressvpn", "launch expressvpn",
+        "start expressvpn", "express vpn"
+      ],
+      "action": "open_app",
+      "params": { "name": "ExpressVPN" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open total commander", "launch total commander",
+        "start total commander", "totalcmd"
+      ],
+      "action": "open_app",
+      "params": { "name": "TOTALCMD" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open double commander", "launch double commander",
+        "start double commander", "doublecmd"
+      ],
+      "action": "open_app",
+      "params": { "name": "doublecmd" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open far manager", "launch far manager",
+        "start far", "far manager"
+      ],
+      "action": "open_app",
+      "params": { "name": "Far" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open conemu", "launch conemu",
+        "start conemu", "conemu terminal"
+      ],
+      "action": "open_app",
+      "params": { "name": "ConEmu64" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open mobaxterm", "launch mobaxterm",
+        "start mobaxterm", "moba xterm"
+      ],
+      "action": "open_app",
+      "params": { "name": "MobaXterm" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open hyper terminal", "launch hyper",
+        "start hyper", "hyper terminal app"
+      ],
+      "action": "open_app",
+      "params": { "name": "Hyper" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open alacritty", "launch alacritty",
+        "start alacritty", "alacritty terminal"
+      ],
+      "action": "open_app",
+      "params": { "name": "alacritty" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open tabby", "launch tabby",
+        "start tabby", "tabby terminal"
+      ],
+      "action": "open_app",
+      "params": { "name": "Tabby" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open warp terminal", "launch warp",
+        "start warp terminal", "warp terminal app"
+      ],
+      "action": "open_app",
+      "params": { "name": "warp-terminal" }
+    },
+    {
+      "type": "exact",
+      "phrases": [
+        "open yakuake", "launch yakuake",
+        "start yakuake", "yakuake terminal"
+      ],
+      "action": "open_app",
+      "params": { "name": "yakuake" }
+    }
+  ]
+}
