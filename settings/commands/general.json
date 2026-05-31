@@ -3,18 +3,6 @@
     {
       "type": "exact",
       "phrases": [
-        "sleep", "sara sleep", "sleep sara",
-        "go to sleep", "sara go to sleep", "sleep mode",
-        "power down", "sara power down", "sara shutdown",
-        "take a nap", "sara rest", "rest sara",
-        "hibernate", "sara hibernate", "sara standby"
-      ],
-      "action": "sleep_sara",
-      "params": {}
-    },
-    {
-      "type": "exact",
-      "phrases": [
         "pause", "resume", "play pause", "toggle play",
         "play/pause", "play or pause", "toggle music",
         "toggle playback", "unpause", "continue playing"

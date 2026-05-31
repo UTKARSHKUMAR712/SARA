@@ -438,17 +438,24 @@ bool NativeCommandRouter::handle_search(const std::string& chat_id, const std::s
 
     nlohmann::json req = {
         {"plugin", "search"},
-        {"action", "search"},
+        {"action", scrape ? "scrape" : "search"},
         {"query",  query},
         {"scrape", scrape},
-        {"max_urls", 5}
+        {"max_urls", 6}
     };
     std::string json_arg = req.dump();
 
     std::thread([chat_id, json_arg, query, scrape]() {
         std::string raw = run_search_plugin(json_arg);
         nlohmann::json resp;
-        try { resp = nlohmann::json::parse(raw); } catch (...) { return; }
+        try { 
+            resp = nlohmann::json::parse(raw); 
+        } catch (const std::exception& e) { 
+            std::string err_msg = raw;
+            if (err_msg.size() > 500) err_msg = err_msg.substr(0, 500) + "...";
+            g_telegram.send_message(chat_id, "❌ Search plugin crashed or returned invalid data.\nError: " + std::string(e.what()) + "\nRaw Output:\n" + err_msg);
+            return; 
+        }
 
         if (!resp.value("success", false)) {
             g_telegram.send_message(chat_id, "❌ Search failed: " + resp.value("error", "Unknown error"));
@@ -473,7 +480,8 @@ bool NativeCommandRouter::handle_search(const std::string& chat_id, const std::s
                 }
             } else { msg += "_No results found._"; }
         } else {
-            msg = "🔍 **Deep Search** for: `" + query + "`\n\n";
+            g_telegram.send_message(chat_id, "🔍 **Deep Search** for: `" + query + "`\n\n");
+            
             auto& sources = resp["sources"];
             if (sources.is_array() && !sources.empty()) {
                 int idx = 1;
@@ -481,15 +489,19 @@ bool NativeCommandRouter::handle_search(const std::string& chat_id, const std::s
                     std::string title   = s.value("title",   "Untitled");
                     std::string url     = s.value("url",     "");
                     std::string content = s.value("content", "");
-                    if (content.size() > 1500) content = content.substr(0, 1500) + "...";
-                    msg += std::to_string(idx++) + ". **" + title + "**\n";
-                    msg += "   🔗 " + url + "\n";
-                    if (!content.empty()) msg += "   " + content + "\n\n";
-                    if (msg.size() > 3800) break;
+                    
+                    std::string result_msg = std::to_string(idx++) + ". **" + title + "**\n   🔗 " + url + "\n\n" + content;
+                    
+                    // Split the message into chunks if it exceeds 4000 characters
+                    for (size_t i = 0; i < result_msg.size(); i += 4000) {
+                        g_telegram.send_message(chat_id, result_msg.substr(i, 4000));
+                        Sleep(500); // Prevent telegram rate limiting
+                    }
                 }
-            } else { msg += "_No scraped content found._"; }
+            } else { 
+                g_telegram.send_message(chat_id, "_No scraped content found._"); 
+            }
         }
-        g_telegram.send_message(chat_id, msg);
     }).detach();
     return true;
 }

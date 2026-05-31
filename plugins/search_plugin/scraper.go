@@ -67,9 +67,9 @@ func scrapeURL(pageURL string) ScrapeResult {
 		content = extractText(doc.Find("body"))
 	}
 
-	// Cap at 3000 chars to keep RAM low
-	if len(content) > 3000 {
-		content = content[:3000] + "..."
+	// Cap at 25000 chars to avoid memory exhaustion on massive files
+	if len(content) > 25000 {
+		content = content[:25000] + "..."
 	}
 
 	return ScrapeResult{

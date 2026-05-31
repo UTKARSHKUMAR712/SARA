@@ -3,6 +3,7 @@
 #include <fstream>
 #include <algorithm>
 #include <filesystem>
+#include <regex>
 
 namespace sara {
 
@@ -39,6 +40,9 @@ void CommandMap::add_commands(const json& j) {
             } else if (type == "contains") {
                 e.match_type = MatchType::contains;
                 contains_entries_.push_back(e);
+            } else if (type == "regex") {
+                e.match_type = MatchType::regex;
+                regex_entries_.push_back(e);
             } else {
                 e.match_type = MatchType::exact;
                 exact_entries_[key] = e;
@@ -59,14 +63,10 @@ bool CommandMap::load(const std::string& filepath) {
         exact_entries_.clear();
         prefix_entries_.clear();
         contains_entries_.clear();
+        regex_entries_.clear();
         add_commands(j);
-        Logger::instance().info("CommandMap(" + filepath + "): "
-            + std::to_string(exact_entries_.size()) + " exact, "
-            + std::to_string(prefix_entries_.size()) + " prefix, "
-            + std::to_string(contains_entries_.size()) + " contains");
         return true;
     } catch (const std::exception& e) {
-        Logger::instance().err("CommandMap: parse error in " + filepath + " - " + std::string(e.what()));
         return false;
     }
 }
@@ -75,6 +75,7 @@ bool CommandMap::load_directory(const std::string& dirpath) {
     exact_entries_.clear();
     prefix_entries_.clear();
     contains_entries_.clear();
+    regex_entries_.clear();
     int files_loaded = 0;
     try {
         for (auto& entry : std::filesystem::directory_iterator(dirpath)) {
@@ -82,31 +83,20 @@ bool CommandMap::load_directory(const std::string& dirpath) {
             auto path = entry.path();
             if (path.extension() != ".json") continue;
             std::ifstream file(path);
-            if (!file.is_open()) {
-                Logger::instance().warning("CommandMap: cannot open " + path.string());
-                continue;
-            }
+            if (!file.is_open()) continue;
             try {
                 json j;
                 file >> j;
                 if (!j.contains("commands")) continue;
-                int before = (int)(exact_entries_.size() + prefix_entries_.size() + contains_entries_.size());
                 add_commands(j);
-                int after = (int)(exact_entries_.size() + prefix_entries_.size() + contains_entries_.size());
                 files_loaded++;
-                Logger::instance().debug("CommandMap: loaded " + path.filename().string()
-                    + " (" + std::to_string(after - before) + " entries)");
-            } catch (const std::exception& e) {
-                Logger::instance().err("CommandMap: parse error in " + path.string() + " - " + std::string(e.what()));
-            }
+            } catch (...) {}
         }
-    } catch (const std::exception& e) {
-        Logger::instance().err("CommandMap: directory error - " + std::string(e.what()));
-        return false;
-    }
+    } catch (...) { return false; }
     Logger::instance().info("CommandMap: loaded " + std::to_string(files_loaded) + " files, "
         + std::to_string(exact_entries_.size()) + " exact, "
         + std::to_string(prefix_entries_.size()) + " prefix, "
+        + std::to_string(regex_entries_.size()) + " regex, "
         + std::to_string(contains_entries_.size()) + " total");
     return files_loaded > 0;
 }
@@ -129,11 +119,25 @@ MatchResult CommandMap::match(const std::string& text) const {
     while (!cleaned.empty() && cleaned.back() == ' ') cleaned.pop_back();
 
     std::string key = normalize(cleaned);
+    
+    // 1. Regex (Highest Priority)
+    for (auto& e : regex_entries_) {
+        try {
+            std::regex re(e.pattern, std::regex_constants::icase);
+            if (std::regex_match(cleaned, re)) {
+                return {&e, {}};
+            }
+        } catch (...) {} // Ignore invalid regex
+    }
+
+    // 2. Exact
     {
         auto it = exact_entries_.find(key);
         if (it != exact_entries_.end())
             return {&it->second, {}};
     }
+    
+    // 3. Prefix
     for (auto& e : prefix_entries_) {
         std::string pat = normalize(e.pattern);
         if (key.compare(0, pat.size(), pat) == 0) {
@@ -142,6 +146,8 @@ MatchResult CommandMap::match(const std::string& text) const {
             return {&e, captured};
         }
     }
+    
+    // 4. Contains
     for (auto& e : contains_entries_) {
         std::string pat = normalize(e.pattern);
         if (key.find(pat) != std::string::npos)
@@ -151,3 +157,4 @@ MatchResult CommandMap::match(const std::string& text) const {
 }
 
 } // namespace sara
+

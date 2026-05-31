@@ -11,13 +11,6 @@
 #include "../include/CommandMap.h"
 #include "../include/ConfigManager.h"
 #include "../include/WinAPIExecutor.h"
-#include "../include/WebSocketServer.h"
-#include "../include/ProcessMonitor.h"
-#include "../include/NetworkMonitor.h"
-#include "../include/IPCServer.h"
-#include "../include/HotkeyManager.h"
-#include "../include/SQLiteStore.h"
-#include "../../plugins/spotify/spotify_plugin.hpp"
 #include <mutex>
 #include <unordered_map>
 #include <fstream>
@@ -35,11 +28,6 @@ extern RuntimeState&          g_runtime;
 extern EventAutomationEngine  g_event_engine;
 extern ConfigManager          g_config;
 extern WinAPIExecutor         g_executor;
-extern WebSocketServer        g_ws_server;
-extern ProcessMonitor         g_proc_monitor;
-extern NetworkMonitor         g_net_monitor;
-extern IPCServer              g_ipc;
-extern SQLiteStore            g_store;
 
 extern std::unordered_map<std::string, std::string> g_pending_outputs;
 extern std::mutex g_pending_mutex;
@@ -160,32 +148,6 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
             g_telegram.send_message(chat_id, "🔒 Session locked. Enter Session Password.");
         }
         return;
-    }
-
-    // ── Sleep mode: any message wakes SARA + executes that command ──────────
-    if (g_runtime.is_sleeping()) {
-        g_telegram.send_message(chat_id, "☀️ Waking up... restarting subsystems.");
-        // Restart WebSocket server
-        g_ws_server.start(9080);
-        g_runtime.set_websocket_ready(true);
-        // Restart subsystems (TerminalHttp + Cloudflare never stopped)
-        g_proc_monitor.start();
-        g_event_engine.set_store(&g_store);
-        g_event_engine.set_notify_callback([](const std::string& msg) {
-            auto chats = g_config.get().telegram.allowed_user_ids;
-            if (chats.empty()) return;
-            std::string cid = std::to_string(chats[0]);
-            g_telegram.send_message(cid, "[Event] " + msg);
-        });
-        g_event_engine.start(&g_executor, &g_proc_monitor);
-        SpotifyPlugin::instance().start();
-        g_net_monitor.start();
-        HotkeyManager::instance().start();
-        g_ipc.set_handler(handle_ipc_message);
-        g_ipc.start();
-        g_runtime.wake();
-        Logger::instance().info("SARA woke up from sleep mode — executing command: " + text);
-        // Fall through to process the message that triggered wake
     }
 
     std::string clean_text;
@@ -659,21 +621,6 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
                 g_telegram.send_message(chat_id, res.success ? "✅ Brightness set to " + std::to_string(level) + "%" : "❌ " + res.message);
                 return;
             }
-            if (e.action == "sleep_sara") {
-                g_telegram.send_message(chat_id, "😴 Going to sleep... stopping subsystems. Terminal + Cloudflare stay online.");
-                // Stop non-essential subsystems (keep TerminalHttp + Cloudflare alive)
-                g_ws_server.stop();
-                g_runtime.set_websocket_ready(false);
-                SpotifyPlugin::instance().stop();
-                g_event_engine.stop();
-                g_proc_monitor.stop();
-                g_net_monitor.stop();
-                HotkeyManager::instance().stop();
-                g_ipc.stop();
-                g_runtime.enter_sleep();
-                Logger::instance().info("SARA entered sleep mode (terminal + cloudflare still running)");
-                return;
-            }
             if (e.action == "open_app") {
                 auto res = g_executor.execute("open_app", params);
                 g_telegram.send_message(chat_id, res.success ? "✅ Opening " + params.value("name","") + "..." : "❌ " + res.message);
@@ -705,9 +652,9 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
                     g_telegram.send_message(chat_id, "🔍 What do you want me to search for?");
                     return;
                 }
-                // Route through search plugin — use scrape mode for deep search action
-                bool scrape = (e.action == "search_plugin_scrape");
-                std::string cmd = scrape ? "/searchscrape " + q : "/search " + q;
+                // Route through search plugin — user requested ALL searches be deep search
+                bool scrape = true;
+                std::string cmd = "/searchscrape " + q;
                 NativeCommandRouter::handle(chat_id, cmd);
                 return;
             }

@@ -73,6 +73,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	if req.Action == "scrape" || req.Action == "search_plugin_scrape" {
+		req.Scrape = true
+	}
+
 	if req.MaxURLs <= 0 {
 		req.MaxURLs = 5
 	}
