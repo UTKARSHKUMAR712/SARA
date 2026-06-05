@@ -221,8 +221,10 @@ void TerminalHttpServer::handle_client(int sock) {
     if (path.rfind("/files", 0) == 0) {
         // Validate token: accept from query param OR cookie header
         std::string cookie_token;
+        std::string lower_req = req;
+        std::transform(lower_req.begin(), lower_req.end(), lower_req.begin(), ::tolower);
         {
-            auto cp = req.find("Sara-Token:");
+            auto cp = lower_req.find("sara-token:");
             if (cp != std::string::npos) {
                 cp += 11;
                 while (cp < req.size() && req[cp] == ' ') cp++;
@@ -231,7 +233,7 @@ void TerminalHttpServer::handle_client(int sock) {
             }
         }
         if (cookie_token.empty()) {
-            auto cp = req.find("Cookie:");
+            auto cp = lower_req.find("cookie:");
             if (cp != std::string::npos) {
                 cp += 7;
                 auto ep = req.find("\r\n", cp);
@@ -508,7 +510,11 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
         }
         auto hdr_end = fwd_req.find("\r\n\r\n");
         if (hdr_end != std::string::npos) {
-            std::string inject = "X-Forwarded-For: 127.0.0.1\r\nX-Real-IP: 127.0.0.1\r\nConnection: close\r\n";
+            std::string inject = "X-Forwarded-For: 127.0.0.1\r\nX-Real-IP: 127.0.0.1\r\n";
+            std::string echo_token = parse_query_param(raw_request, "token");
+            if (!echo_token.empty()) {
+                inject += "Connection: close\r\n";
+            }
             fwd_req.insert(hdr_end + 2, inject);
         }
     }
@@ -520,73 +526,28 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
         sent += n;
     }
 
-    long long content_len = 0;
-    bool is_chunked = false;
-    {
-        std::string lower_req = fwd_req;
-        std::transform(lower_req.begin(), lower_req.end(), lower_req.begin(), ::tolower);
-        auto p = lower_req.find("content-length:");
-        if (p != std::string::npos) content_len = std::stoll(fwd_req.substr(p + 15));
-        
-        if (lower_req.find("transfer-encoding: chunked") != std::string::npos) {
-            is_chunked = true;
+    auto pipe_thread = [](int from, int to, std::atomic<bool>& done_flag) {
+        char buf[8192];
+        while (!done_flag) {
+            fd_set fds; FD_ZERO(&fds); FD_SET(from, &fds);
+            timeval tv{1, 0};
+            if (select(0, &fds, nullptr, nullptr, &tv) <= 0) continue;
+            int n = recv(from, buf, sizeof(buf), 0);
+            if (n <= 0) { done_flag = true; break; }
+            int s = 0;
+            while (s < n) {
+                int r = ::send(to, buf + s, n - s, 0);
+                if (r <= 0) { done_flag = true; return; }
+                s += r;
+            }
         }
-    }
-    
-    long long body_already_in_fwd = 0;
-    auto req_hdr_end = raw_request.find("\r\n\r\n");
-    if (req_hdr_end != std::string::npos) {
-        body_already_in_fwd = (long long)raw_request.size() - (req_hdr_end + 4);
-    }
-    long long body_remaining = content_len - body_already_in_fwd;
+    };
 
-    if (body_remaining > 0 || is_chunked) {
-        int idle_timeout = proxy_idle_timeout_;
-        std::thread upload_thread([client_sock, fb_sock, body_remaining, is_chunked, idle_timeout]() {
-            char ubuf[8192];
-            long long to_read = body_remaining;
-            while (is_chunked || to_read > 0) {
-                fd_set ufds; FD_ZERO(&ufds); FD_SET(client_sock, &ufds);
-                timeval tv{idle_timeout, 0};
-                if (select(0, &ufds, nullptr, nullptr, &tv) <= 0) break;
-                
-                int read_size = is_chunked ? sizeof(ubuf) : (int)std::min((long long)sizeof(ubuf), to_read);
-                int n = recv(client_sock, ubuf, read_size, 0);
-                if (n <= 0) break;
-                
-                int usent = 0;
-                while (usent < n) {
-                    int r = ::send(fb_sock, ubuf + usent, n - usent, 0);
-                    if (r <= 0) break;
-                    usent += r;
-                }
-                if (!is_chunked) {
-                    to_read -= n;
-                }
-            }
-        });
-        upload_thread.detach();
-    }
-
+    std::string echo_token = parse_query_param(raw_request, "token");
     bool is_ws = is_websocket_upgrade(raw_request);
-    if (is_ws) {
+    
+    if (is_ws || echo_token.empty()) {
         std::atomic<bool> done{false};
-        auto pipe_thread = [](int from, int to, std::atomic<bool>& done_flag) {
-            char buf[8192];
-            while (!done_flag) {
-                fd_set fds; FD_ZERO(&fds); FD_SET(from, &fds);
-                timeval tv{1, 0};
-                if (select(0, &fds, nullptr, nullptr, &tv) <= 0) continue;
-                int n = recv(from, buf, sizeof(buf), 0);
-                if (n <= 0) { done_flag = true; break; }
-                int s = 0;
-                while (s < n) {
-                    int r = ::send(to, buf + s, n - s, 0);
-                    if (r <= 0) { done_flag = true; return; }
-                    s += r;
-                }
-            }
-        };
         std::thread t1(pipe_thread, fb_sock, client_sock, std::ref(done));
         std::thread t2(pipe_thread, client_sock, fb_sock, std::ref(done));
         t1.join(); t2.join();
@@ -618,37 +579,19 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
         resp_headers  = resp_headers.substr(0, hdr_end_resp + 4);
     }
 
-    std::string echo_token = parse_query_param(raw_request, "token");
-    if (!echo_token.empty()) {
-        std::string cookie_hdr = "Set-Cookie: sara_token=" + echo_token +
-                                 "; Path=/files; HttpOnly; SameSite=Lax\r\n";
-        resp_headers.insert(resp_headers.size() - 2, cookie_hdr);
-    }
-
-    resp_headers.insert(resp_headers.size() - 2,
-        "Access-Control-Allow-Origin: *\r\n"
-        "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS\r\n"
-        "Access-Control-Allow-Headers: *\r\n");
+    std::string cookie_hdr = "Set-Cookie: sara_token=" + echo_token +
+                             "; Path=/files; HttpOnly; SameSite=Lax\r\n";
+    resp_headers.insert(resp_headers.size() - 2, cookie_hdr);
 
     ::send(client_sock, resp_headers.data(), (int)resp_headers.size(), 0);
 
     if (!body_prefix.empty())
         ::send(client_sock, body_prefix.data(), (int)body_prefix.size(), 0);
 
-    while (true) {
-        fd_set fds; FD_ZERO(&fds); FD_SET(fb_sock, &fds);
-        timeval tv{proxy_idle_timeout_, 0};
-        if (select(0, &fds, nullptr, nullptr, &tv) <= 0) break;
-        int n = recv(fb_sock, rbuf, sizeof(rbuf), 0);
-        if (n <= 0) break;
-        int s = 0;
-        while (s < n) {
-            int r = ::send(client_sock, rbuf + s, n - s, 0);
-            if (r <= 0) goto fb_done;
-            s += r;
-        }
-    }
-fb_done:
+    std::atomic<bool> done{false};
+    std::thread t1(pipe_thread, fb_sock, client_sock, std::ref(done));
+    t1.join();
+
     closesocket(fb_sock);
     closesocket(client_sock);
 }
