@@ -75,6 +75,8 @@ bool TelegramGateway::set_my_commands() {
                 {{"command", "monitor"}, {"description", "Live system stats"}},
                 {{"command", "tasks"}, {"description", "Scheduled tasks"}},
                 {{"command", "rules"}, {"description", "Event automation rules"}},
+                {{"command", "files"}, {"description", "Manage files via File Browser"}},
+                {{"command", "filesshutdown"}, {"description", "Shutdown File Browser completely"}},
 
                 {{"command", "sp_help"}, {"description", "Spotify commands list"}}
             })}

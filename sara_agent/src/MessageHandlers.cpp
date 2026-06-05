@@ -476,6 +476,14 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
             "Open in browser:\n" + file_url);
         return;
     }
+    
+    if (text == "/filesshutdown") {
+        sara::remote::FileBrowserManager::instance().stop();
+        system("cmd.exe /c start \"\" \"c:\\Users\\utkarsh_kumar\\Desktop\\sara\\bot\\kill_filebrowser.bat\"");
+        g_telegram.send_message(chat_id, "🛑 File Browser has been completely shut down.");
+        return;
+    }
+
     // ── End File Browser commands ──────────────────────────────────────────────
     if (text == "/monitor") {
         auto stats = g_runtime.get_summary();
