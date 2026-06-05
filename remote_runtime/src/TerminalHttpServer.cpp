@@ -217,6 +217,43 @@ void TerminalHttpServer::handle_client(int sock) {
         send_http(sock, 200, "text/html; charset=utf-8", html_content_); closesocket(sock); return;
     }
 
+    // ── File Browser reverse proxy ───────────────────────────────────────────
+    if (path.rfind("/files", 0) == 0) {
+        // Validate token: accept from query param OR cookie header
+        std::string cookie_token;
+        {
+            auto cp = req.find("Sara-Token:");
+            if (cp != std::string::npos) {
+                cp += 11;
+                while (cp < req.size() && req[cp] == ' ') cp++;
+                auto ep = req.find("\r\n", cp);
+                cookie_token = ep != std::string::npos ? req.substr(cp, ep - cp) : req.substr(cp);
+            }
+        }
+        if (cookie_token.empty()) {
+            auto cp = req.find("Cookie:");
+            if (cp != std::string::npos) {
+                cp += 7;
+                auto ep = req.find("\r\n", cp);
+                std::string cookie_hdr = ep != std::string::npos ? req.substr(cp, ep - cp) : req.substr(cp);
+                auto tp = cookie_hdr.find("sara_token=");
+                if (tp != std::string::npos) {
+                    tp += 11;
+                    auto tend = cookie_hdr.find(';', tp);
+                    cookie_token = tend != std::string::npos ? cookie_hdr.substr(tp, tend - tp) : cookie_hdr.substr(tp);
+                    while (!cookie_token.empty() && (cookie_token.front() == ' ')) cookie_token.erase(0,1);
+                    while (!cookie_token.empty() && (cookie_token.back() == ' ' || cookie_token.back() == '\r')) cookie_token.pop_back();
+                }
+            }
+        }
+        std::string auth_token = token.empty() ? cookie_token : token;
+        if (!TerminalSessionManager::instance().validate_any_token(auth_token)) {
+            send_403(sock); closesocket(sock); return;
+        }
+        proxy_to_filebrowser(sock, req, path);
+        return;
+    }
+
     // ── Health check ──────────────────────────────────────────────────────────
     if (path == "/health") {
         send_http(sock, 200, "text/plain", "ok"); closesocket(sock); return;
@@ -309,20 +346,19 @@ void TerminalHttpServer::handle_terminal_ws(int sock,
 }
 
 std::string TerminalHttpServer::parse_path(const std::string& req) {
-    auto s = req.find("GET ");
-    if (s == std::string::npos) return "/";
-    s += 4;
-    auto e = req.find(' ', s);
-    std::string raw = (e != std::string::npos) ? req.substr(s, e-s) : req.substr(s);
+    auto space1 = req.find(' ');
+    if (space1 == std::string::npos) return "/";
+    auto space2 = req.find(' ', space1 + 1);
+    std::string raw = (space2 != std::string::npos) ? req.substr(space1 + 1, space2 - space1 - 1) : req.substr(space1 + 1);
     auto q = raw.find('?'); return q != std::string::npos ? raw.substr(0, q) : raw;
 }
 
 std::string TerminalHttpServer::parse_query_param(const std::string& req,
                                                    const std::string& param) {
-    auto s = req.find("GET ");
-    if (s == std::string::npos) return "";
-    s += 4; auto e = req.find(' ', s);
-    std::string url = (e != std::string::npos) ? req.substr(s, e-s) : req.substr(s);
+    auto space1 = req.find(' ');
+    if (space1 == std::string::npos) return "";
+    auto space2 = req.find(' ', space1 + 1);
+    std::string url = (space2 != std::string::npos) ? req.substr(space1 + 1, space2 - space1 - 1) : req.substr(space1 + 1);
     auto qp = url.find('?');
     if (qp == std::string::npos) return "";
     std::string qs = url.substr(qp + 1);
@@ -390,6 +426,217 @@ void TerminalHttpServer::send_404(int sock) {
 }
 void TerminalHttpServer::send_403(int sock) {
     send_http(sock, 403, "text/plain", "403 Forbidden — Invalid or expired session token");
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// FILE BROWSER REVERSE PROXY
+// ───────────────────────────────────────────────────────────────────────────────
+void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
+                                               const std::string& raw_request,
+                                               const std::string& path) {
+    int fb_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (fb_sock == INVALID_SOCKET) {
+        std::string body502 = "502 Bad Gateway — File Browser not reachable";
+        std::string resp502 =
+            "HTTP/1.1 502 Bad Gateway\r\nContent-Type: text/plain\r\nContent-Length: " +
+            std::to_string(body502.size()) + "\r\nConnection: close\r\n\r\n" + body502;
+        ::send(client_sock, resp502.data(), (int)resp502.size(), 0);
+        closesocket(client_sock); return;
+    }
+
+    sockaddr_in fb_addr{};
+    fb_addr.sin_family      = AF_INET;
+    fb_addr.sin_addr.s_addr = htonl(0x7F000001); // 127.0.0.1
+    fb_addr.sin_port        = htons((u_short)9090);
+
+    if (connect(fb_sock, (sockaddr*)&fb_addr, sizeof(fb_addr)) == SOCKET_ERROR) {
+        closesocket(fb_sock);
+        send_http(client_sock, 503, "text/plain",
+            "503 File Browser unavailable. It may still be starting up — please retry in a moment.");
+        closesocket(client_sock);
+        return;
+    }
+
+    std::string fwd_req = raw_request;
+    {
+        auto line_end = fwd_req.find("\r\n");
+        if (line_end != std::string::npos) {
+            std::string req_line = fwd_req.substr(0, line_end);
+            auto tp = req_line.find("?token=");
+            if (tp != std::string::npos) {
+                auto space_after = req_line.find(' ', tp);
+                if (space_after != std::string::npos)
+                    req_line = req_line.substr(0, tp) + req_line.substr(space_after);
+                else
+                    req_line = req_line.substr(0, tp) + " HTTP/1.1";
+            }
+            auto ap = req_line.find("&token=");
+            if (ap != std::string::npos) {
+                auto amp_or_space = req_line.find_first_of(" &", ap + 1);
+                if (amp_or_space != std::string::npos)
+                    req_line = req_line.substr(0, ap) + req_line.substr(amp_or_space);
+                else
+                    req_line = req_line.substr(0, ap);
+            }
+            fwd_req = req_line + fwd_req.substr(line_end);
+        }
+    }
+    {
+        auto strip_header = [&](const std::string& prefix) {
+            size_t pos = 0;
+            while ((pos = fwd_req.find(prefix, pos)) != std::string::npos) {
+                if (pos == 0 || fwd_req[pos-1] == '\n') {
+                    size_t end = fwd_req.find("\r\n", pos);
+                    if (end != std::string::npos) fwd_req.erase(pos, end - pos + 2);
+                    else break;
+                } else pos += prefix.size();
+            }
+        };
+        strip_header("X-Forwarded-For:");
+        strip_header("x-forwarded-for:");
+        strip_header("X-Real-IP:");
+        strip_header("x-real-ip:");
+        strip_header("X-Forwarded-Proto:");
+        strip_header("x-forwarded-proto:");
+        
+        auto cp = fwd_req.find("Connection:");
+        if (cp == std::string::npos) cp = fwd_req.find("connection:");
+        if (cp != std::string::npos) {
+            auto ep = fwd_req.find("\r\n", cp);
+            if (ep != std::string::npos) fwd_req.erase(cp, ep - cp + 2);
+        }
+        auto hdr_end = fwd_req.find("\r\n\r\n");
+        if (hdr_end != std::string::npos) {
+            std::string inject = "X-Forwarded-For: 127.0.0.1\r\nX-Real-IP: 127.0.0.1\r\nConnection: close\r\n";
+            fwd_req.insert(hdr_end, inject);
+        }
+    }
+
+    int sent = 0;
+    while (sent < (int)fwd_req.size()) {
+        int n = ::send(fb_sock, fwd_req.data() + sent, (int)(fwd_req.size() - sent), 0);
+        if (n <= 0) break;
+        sent += n;
+    }
+
+    long long content_len = 0;
+    {
+        auto p = fwd_req.find("Content-Length:");
+        if (p == std::string::npos) p = fwd_req.find("content-length:");
+        if (p != std::string::npos) content_len = std::stoll(fwd_req.substr(p + 15));
+    }
+    long long body_already_in_fwd = 0;
+    auto req_hdr_end = raw_request.find("\r\n\r\n");
+    if (req_hdr_end != std::string::npos) {
+        body_already_in_fwd = (long long)raw_request.size() - (req_hdr_end + 4);
+    }
+    long long body_remaining = content_len - body_already_in_fwd;
+
+    if (body_remaining > 0) {
+        std::thread upload_thread([client_sock, fb_sock, body_remaining]() {
+            char ubuf[8192];
+            long long to_read = body_remaining;
+            while (to_read > 0) {
+                fd_set ufds; FD_ZERO(&ufds); FD_SET(client_sock, &ufds);
+                timeval tv{60, 0};
+                if (select(0, &ufds, nullptr, nullptr, &tv) <= 0) break;
+                int n = recv(client_sock, ubuf, (int)std::min((long long)sizeof(ubuf), to_read), 0);
+                if (n <= 0) break;
+                int usent = 0;
+                while (usent < n) {
+                    int r = ::send(fb_sock, ubuf + usent, n - usent, 0);
+                    if (r <= 0) break;
+                    usent += r;
+                }
+                to_read -= n;
+            }
+        });
+        upload_thread.detach();
+    }
+
+    bool is_ws = is_websocket_upgrade(raw_request);
+    if (is_ws) {
+        std::atomic<bool> done{false};
+        auto pipe_thread = [](int from, int to, std::atomic<bool>& done_flag) {
+            char buf[8192];
+            while (!done_flag) {
+                fd_set fds; FD_ZERO(&fds); FD_SET(from, &fds);
+                timeval tv{1, 0};
+                if (select(0, &fds, nullptr, nullptr, &tv) <= 0) continue;
+                int n = recv(from, buf, sizeof(buf), 0);
+                if (n <= 0) { done_flag = true; break; }
+                int s = 0;
+                while (s < n) {
+                    int r = ::send(to, buf + s, n - s, 0);
+                    if (r <= 0) { done_flag = true; return; }
+                    s += r;
+                }
+            }
+        };
+        std::thread t1(pipe_thread, fb_sock, client_sock, std::ref(done));
+        std::thread t2(pipe_thread, client_sock, fb_sock, std::ref(done));
+        t1.join(); t2.join();
+        closesocket(fb_sock);
+        closesocket(client_sock);
+        return;
+    }
+
+    std::string resp_headers;
+    char rbuf[4096];
+    while (resp_headers.find("\r\n\r\n") == std::string::npos) {
+        fd_set fds; FD_ZERO(&fds); FD_SET(fb_sock, &fds);
+        timeval tv{10, 0};
+        if (select(0, &fds, nullptr, nullptr, &tv) <= 0) break;
+        int n = recv(fb_sock, rbuf, sizeof(rbuf) - 1, 0);
+        if (n <= 0) break;
+        rbuf[n] = 0;
+        resp_headers.append(rbuf, n);
+    }
+
+    if (resp_headers.empty()) {
+        closesocket(fb_sock); closesocket(client_sock); return;
+    }
+
+    std::string body_prefix;
+    auto hdr_end_resp = resp_headers.find("\r\n\r\n");
+    if (hdr_end_resp != std::string::npos) {
+        body_prefix   = resp_headers.substr(hdr_end_resp + 4);
+        resp_headers  = resp_headers.substr(0, hdr_end_resp + 4);
+    }
+
+    std::string echo_token = parse_query_param(raw_request, "token");
+    if (!echo_token.empty()) {
+        std::string cookie_hdr = "Set-Cookie: sara_token=" + echo_token +
+                                 "; Path=/files; HttpOnly; SameSite=Lax\r\n";
+        resp_headers.insert(resp_headers.size() - 2, cookie_hdr);
+    }
+
+    resp_headers.insert(resp_headers.size() - 2,
+        "Access-Control-Allow-Origin: *\r\n"
+        "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS\r\n"
+        "Access-Control-Allow-Headers: *\r\n");
+
+    ::send(client_sock, resp_headers.data(), (int)resp_headers.size(), 0);
+
+    if (!body_prefix.empty())
+        ::send(client_sock, body_prefix.data(), (int)body_prefix.size(), 0);
+
+    while (true) {
+        fd_set fds; FD_ZERO(&fds); FD_SET(fb_sock, &fds);
+        timeval tv{60, 0};
+        if (select(0, &fds, nullptr, nullptr, &tv) <= 0) break;
+        int n = recv(fb_sock, rbuf, sizeof(rbuf), 0);
+        if (n <= 0) break;
+        int s = 0;
+        while (s < n) {
+            int r = ::send(client_sock, rbuf + s, n - s, 0);
+            if (r <= 0) goto fb_done;
+            s += r;
+        }
+    }
+fb_done:
+    closesocket(fb_sock);
+    closesocket(client_sock);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

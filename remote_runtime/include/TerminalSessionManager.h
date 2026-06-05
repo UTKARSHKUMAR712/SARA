@@ -92,8 +92,14 @@ public:
     bool validate_token(const std::string& session_id,
                         const std::string& token) const;
 
-    // Validate that a token belongs to ANY active session (for /api/new_session).
+    // Validate that a token belongs to ANY active session (for /api/new_session and /files proxy).
     bool validate_any_token(const std::string& token) const;
+
+    // Issue a short-lived auth token WITHOUT spawning a PTY.
+    // Used for /files File Browser authentication.
+    // Returns {session_id, token, true} on success.
+    CreateSessionResult issue_auth_token(const std::string& chat_id,
+                                         int expiry_minutes = 120);
 
     // Cleanup expired sessions (called every 60s by background thread).
     void cleanup_expired();

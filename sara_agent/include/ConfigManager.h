@@ -40,6 +40,11 @@ struct AppConfig {
     std::string cloudflare_mode         = "quick";        // "quick" or "named"
     std::string cloudflare_tunnel_name  = "";             // for named tunnel mode
     std::string cloudflare_exe_dir      = "";             // dir to store cloudflared.exe
+
+    // ── File Browser ─────────────────────────────────────────────────────
+    bool        filebrowser_enabled     = true;           // auto-start filebrowser.exe
+    int         filebrowser_port        = 9090;           // localhost port for filebrowser
+    std::string filebrowser_root        = "C:\\";         // root directory to expose
 };
 
 class ConfigManager {

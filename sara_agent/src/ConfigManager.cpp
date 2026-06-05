@@ -62,6 +62,11 @@ bool ConfigManager::load(const std::string& path) {
         cfg.cloudflare_tunnel_name = j.value("cloudflare_tunnel_name", std::string(""));
         cfg.cloudflare_exe_dir     = j.value("cloudflare_exe_dir", std::string(""));
 
+        // File Browser config
+        cfg.filebrowser_enabled    = j.value("filebrowser_enabled", true);
+        cfg.filebrowser_port       = j.value("filebrowser_port", 9090);
+        cfg.filebrowser_root       = j.value("filebrowser_root", std::string("C:\\\\"));
+
     } catch (const std::exception& e) {
         last_error_ = "Config parse error: ";
         last_error_ += e.what();
@@ -99,6 +104,10 @@ bool ConfigManager::save(const std::string& path) const {
     j["terminal_expiry_minutes"] = config_.terminal_expiry_minutes;
     j["terminal_default_cols"]   = config_.terminal_default_cols;
     j["terminal_default_rows"]   = config_.terminal_default_rows;
+
+    j["filebrowser_enabled"]     = config_.filebrowser_enabled;
+    j["filebrowser_port"]        = config_.filebrowser_port;
+    j["filebrowser_root"]        = config_.filebrowser_root;
 
     std::ofstream file(path);
     if (!file.is_open()) return false;

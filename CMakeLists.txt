@@ -76,6 +76,7 @@ add_executable(sara_agent
     remote_runtime/src/TerminalSessionManager.cpp
     remote_runtime/src/TerminalHttpServer.cpp
     remote_runtime/src/CloudflaredManager.cpp
+    remote_runtime/src/FileBrowserManager.cpp
 )
 
 # Compile sqlite3.c as C, not C++

@@ -27,6 +27,7 @@
 #include "../../remote_runtime/include/TerminalHttpServer.h"
 #include "../../remote_runtime/include/TerminalSessionManager.h"
 #include "../../remote_runtime/include/CloudflaredManager.h"
+#include "../../remote_runtime/include/FileBrowserManager.h"
 #include <fstream>
 namespace sara { extern void register_default_tools(WinAPIExecutor& ex); }
 #include "../include/WebSocketServer.h"
@@ -211,7 +212,30 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // ── Prepare Cloudflare Tunnel ────────────────────────────────────────
+    // ── Start File Browser ────────────────────────────────────────────
+    if (cfg.filebrowser_enabled) {
+        std::string fb_dir = resolve_path("runtime");
+        std::string fb_exe = sara::remote::FileBrowserManager::ensure_filebrowser(fb_dir);
+        if (!fb_exe.empty()) {
+            // Add fb_dir to PATH so filebrowser is findable
+            std::string cur_path2(32768, '\0');
+            DWORD plen2 = GetEnvironmentVariableA("PATH", cur_path2.data(), (DWORD)cur_path2.size());
+            cur_path2.resize(plen2);
+            SetEnvironmentVariableA("PATH", (fb_dir + ";" + cur_path2).c_str());
+
+            std::string fb_db = resolve_path("runtime") + "\\filebrowser.db";
+            int fb_port = cfg.filebrowser_port;
+            sara::remote::FileBrowserManager::instance().configure(fb_port, cfg.filebrowser_root, fb_db);
+            // Tell the HTTP server which port filebrowser is on
+            sara::remote::TerminalHttpServer::instance().set_filebrowser_port(fb_port);
+            Logger::instance().info("File Browser configured for port " + std::to_string(fb_port) +
+                                    " (root: " + cfg.filebrowser_root + ") — will start on demand");
+        } else {
+            Logger::instance().warning("filebrowser.exe not found or download failed — /files unavailable");
+        }
+    }
+
+    // ── Prepare Cloudflare Tunnel ──────────────────────────────────────────
     if (cfg.cloudflare_mode != "disabled") {
         std::string cf_dir = cfg.cloudflare_exe_dir.empty() 
             ? resolve_path("runtime")
@@ -282,9 +306,10 @@ int main(int argc, char* argv[]) {
         g_runtime.set_active_tasks((int)g_scheduler.list_tasks().size());
     }
 
-    // ── Shutdown ──────────────────────────────────────────────────────────
+    // ── Shutdown ─────────────────────────────────────────────────────
     Logger::instance().info("SARA shutting down...");
     MCPRegistry::instance().shutdown();
+    sara::remote::FileBrowserManager::instance().stop();
     g_runtime.set_websocket_ready(false);
     sara::remote::TerminalSessionManager::instance().shutdown_all();
     sara::remote::TerminalSessionManager::instance().stop_cleanup_thread();

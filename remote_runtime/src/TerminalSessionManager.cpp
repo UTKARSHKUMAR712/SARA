@@ -173,6 +173,32 @@ bool TerminalSessionManager::validate_any_token(const std::string& token) const 
     return false;
 }
 
+CreateSessionResult TerminalSessionManager::issue_auth_token(
+    const std::string& chat_id, int expiry_minutes)
+{
+    auto sid   = generate_session_id();
+    auto token = generate_token();
+    int64_t now = now_seconds();
+
+    auto sess = std::make_unique<TerminalSession>();
+    sess->id             = sid;
+    sess->token          = token;
+    sess->owner_chat_id  = chat_id;
+    sess->admin_mode     = false;
+    sess->shell_cmd      = "files"; // marker — no PTY
+    sess->created_at     = now;
+    sess->last_active    = now;
+    sess->expires_at     = now + (int64_t)expiry_minutes * 60;
+    sess->ws_socket      = -1;
+    // NOTE: pty is NOT started — this session exists only for token validation.
+
+    {
+        std::lock_guard<std::mutex> lock(sessions_mutex_);
+        sessions_[sid] = std::move(sess);
+    }
+    return {sid, token, true, ""};
+}
+
 void TerminalSessionManager::destroy_session(const std::string& session_id,
                                               const std::string& chat_id) {
     std::lock_guard<std::mutex> lock(sessions_mutex_);
