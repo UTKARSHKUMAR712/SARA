@@ -509,7 +509,7 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
         auto hdr_end = fwd_req.find("\r\n\r\n");
         if (hdr_end != std::string::npos) {
             std::string inject = "X-Forwarded-For: 127.0.0.1\r\nX-Real-IP: 127.0.0.1\r\nConnection: close\r\n";
-            fwd_req.insert(hdr_end, inject);
+            fwd_req.insert(hdr_end + 2, inject);
         }
     }
 
