@@ -198,6 +198,10 @@ int main(int argc, char* argv[]) {
         bool started = false;
         for (int i = 0; i < 5; i++) {
             int port = all_ports[i];
+            sara::remote::TerminalHttpServer::instance().set_proxy_timeouts(
+                cfg.proxy_header_timeout_seconds,
+                cfg.proxy_idle_timeout_seconds
+            );
             if (sara::remote::TerminalHttpServer::instance().start(port, frontend_dir)) {
                 sara::remote::TerminalSessionManager::instance().start_cleanup_thread(60);
                 g_actual_terminal_port = port;

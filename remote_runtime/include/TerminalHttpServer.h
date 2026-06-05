@@ -29,6 +29,10 @@ public:
 
     // Port that File Browser is listening on (set externally after FileBrowserManager starts)
     void set_filebrowser_port(int p) { filebrowser_port_ = p; }
+    void set_proxy_timeouts(int header_sec, int idle_sec) {
+        proxy_header_timeout_ = header_sec;
+        proxy_idle_timeout_ = idle_sec;
+    }
 
 private:
     TerminalHttpServer() = default;
@@ -71,6 +75,9 @@ private:
     std::string static_dir_;
     std::atomic<bool> running_{false};
     std::thread accept_thread_;
+
+    int proxy_header_timeout_ = 300;
+    int proxy_idle_timeout_   = 300;
 
     // Cached static files
     std::string html_content_;

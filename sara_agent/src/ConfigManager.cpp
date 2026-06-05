@@ -67,6 +67,9 @@ bool ConfigManager::load(const std::string& path) {
         cfg.filebrowser_port       = j.value("filebrowser_port", 9090);
         cfg.filebrowser_root       = j.value("filebrowser_root", std::string("C:\\\\"));
 
+        cfg.proxy_header_timeout_seconds = j.value("proxy_header_timeout_seconds", 300);
+        cfg.proxy_idle_timeout_seconds   = j.value("proxy_idle_timeout_seconds", 300);
+
     } catch (const std::exception& e) {
         last_error_ = "Config parse error: ";
         last_error_ += e.what();
@@ -108,6 +111,9 @@ bool ConfigManager::save(const std::string& path) const {
     j["filebrowser_enabled"]     = config_.filebrowser_enabled;
     j["filebrowser_port"]        = config_.filebrowser_port;
     j["filebrowser_root"]        = config_.filebrowser_root;
+    
+    j["proxy_header_timeout_seconds"] = config_.proxy_header_timeout_seconds;
+    j["proxy_idle_timeout_seconds"]   = config_.proxy_idle_timeout_seconds;
 
     std::ofstream file(path);
     if (!file.is_open()) return false;

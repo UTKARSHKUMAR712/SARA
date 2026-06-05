@@ -520,11 +520,18 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
     }
 
     long long content_len = 0;
+    bool is_chunked = false;
     {
-        auto p = fwd_req.find("Content-Length:");
-        if (p == std::string::npos) p = fwd_req.find("content-length:");
+        std::string lower_req = fwd_req;
+        std::transform(lower_req.begin(), lower_req.end(), lower_req.begin(), ::tolower);
+        auto p = lower_req.find("content-length:");
         if (p != std::string::npos) content_len = std::stoll(fwd_req.substr(p + 15));
+        
+        if (lower_req.find("transfer-encoding: chunked") != std::string::npos) {
+            is_chunked = true;
+        }
     }
+    
     long long body_already_in_fwd = 0;
     auto req_hdr_end = raw_request.find("\r\n\r\n");
     if (req_hdr_end != std::string::npos) {
@@ -532,23 +539,29 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
     }
     long long body_remaining = content_len - body_already_in_fwd;
 
-    if (body_remaining > 0) {
-        std::thread upload_thread([client_sock, fb_sock, body_remaining]() {
+    if (body_remaining > 0 || is_chunked) {
+        int idle_timeout = proxy_idle_timeout_;
+        std::thread upload_thread([client_sock, fb_sock, body_remaining, is_chunked, idle_timeout]() {
             char ubuf[8192];
             long long to_read = body_remaining;
-            while (to_read > 0) {
+            while (is_chunked || to_read > 0) {
                 fd_set ufds; FD_ZERO(&ufds); FD_SET(client_sock, &ufds);
-                timeval tv{60, 0};
+                timeval tv{idle_timeout, 0};
                 if (select(0, &ufds, nullptr, nullptr, &tv) <= 0) break;
-                int n = recv(client_sock, ubuf, (int)std::min((long long)sizeof(ubuf), to_read), 0);
+                
+                int read_size = is_chunked ? sizeof(ubuf) : (int)std::min((long long)sizeof(ubuf), to_read);
+                int n = recv(client_sock, ubuf, read_size, 0);
                 if (n <= 0) break;
+                
                 int usent = 0;
                 while (usent < n) {
                     int r = ::send(fb_sock, ubuf + usent, n - usent, 0);
                     if (r <= 0) break;
                     usent += r;
                 }
-                to_read -= n;
+                if (!is_chunked) {
+                    to_read -= n;
+                }
             }
         });
         upload_thread.detach();
@@ -585,7 +598,7 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
     char rbuf[4096];
     while (resp_headers.find("\r\n\r\n") == std::string::npos) {
         fd_set fds; FD_ZERO(&fds); FD_SET(fb_sock, &fds);
-        timeval tv{10, 0};
+        timeval tv{proxy_header_timeout_, 0};
         if (select(0, &fds, nullptr, nullptr, &tv) <= 0) break;
         int n = recv(fb_sock, rbuf, sizeof(rbuf) - 1, 0);
         if (n <= 0) break;
@@ -623,7 +636,7 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
 
     while (true) {
         fd_set fds; FD_ZERO(&fds); FD_SET(fb_sock, &fds);
-        timeval tv{60, 0};
+        timeval tv{proxy_idle_timeout_, 0};
         if (select(0, &fds, nullptr, nullptr, &tv) <= 0) break;
         int n = recv(fb_sock, rbuf, sizeof(rbuf), 0);
         if (n <= 0) break;

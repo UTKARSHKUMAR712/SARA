@@ -45,6 +45,8 @@ struct AppConfig {
     bool        filebrowser_enabled     = true;           // auto-start filebrowser.exe
     int         filebrowser_port        = 9090;           // localhost port for filebrowser
     std::string filebrowser_root        = "C:\\";         // root directory to expose
+    int         proxy_header_timeout_seconds = 300;
+    int         proxy_idle_timeout_seconds   = 300;
 };
 
 class ConfigManager {
