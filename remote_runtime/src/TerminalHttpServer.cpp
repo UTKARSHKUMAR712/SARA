@@ -498,10 +498,7 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
         strip_header("x-real-ip:");
         strip_header("X-Forwarded-Proto:");
         strip_header("x-forwarded-proto:");
-        strip_header("X-Auth:");
-        strip_header("x-auth:");
-        strip_header("Authorization:");
-        strip_header("authorization:");
+
         
         auto cp = fwd_req.find("Connection:");
         if (cp == std::string::npos) cp = fwd_req.find("connection:");
