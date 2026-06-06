@@ -1,4 +1,4 @@
-import { getAuthToken } from './api.js';
+import { getAuthToken, apiFetch } from './api.js';
 import { state } from './state.js';
 
 export let isTerminalOpen = false;
@@ -66,6 +66,53 @@ export function initTerminal() {
     // @ts-ignore
     const fitAddon = new FitAddon.FitAddon();
     xterm.loadAddon(fitAddon);
+    
+    // @ts-ignore
+    if (typeof WebLinksAddon !== 'undefined') {
+        const webLinksAddon = new WebLinksAddon.WebLinksAddon(
+            async (event, uri) => {
+                try {
+                    const urlObj = new URL(uri);
+                    if (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1' || urlObj.hostname === '0.0.0.0') {
+                        const port = urlObj.port;
+                        if (port) {
+                            const newTab = window.open('about:blank', '_blank');
+                            if (newTab) {
+                                newTab.document.write('<html><body style="background:#1e1e1e;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;"><h2>Starting secure tunnel... Please wait...</h2></body></html>');
+                            }
+                            
+                            const res = await apiFetch(`/ports/tunnel/${port}`);
+                            if (res.ok) {
+                                const data = await res.json();
+                                if (data.url) {
+                                    // Append original path and query to tunnel URL
+                                    const destUrl = new URL(data.url);
+                                    destUrl.pathname = urlObj.pathname;
+                                    destUrl.search = urlObj.search;
+                                    destUrl.hash = urlObj.hash;
+                                    
+                                    if (newTab) newTab.location.href = destUrl.toString();
+                                    else window.open(destUrl.toString(), '_blank');
+                                    return;
+                                }
+                            }
+                            
+                            if (newTab) newTab.close();
+                            alert("Failed to start Cloudflare tunnel for port " + port);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    // Ignore parse errors
+                }
+                
+                // Fallback for non-localhost URLs
+                window.open(uri, '_blank');
+            }
+        );
+        xterm.loadAddon(webLinksAddon);
+    }
+
     xterm.open(containerEl);
     
     const termObj = {
