@@ -1,7 +1,13 @@
 #include "../include/TerminalHttpServer.h"
 #include "../include/TerminalSessionManager.h"
+#include "../include/FileBrowserManager.h"
+#include "../include/PortDetector.h"
+#include "../include/LiveServer.h"
+#include <filesystem>
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #include <windows.h>
+#include <iphlpapi.h>
 #include <wincrypt.h>
 #include <string>
 #include <vector>
@@ -217,9 +223,8 @@ void TerminalHttpServer::handle_client(int sock) {
         send_http(sock, 200, "text/html; charset=utf-8", html_content_); closesocket(sock); return;
     }
 
-    // ── File Browser reverse proxy ───────────────────────────────────────────
-    if (path.rfind("/files", 0) == 0) {
-        // Validate token: accept from query param OR cookie header
+    // Token validation helper
+    auto validate_request_token = [&]() -> bool {
         std::string cookie_token;
         std::string lower_req = req;
         std::transform(lower_req.begin(), lower_req.end(), lower_req.begin(), ::tolower);
@@ -249,11 +254,419 @@ void TerminalHttpServer::handle_client(int sock) {
             }
         }
         std::string auth_token = token.empty() ? cookie_token : token;
-        if (!TerminalSessionManager::instance().validate_any_token(auth_token)) {
+        return TerminalSessionManager::instance().validate_any_token(auth_token);
+    };
+
+    // ── Workspace Static Files & API ──────────────────────────────────────────
+    if (path.rfind("/workspace", 0) == 0) {
+        if (!validate_request_token()) {
+            send_403(sock); closesocket(sock); return;
+        } else if (path == "/workspace/api/live_server/stop") {
+            if (!validate_request_token()) { send_403(sock); closesocket(sock); return; }
+            LiveServer::instance().stop();
+            send_http(sock, 200, "application/json", "{\"status\":\"ok\"}");
+            closesocket(sock); return;
+        } else if (path.find("/workspace/api/ports/tunnel/") == 0) {
+            if (!validate_request_token()) { send_403(sock); closesocket(sock); return; }
+            int port = std::stoi(path.substr(28));
+            
+            std::string url;
+            {
+                std::lock_guard<std::mutex> lock(port_tunnels_mutex_);
+                auto it = port_tunnels_.find(port);
+                if (it != port_tunnels_.end() && it->second->is_tunnel_alive()) {
+                    url = it->second->tunnel_url();
+                } else {
+                    auto mgr = std::make_unique<CloudflaredManager>();
+                    // Start tunnel without killing zombies
+                    mgr->start_quick_tunnel(port, [](const std::string&){} , false);
+                    port_tunnels_[port] = std::move(mgr);
+                    
+                    // Wait up to 10 seconds for the URL
+                    for (int i = 0; i < 50; i++) {
+                        url = port_tunnels_[port]->tunnel_url();
+                        if (!url.empty()) {
+                            // URL is generated, but Cloudflare's DNS takes a few seconds to propagate
+                            // and the tunnel needs to finish registering. We sleep to prevent DNS errors in the browser.
+                            Sleep(3000);
+                            break;
+                        }
+                        Sleep(200);
+                    }
+                }
+            }
+            std::string json = "{\"url\":\"" + url + "\"}";
+            send_http(sock, 200, "application/json", json);
+            closesocket(sock); return;
+        } else if (path.find("/workspace/api/ports/kill/") == 0) {
+            if (!validate_request_token()) { send_403(sock); closesocket(sock); return; }
+            int port = std::stoi(path.substr(26));
+            
+            {
+                std::lock_guard<std::mutex> lock(port_tunnels_mutex_);
+                auto it = port_tunnels_.find(port);
+                if (it != port_tunnels_.end()) {
+                    it->second->stop();
+                    port_tunnels_.erase(it);
+                }
+            }
+            
+            int pid = -1;
+            DWORD dwSize = 0;
+            if (GetExtendedTcpTable(nullptr, &dwSize, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0) == ERROR_INSUFFICIENT_BUFFER) {
+                std::vector<uint8_t> buffer(dwSize);
+                PMIB_TCPTABLE_OWNER_PID pTcpTable = reinterpret_cast<PMIB_TCPTABLE_OWNER_PID>(buffer.data());
+                if (GetExtendedTcpTable(pTcpTable, &dwSize, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0) == NO_ERROR) {
+                    for (int i = 0; i < (int)pTcpTable->dwNumEntries; i++) {
+                        if (pTcpTable->table[i].dwState == MIB_TCP_STATE_LISTEN && ntohs((u_short)pTcpTable->table[i].dwLocalPort) == port) {
+                            pid = pTcpTable->table[i].dwOwningPid; break;
+                        }
+                    }
+                }
+            }
+            if (pid == -1) {
+                dwSize = 0;
+                if (GetExtendedTcpTable(nullptr, &dwSize, FALSE, AF_INET6, TCP_TABLE_OWNER_PID_ALL, 0) == ERROR_INSUFFICIENT_BUFFER) {
+                    std::vector<uint8_t> buffer(dwSize);
+                    PMIB_TCP6TABLE_OWNER_PID pTcp6Table = reinterpret_cast<PMIB_TCP6TABLE_OWNER_PID>(buffer.data());
+                    if (GetExtendedTcpTable(pTcp6Table, &dwSize, FALSE, AF_INET6, TCP_TABLE_OWNER_PID_ALL, 0) == NO_ERROR) {
+                        for (int i = 0; i < (int)pTcp6Table->dwNumEntries; i++) {
+                            if (pTcp6Table->table[i].dwState == MIB_TCP_STATE_LISTEN && ntohs((u_short)pTcp6Table->table[i].dwLocalPort) == port) {
+                                pid = pTcp6Table->table[i].dwOwningPid; break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (pid > 0) {
+                HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+                if (hProc) { TerminateProcess(hProc, 0); CloseHandle(hProc); }
+            }
+            send_http(sock, 200, "application/json", "{\"status\":\"ok\"}");
+            closesocket(sock); return;
+        } else if (path.find("/workspace/api/") == 0) {
+            std::string action = path.substr(15);
+            
+            std::string root_dir = FileBrowserManager::instance().root_dir();
+            if (root_dir.empty()) root_dir = ".";
+            
+            auto resolve_workspace_path = [&](const std::string& req_path) {
+                std::string full;
+                if (req_path.length() >= 3 && req_path[0] == '/' && isalpha(req_path[1]) && req_path[2] == ':') {
+                    full = req_path.substr(1);
+                } else if (req_path.length() >= 2 && isalpha(req_path[0]) && req_path[1] == ':') {
+                    full = req_path;
+                } else {
+                    full = root_dir + (req_path.empty() || req_path[0] != '/' ? "/" : "") + req_path;
+                }
+                for (char& c : full) if (c == '/') c = '\\';
+                return full;
+            };
+
+            // Remove token from action string if present
+            auto qm = action.find('?');
+            if (qm != std::string::npos) action = action.substr(0, qm);
+            
+            if (action.find("tree") == 0) {
+                std::string req_path = action.substr(4); // the rest, e.g. "/" or "/src"
+                if (req_path.empty()) req_path = "/";
+                
+                std::string full = resolve_workspace_path(req_path);
+                
+                std::string json = "{\"items\":[";
+                bool first = true;
+                std::error_code ec;
+                if (std::filesystem::is_directory(full, ec)) {
+                    for (const auto& entry : std::filesystem::directory_iterator(full, ec)) {
+                        if (!first) json += ",";
+                        first = false;
+                        
+                        std::string name = entry.path().filename().string();
+                        bool isDir = entry.is_directory();
+                        std::string item_path = req_path;
+                        if (!item_path.empty() && item_path.back() != '/') item_path += "/";
+                        item_path += name;
+                        
+                        std::string escaped_name;
+                        for (char c : name) { if (c == '"' || c == '\\') escaped_name += '\\'; escaped_name += c; }
+                        
+                        json += "{\"name\":\"" + escaped_name + "\",\"path\":\"" + item_path + "\",\"isDir\":" + (isDir ? "true" : "false") + "}";
+                    }
+                }
+                json += "]}";
+                send_http(sock, 200, "application/json; charset=utf-8", json);
+                closesocket(sock); return;
+            } else if (action.find("read") == 0) {
+                std::string req_path = action.substr(4);
+                std::string full = resolve_workspace_path(req_path);
+                
+                std::ifstream f(full, std::ios::binary);
+                if (!f) { send_404(sock); closesocket(sock); return; }
+                std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+                send_http(sock, 200, "text/plain; charset=utf-8", content);
+                closesocket(sock); return;
+            } else if (action.find("write") == 0) {
+                std::string req_path = action.substr(5);
+                std::string full = resolve_workspace_path(req_path);
+                
+                // Read rest of body if necessary
+                auto body_pos = req.find("\r\n\r\n");
+                std::string body;
+                if (body_pos != std::string::npos) {
+                    body = req.substr(body_pos + 4);
+                }
+                
+                auto cl_pos = req.find("Content-Length: ");
+                if (cl_pos == std::string::npos) cl_pos = req.find("content-length: ");
+                if (cl_pos != std::string::npos) {
+                    int cl = std::stoi(req.substr(cl_pos + 16));
+                    while (body.size() < cl) {
+                        char buf[4096];
+                        int n = recv(sock, buf, sizeof(buf), 0);
+                        if (n <= 0) break;
+                        body.append(buf, n);
+                    }
+                }
+                
+                std::ofstream f(full, std::ios::binary);
+                if (f) {
+                    f << body;
+                    send_http(sock, 200, "application/json; charset=utf-8", "{}");
+                } else {
+                    send_http(sock, 500, "application/json; charset=utf-8", "{\"error\":\"Failed to save\"}");
+                }
+                closesocket(sock); return;
+            } else if (action.find("delete") == 0) {
+                std::string req_path = action.substr(6);
+                std::string full = resolve_workspace_path(req_path);
+                std::error_code ec;
+                std::filesystem::remove_all(full, ec);
+                if (ec) {
+                    send_http(sock, 500, "application/json", "{\"error\":\"" + ec.message() + "\"}");
+                } else {
+                    send_http(sock, 200, "application/json", "{}");
+                }
+                closesocket(sock); return;
+            } else if (action.find("mkdir") == 0) {
+                std::string req_path = action.substr(5);
+                std::string full = resolve_workspace_path(req_path);
+                std::error_code ec;
+                std::filesystem::create_directories(full, ec);
+                if (ec) {
+                    send_http(sock, 500, "application/json", "{\"error\":\"" + ec.message() + "\"}");
+                } else {
+                    send_http(sock, 200, "application/json", "{}");
+                }
+                closesocket(sock); return;
+            } else if (action.find("settings") == 0) {
+                std::string settings_file = "workspace_settings.json"; // Save in current dir (sara root)
+                if (req.find("GET") == 0) {
+                    std::ifstream f(settings_file);
+                    if (f) {
+                        std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+                        send_http(sock, 200, "application/json", content);
+                    } else {
+                        send_http(sock, 200, "application/json", "{}");
+                    }
+                } else if (req.find("POST") == 0 || req.find("PUT") == 0) {
+                    auto body_pos = req.find("\r\n\r\n");
+                    std::string body = (body_pos != std::string::npos) ? req.substr(body_pos + 4) : "";
+                    auto cl_pos = req.find("Content-Length: ");
+                    if (cl_pos == std::string::npos) cl_pos = req.find("content-length: ");
+                    if (cl_pos != std::string::npos) {
+                        int cl = std::stoi(req.substr(cl_pos + 16));
+                        while (body.size() < cl) {
+                            char buf[4096];
+                            int n = recv(sock, buf, sizeof(buf), 0);
+                            if (n <= 0) break;
+                            body.append(buf, n);
+                        }
+                    }
+                    std::ofstream f(settings_file);
+                    if (f) {
+                        f << body;
+                        send_http(sock, 200, "application/json", "{}");
+                    } else {
+                        send_http(sock, 500, "application/json", "{\"error\":\"Failed to save settings\"}");
+                    }
+                }
+                closesocket(sock); return;
+            } else if (action.find("rename") == 0 || action.find("copy") == 0) {
+                bool is_copy = action.find("copy") == 0;
+                std::string req_path = action.substr(is_copy ? 4 : 6);
+                
+                std::string to_param;
+                auto to_pos = req.find("to=");
+                if (to_pos != std::string::npos) {
+                    auto amp = req.find('&', to_pos);
+                    auto qm = req.find('?', to_pos);
+                    auto space = req.find(' ', to_pos);
+                    
+                    auto end_pos = space;
+                    if (amp != std::string::npos && amp < end_pos) end_pos = amp;
+                    if (qm != std::string::npos && qm < end_pos) end_pos = qm;
+                    
+                    if (end_pos != std::string::npos) {
+                        to_param = req.substr(to_pos + 3, end_pos - to_pos - 3);
+                    } else {
+                        to_param = req.substr(to_pos + 3);
+                    }
+                    // URL decode to_param (simple implementation for %2F, %20, etc.)
+                    std::string decoded;
+                    for (size_t i = 0; i < to_param.length(); ++i) {
+                        if (to_param[i] == '%' && i + 2 < to_param.length()) {
+                            std::string hex = to_param.substr(i + 1, 2);
+                            decoded += (char)std::strtol(hex.c_str(), nullptr, 16);
+                            i += 2;
+                        } else if (to_param[i] == '+') {
+                            decoded += ' ';
+                        } else {
+                            decoded += to_param[i];
+                        }
+                    }
+                    to_param = decoded;
+                }
+                
+                std::string full_from = resolve_workspace_path(req_path);
+                std::string full_to = resolve_workspace_path(to_param);
+                
+                std::error_code ec;
+                if (is_copy) {
+                    std::filesystem::copy(full_from, full_to, std::filesystem::copy_options::recursive, ec);
+                } else {
+                    std::filesystem::rename(full_from, full_to, ec);
+                }
+                
+                if (ec) {
+                    send_http(sock, 500, "application/json", "{\"error\":\"" + ec.message() + "\"}");
+                } else {
+                    send_http(sock, 200, "application/json", "{}");
+                }
+                closesocket(sock); return;
+            } else if (action == "ports") {
+                auto ports = PortDetector::get_active_ports();
+                std::string json = "[";
+                for (size_t i = 0; i < ports.size(); ++i) {
+                    if (i > 0) json += ",";
+                    json += "{\"port\":" + std::to_string(ports[i].port) + ",\"status\":\"" + ports[i].status + "\"}";
+                }
+                json += "]";
+                send_http(sock, 200, "application/json", json);
+                closesocket(sock); return;
+            } else if (action.find("live_server/start") == 0) {
+                std::string dir = parse_query_param(req, "dir");
+                std::string decoded;
+                for (size_t i = 0; i < dir.length(); ++i) {
+                    if (dir[i] == '%' && i + 2 < dir.length()) {
+                        std::string hex = dir.substr(i + 1, 2);
+                        decoded += (char)std::strtol(hex.c_str(), nullptr, 16);
+                        i += 2;
+                    } else if (dir[i] == '+') {
+                        decoded += ' ';
+                    } else {
+                        decoded += dir[i];
+                    }
+                }
+                if (decoded.empty()) decoded = ".";
+                bool ok = LiveServer::instance().start(decoded, 5500);
+                send_http(sock, ok ? 200 : 500, "application/json", ok ? "{}" : "{\"error\":\"Failed to start\"}");
+                closesocket(sock); return;
+            } else if (action == "live_server/stop") {
+                LiveServer::instance().stop();
+                send_http(sock, 200, "application/json", "{}");
+                closesocket(sock); return;
+            }
+            
+            send_404(sock); closesocket(sock); return;
+        }
+
+        std::string req_file = path.substr(10); // remove "/workspace"
+        if (req_file.empty() || req_file == "/") req_file = "/index.html";
+        
+        // Prevent path traversal
+        if (req_file.find("..") != std::string::npos) {
+            send_403(sock); closesocket(sock); return;
+        }
+
+        std::string workspace_dir = static_dir_.empty() ? "remote_runtime\\workspace" : static_dir_ + "\\..\\workspace";
+        std::string full_path = workspace_dir + req_file;
+        for (char& c : full_path) if (c == '/') c = '\\';
+
+        std::ifstream f(full_path, std::ios::binary);
+        if (!f) {
+            send_404(sock); closesocket(sock); return;
+        }
+        std::string body((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+
+        std::string ct = "text/plain";
+        if (full_path.ends_with(".html")) ct = "text/html; charset=utf-8";
+        else if (full_path.ends_with(".js")) ct = "application/javascript; charset=utf-8";
+        else if (full_path.ends_with(".css")) ct = "text/css; charset=utf-8";
+        else if (full_path.ends_with(".json")) ct = "application/json; charset=utf-8";
+        else if (full_path.ends_with(".png")) ct = "image/png";
+        else if (full_path.ends_with(".svg")) ct = "image/svg+xml";
+        else if (full_path.ends_with(".ttf")) ct = "font/ttf";
+        else if (full_path.ends_with(".woff")) ct = "font/woff";
+        else if (full_path.ends_with(".woff2")) ct = "font/woff2";
+
+        std::string extra_headers = "";
+        if (!token.empty()) {
+            extra_headers = "Set-Cookie: sara_token=" + token + "; Path=/; SameSite=Lax\r\n";
+        }
+
+        send_http(sock, 200, ct, body, extra_headers);
+        closesocket(sock);
+        return;
+    }
+
+    // ── File Browser reverse proxy ───────────────────────────────────────────
+    if (path.rfind("/files", 0) == 0) {
+        if (!validate_request_token()) {
             send_403(sock); closesocket(sock); return;
         }
         proxy_to_filebrowser(sock, req, path);
         return;
+    }
+
+    // ── Reverse Proxy /preview/{port}/ ───────────────────────────────────────
+    if (path.find("/preview/") == 0) {
+        if (!validate_request_token()) { send_403(sock); closesocket(sock); return; }
+        auto slash_idx = path.find('/', 9);
+        std::string port_str = path.substr(9, slash_idx == std::string::npos ? std::string::npos : slash_idx - 9);
+        int port = 0;
+        try { port = std::stoi(port_str); } catch(...) {}
+        if (port > 0) {
+            std::string prefix = "/preview/" + port_str;
+            proxy_to_port(sock, req, port, prefix);
+            return;
+        }
+    }
+
+    // Block Service Workers from being registered on the domain
+    if (path.ends_with("sw.js") || path.ends_with("service-worker.js")) {
+        send_404(sock); closesocket(sock); return;
+    }
+
+    // ── Referer-based fallback for Preview ───────────────────────────────────
+    {
+        std::string lower_req = req;
+        std::transform(lower_req.begin(), lower_req.end(), lower_req.begin(), ::tolower);
+        auto ref_pos = lower_req.find("referer:");
+        if (ref_pos != std::string::npos) {
+            auto eol = lower_req.find("\r\n", ref_pos);
+            std::string referer = req.substr(ref_pos + 8, eol - (ref_pos + 8));
+            auto prev_pos = referer.find("/preview/");
+            if (prev_pos != std::string::npos) {
+                auto slash_idx = referer.find('/', prev_pos + 9);
+                std::string port_str = referer.substr(prev_pos + 9, slash_idx == std::string::npos ? std::string::npos : slash_idx - (prev_pos + 9));
+                int port = 0;
+                try { port = std::stoi(port_str); } catch(...) {}
+                if (port > 0 && path.find("/workspace") != 0 && path.find("/api") != 0 && path.find("/t/") != 0 && path.find("/static/") != 0 && path != "/health") {
+                    proxy_to_port(sock, req, port, ""); // no prefix to strip since path is absolute (e.g., /main.js)
+                    return;
+                }
+            }
+        }
     }
 
     // ── Health check ──────────────────────────────────────────────────────────
@@ -413,13 +826,20 @@ bool TerminalHttpServer::do_ws_handshake(int sock, const std::string& req) {
 }
 
 void TerminalHttpServer::send_http(int sock, int code, const std::string& ct,
-                                    const std::string& body) {
-    std::string status = (code == 200) ? "200 OK" : (code == 403) ? "403 Forbidden" : "404 Not Found";
+                                    const std::string& body, const std::string& extra_headers) {
+    std::string status;
+    if (code == 200) status = "200 OK";
+    else if (code == 400) status = "400 Bad Request";
+    else if (code == 403) status = "403 Forbidden";
+    else if (code == 404) status = "404 Not Found";
+    else if (code == 500) status = "500 Internal Server Error";
+    else status = std::to_string(code) + " Error";
     std::string resp =
         "HTTP/1.1 " + status + "\r\n"
         "Content-Type: " + ct + "\r\n"
         "Content-Length: " + std::to_string(body.size()) + "\r\n"
         "Access-Control-Allow-Origin: *\r\n"
+        + extra_headers +
         "Connection: close\r\n\r\n" + body;
     ::send(sock, resp.data(), (int)resp.size(), 0);
 }
@@ -510,7 +930,7 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
         }
         auto hdr_end = fwd_req.find("\r\n\r\n");
         if (hdr_end != std::string::npos) {
-            std::string inject = "X-Forwarded-For: 127.0.0.1\r\nX-Real-IP: 127.0.0.1\r\n";
+            std::string inject = "X-Forwarded-For: 127.0.0.1\r\nX-Real-IP: 127.0.0.1\r\nX-Remote-User: admin\r\n";
             std::string echo_token = parse_query_param(raw_request, "token");
             if (!echo_token.empty()) {
                 inject += "Connection: close\r\n";
@@ -580,7 +1000,7 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
     }
 
     std::string cookie_hdr = "Set-Cookie: sara_token=" + echo_token +
-                             "; Path=/files; HttpOnly; SameSite=Lax\r\n";
+                             "; Path=/; HttpOnly; SameSite=Lax\r\n";
     resp_headers.insert(resp_headers.size() - 2, cookie_hdr);
 
     ::send(client_sock, resp_headers.data(), (int)resp_headers.size(), 0);
@@ -1045,6 +1465,136 @@ html,body{width:100%;height:100%;background:#0d1117;overflow:hidden;font-family:
 .menu-item{padding:10px 14px;font-size:13px;color:#c9d1d9;cursor:pointer;display:flex;align-items:center;gap:8px}
 .menu-item:hover{background:#21262d;color:#fff}
 )CSS";
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// DYNAMIC PORT REVERSE PROXY
+// ───────────────────────────────────────────────────────────────────────────────
+void TerminalHttpServer::proxy_to_port(int client_sock,
+                                       const std::string& raw_request,
+                                       int target_port,
+                                       const std::string& prefix_to_strip) {
+    int target_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (target_sock == INVALID_SOCKET) {
+        send_http(client_sock, 502, "text/plain", "502 Bad Gateway");
+        closesocket(client_sock); return;
+    }
+
+    sockaddr_in t_addr{};
+    t_addr.sin_family      = AF_INET;
+    t_addr.sin_addr.s_addr = htonl(0x7F000001); // 127.0.0.1
+    t_addr.sin_port        = htons((u_short)target_port);
+
+    if (connect(target_sock, (sockaddr*)&t_addr, sizeof(t_addr)) == SOCKET_ERROR) {
+        closesocket(target_sock);
+        
+        target_sock = socket(AF_INET6, SOCK_STREAM, 0);
+        if (target_sock != INVALID_SOCKET) {
+            sockaddr_in6 t_addr6{};
+            t_addr6.sin6_family = AF_INET6;
+            t_addr6.sin6_port = htons((u_short)target_port);
+            inet_pton(AF_INET6, "::1", &t_addr6.sin6_addr);
+            if (connect(target_sock, (sockaddr*)&t_addr6, sizeof(t_addr6)) == SOCKET_ERROR) {
+                closesocket(target_sock);
+                target_sock = INVALID_SOCKET;
+            }
+        }
+        
+        if (target_sock == INVALID_SOCKET) {
+            send_http(client_sock, 503, "text/plain", "503 Service Unavailable");
+            closesocket(client_sock); return;
+        }
+    }
+    std::string fwd_req = raw_request;
+    
+    auto replace_all = [](std::string& str, const std::string& from, const std::string& to) {
+        size_t start_pos = 0;
+        while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+            str.replace(start_pos, from.length(), to);
+            start_pos += to.length();
+        }
+    };
+    
+    replace_all(fwd_req, "\r\nX-Forwarded-Host:", "\r\nX-Scrubbed-Host:");
+    replace_all(fwd_req, "\r\nx-forwarded-host:", "\r\nX-Scrubbed-Host:");
+    replace_all(fwd_req, "\r\nX-Forwarded-Proto:", "\r\nX-Scrubbed-Proto:");
+    replace_all(fwd_req, "\r\nx-forwarded-proto:", "\r\nX-Scrubbed-Proto:");
+    replace_all(fwd_req, "\r\nOrigin:", "\r\nX-Scrubbed-Origin:");
+    replace_all(fwd_req, "\r\norigin:", "\r\nX-Scrubbed-Origin:");
+    replace_all(fwd_req, "\r\nForwarded:", "\r\nX-Scrubbed-Forwarded:");
+    replace_all(fwd_req, "\r\nforwarded:", "\r\nX-Scrubbed-Forwarded:");
+    replace_all(fwd_req, "\r\nService-Worker: script", "\r\nX-Scrubbed-SW: script");
+    replace_all(fwd_req, "\r\nservice-worker: script", "\r\nX-Scrubbed-SW: script");
+    
+    auto rewrite_host = [&]() {
+        std::string lower_req = fwd_req;
+        std::transform(lower_req.begin(), lower_req.end(), lower_req.begin(), ::tolower);
+        auto pos = lower_req.find("\r\nhost:");
+        if (pos != std::string::npos) {
+            auto end = lower_req.find("\r\n", pos + 2);
+            if (end != std::string::npos) {
+                std::string new_host = "\r\nHost: localhost:" + std::to_string(target_port);
+                fwd_req.replace(pos, end - pos, new_host);
+            }
+        }
+    };
+    rewrite_host();
+
+    // Strip the prefix from the first line
+    if (!prefix_to_strip.empty()) {
+        auto line_end = fwd_req.find("\r\n");
+        if (line_end != std::string::npos) {
+            std::string req_line = fwd_req.substr(0, line_end);
+            auto p1 = req_line.find(' ');
+            if (p1 != std::string::npos) {
+                auto p2 = req_line.find(' ', p1 + 1);
+                if (p2 != std::string::npos) {
+                    std::string url = req_line.substr(p1 + 1, p2 - p1 - 1);
+                    if (url.find(prefix_to_strip) == 0) {
+                        url = url.substr(prefix_to_strip.length());
+                        if (url.empty() || url[0] != '/') url = "/" + url;
+                        req_line = req_line.substr(0, p1 + 1) + url + req_line.substr(p2);
+                        fwd_req = req_line + fwd_req.substr(line_end);
+                    }
+                }
+            }
+        }
+    }
+
+    int sent = 0;
+    while (sent < (int)fwd_req.size()) {
+        int n = ::send(target_sock, fwd_req.data() + sent, (int)(fwd_req.size() - sent), 0);
+        if (n <= 0) break;
+        sent += n;
+    }
+
+    std::shared_ptr<std::atomic<bool>> done = std::make_shared<std::atomic<bool>>(false);
+    
+    auto pipe_thread = [](int from, int to, std::shared_ptr<std::atomic<bool>> done_flag) {
+        char buf[16384];
+        while (!(*done_flag)) {
+            fd_set fds; FD_ZERO(&fds); FD_SET(from, &fds);
+            timeval tv{1, 0};
+            if (select(0, &fds, nullptr, nullptr, &tv) <= 0) continue;
+            int n = recv(from, buf, sizeof(buf), 0);
+            if (n <= 0) { *done_flag = true; break; }
+            int s = 0;
+            while (s < n) {
+                int r = ::send(to, buf + s, n - s, 0);
+                if (r <= 0) { *done_flag = true; break; }
+                s += r;
+            }
+        }
+    };
+
+    std::thread t1(pipe_thread, client_sock, target_sock, done);
+    std::thread t2(pipe_thread, target_sock, client_sock, done);
+    
+    t1.join();
+    t2.join();
+    
+    closesocket(target_sock);
+    closesocket(client_sock);
 }
 
 } // namespace sara::remote

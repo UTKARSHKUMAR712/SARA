@@ -1,0 +1,197 @@
+/* Bottom Panel */
+#bottom-panel {
+    height: 300px; /* Default height */
+    min-height: 100px;
+    max-height: 90vh;
+    border-top: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    background-color: #1e1e1e;
+    position: relative; /* For resizer */
+}
+
+/* Resizer handle */
+#panel-resizer {
+    position: absolute;
+    top: -3px;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    cursor: ns-resize;
+    z-index: 10;
+}
+#panel-resizer:hover {
+    background-color: rgba(0, 122, 204, 0.5);
+}
+
+/* Maximized state */
+#bottom-panel.maximized {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: auto !important;
+    max-height: none !important;
+    z-index: 9999;
+}
+@media (max-width: 768px) {
+    #bottom-panel.maximized {
+        left: 0;
+        bottom: 0;
+    }
+}
+
+#bottom-panel.hidden {
+    display: none;
+}
+
+.panel-header {
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #252526;
+    border-bottom: 1px solid #333;
+    padding: 0 10px;
+    flex-shrink: 0;
+}
+
+.panel-tabs {
+    display: flex;
+    height: 100%;
+    align-items: flex-end;
+}
+
+.panel-tab {
+    padding: 6px 12px;
+    font-size: 11px;
+    color: #888;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid transparent;
+}
+
+.panel-tab:hover {
+    color: #ccc;
+}
+
+.panel-tab.active {
+    color: #e7e7e7;
+    border-bottom: 1px solid #007acc;
+}
+
+/* Terminal Tabs Container (Horizontal scroll) */
+.terminal-tabs-container {
+    display: flex;
+    flex: 1;
+    height: 100%;
+    margin-left: 20px;
+    align-items: flex-end;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none; /* Firefox */
+}
+.terminal-tabs-container::-webkit-scrollbar {
+    display: none; /* Chrome */
+}
+
+.terminal-tab {
+    display: flex;
+    align-items: center;
+    padding: 4px 10px;
+    margin-right: 2px;
+    background-color: transparent;
+    color: #888;
+    cursor: pointer;
+    border-top: 1px solid transparent;
+    border-left: 1px solid transparent;
+    border-right: 1px solid transparent;
+    font-size: 11px;
+    white-space: nowrap;
+}
+.terminal-tab:hover {
+    color: #ccc;
+}
+.terminal-tab.active {
+    color: #fff;
+    background-color: #1e1e1e;
+    border-top: 1px solid #007acc;
+    border-left: 1px solid #333;
+    border-right: 1px solid #333;
+}
+
+.terminal-tab-close {
+    margin-left: 8px;
+    border-radius: 3px;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+}
+.terminal-tab-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .terminal-tab {
+        padding: 4px 6px;
+    }
+    .term-name-full { display: none; }
+    .term-name-short { display: inline; }
+}
+@media (min-width: 769px) {
+    .term-name-full { display: inline; }
+    .term-name-short { display: none; }
+}
+
+.panel-content {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}
+
+#terminal-container {
+    flex: 1;
+    padding: 10px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* Multiple terminals containers */
+.terminal-instance {
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+.terminal-instance.active {
+    display: block;
+}
+
+#terminal-container .xterm {
+    height: 100%;
+    width: 100%;
+}
+
+#terminal-container .xterm-viewport {
+    /* REMOVED: background-color: transparent !important; -> This broke background clearing! */
+}
+
+/* Custom Native-Looking Scrollbar for Terminal */
+#terminal-container .xterm-viewport::-webkit-scrollbar {
+    width: 10px;
+}
+#terminal-container .xterm-viewport::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+#terminal-container .xterm-viewport::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 5px;
+}
+#terminal-container .xterm-viewport::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

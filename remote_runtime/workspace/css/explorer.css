@@ -1,0 +1,129 @@
+/* Sidebar */
+#sidebar {
+    width: 200px;
+    height: 100%;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+#sidebar.hide-sidebar {
+    display: none !important;
+}
+
+.sidebar-header {
+    height: 35px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px 0 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #bbbbbb;
+}
+
+.sidebar-actions button {
+    background: none;
+    border: none;
+    color: #bbbbbb;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 3px;
+    padding: 0;
+}
+
+.sidebar-actions button:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-bottom: 20px;
+}
+
+/* Tree View */
+.tree-item {
+    display: flex;
+    align-items: center;
+    padding: 3px 0;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    position: relative;
+    line-height: 22px;
+}
+
+.tree-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.tree-item.selected {
+    background-color: #37373d;
+    color: var(--fg-active);
+}
+
+.tree-item-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.chevron {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #cccccc;
+    transition: transform 0.1s;
+}
+.chevron svg {
+    width: 16px;
+    height: 16px;
+}
+.chevron.expanded {
+    transform: rotate(90deg);
+}
+.chevron.hidden {
+    visibility: hidden;
+}
+
+.tree-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+.tree-icon img {
+    width: 16px;
+    height: 16px;
+}
+
+.tree-children {
+    display: none;
+}
+.tree-children.expanded {
+    display: block;
+}
+
+/* Sidebar empty state */
+#sidebar-empty {
+    padding: 20px;
+    text-align: center;
+    color: #858585;
+}
+
+#sidebar-empty p {
+    margin-bottom: 15px;
+}

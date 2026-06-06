@@ -1,0 +1,118 @@
+/* Editor Area */
+#editor-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-base);
+    min-width: 0;
+}
+
+#editor-top {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#tabs-bar {
+    height: 35px;
+    background-color: var(--bg-sidebar);
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+#tabs-bar::-webkit-scrollbar {
+    height: 3px;
+}
+#tabs-bar::-webkit-scrollbar-thumb {
+    background: #444;
+}
+
+.tab {
+    display: inline-flex;
+    align-items: center;
+    height: 35px;
+    padding: 0 10px;
+    background-color: var(--bg-tab);
+    border-right: 1px solid var(--border-color);
+    cursor: pointer;
+    min-width: 100px;
+    max-width: 200px;
+}
+
+.tab.active {
+    background-color: var(--bg-tab-active);
+    color: var(--fg-active);
+    border-top: 1px solid var(--accent);
+}
+
+.tab-title {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 5px;
+}
+
+.tab-close {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+}
+
+.tab:hover .tab-close {
+    opacity: 1;
+}
+
+.tab-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.tab.dirty .tab-close {
+    opacity: 1;
+}
+
+.tab.dirty .tab-close::before {
+    content: '';
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #fff;
+}
+.tab.dirty:hover .tab-close::before {
+    display: none;
+}
+.tab.dirty:hover .tab-close::after {
+    content: '×';
+    font-size: 16px;
+    line-height: 16px;
+}
+.tab-close::after {
+    content: '×';
+    font-size: 16px;
+    line-height: 16px;
+    display: none;
+}
+.tab:not(.dirty) .tab-close::after {
+    display: block;
+}
+
+#monaco-container {
+    flex-grow: 1;
+    display: none;
+}
+
+#welcome-screen {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #666;
+}

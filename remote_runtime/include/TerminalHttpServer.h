@@ -2,6 +2,10 @@
 #include <string>
 #include <atomic>
 #include <thread>
+#include <mutex>
+#include <map>
+#include <memory>
+#include "CloudflaredManager.h"
 
 namespace sara::remote {
 
@@ -51,7 +55,7 @@ private:
 
     // Response helpers
     static void send_http(int sock, int code, const std::string& content_type,
-                          const std::string& body);
+                          const std::string& body, const std::string& extra_headers = "");
     static void send_404(int sock);
     static void send_403(int sock);
 
@@ -70,11 +74,18 @@ private:
     void proxy_to_filebrowser(int client_sock, const std::string& raw_request,
                                const std::string& path);
 
+    // Dynamic port reverse proxy (for Preview System)
+    void proxy_to_port(int client_sock, const std::string& raw_request, 
+                       int target_port, const std::string& prefix_to_strip);
+
     int port_ = 9081;
     int filebrowser_port_ = 9090;
     std::string static_dir_;
     std::atomic<bool> running_{false};
     std::thread accept_thread_;
+
+    std::mutex port_tunnels_mutex_;
+    std::map<int, std::unique_ptr<CloudflaredManager>> port_tunnels_;
 
     int proxy_header_timeout_ = 300;
     int proxy_idle_timeout_   = 300;

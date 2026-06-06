@@ -27,7 +27,8 @@ public:
     // on_url_ready is called when the tunnel URL is captured (from another thread).
     // Returns true if cloudflared process was started.
     bool start_quick_tunnel(int local_port,
-                            std::function<void(const std::string& url)> on_url_ready);
+                            std::function<void(const std::string& url)> on_url_ready,
+                            bool kill_zombies = true);
 
     // Start named tunnel (requires cloudflare account + tunnel configured).
     bool start_named_tunnel(const std::string& tunnel_name,
@@ -46,10 +47,10 @@ public:
     // Returns path to cloudflared.exe, or empty on failure.
     static std::string ensure_cloudflared(const std::string& dir);
 
-private:
     CloudflaredManager() = default;
     ~CloudflaredManager() { stop(); }
 
+private:
     void reader_loop(std::function<void(const std::string&)> on_url_ready);
 
     HANDLE proc_handle_     = INVALID_HANDLE_VALUE;

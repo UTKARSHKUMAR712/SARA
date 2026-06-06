@@ -1,4 +1,5 @@
 // SARA Agent v4.0 — Native Runtime
+#include <winsock2.h>
 #include <windows.h>
 #include "../include/AgentInitializer.h"
 #include "../include/Logger.h"

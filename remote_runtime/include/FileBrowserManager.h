@@ -43,6 +43,7 @@ public:
     bool is_process_alive() const;
 
     int port() const { return port_; }
+    const std::string& root_dir() const { return root_dir_; }
 
 private:
     FileBrowserManager() = default;

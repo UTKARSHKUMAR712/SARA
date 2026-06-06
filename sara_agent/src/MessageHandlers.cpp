@@ -218,6 +218,7 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
             "• /sp — Spotify control\n"
             "• /terminal — open terminal\n"
             "• /terminal admin — open admin terminal\n"
+            "• /workspace — open codespaces IDE\n"
             "• /files — open file browser\n"
             "• /sararestart — restart SARA agent\n\n"
             "Type /help for commands.");
@@ -241,6 +242,7 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
             "/terminal admin — Start admin browser terminal\n"
             "/terminals   — List active terminals\n"
             "/killterminal <id> — Stop a terminal session\n"
+            "/workspace   — Open SARA Workspace IDE\n"
             "/files       — Open File Browser\n"
             "/sararestart — Restart SARA and Cloudflare completely\n"
             "/sarashutdown — Kill SARA completely (no restart)\n\n"
@@ -485,6 +487,89 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
     }
 
     // ── End File Browser commands ──────────────────────────────────────────────
+
+    // ── Workspace command ──────────────────────────────────────────────────────
+    if (text == "/workspace" || text == "open workspace" || text == "ide") {
+        auto& cfg = g_config.get();
+
+        // Workspace relies on FileBrowser backend for APIs, so we ensure it is started
+        if (!cfg.filebrowser_enabled) {
+            g_telegram.send_message(chat_id, "❌ File Browser is disabled in settings. Workspace requires it for file APIs.");
+            return;
+        }
+
+        if (!sara::remote::FileBrowserManager::instance().start()) {
+            g_telegram.send_message(chat_id, "❌ Failed to start backend File Service. Check logs.");
+            return;
+        }
+
+        // Issue auth token
+        auto result = sara::remote::TerminalSessionManager::instance().issue_auth_token(
+            chat_id,
+            cfg.terminal_expiry_minutes);
+        if (!result.success) {
+            g_telegram.send_message(chat_id, "❌ Failed to create workspace session: " + result.error);
+            return;
+        }
+
+        std::string cf_url = sara::remote::CloudflaredManager::instance().tunnel_url();
+
+        if (cf_url.empty() && cfg.cloudflare_mode != "disabled") {
+            g_telegram.send_message(chat_id, "☁️ *Starting Cloudflare Tunnel...*\n\nThe Workspace link will be sent once the tunnel is ready!");
+
+            auto on_url = [chat_id, result, cfg](const std::string& url) {
+                std::thread([chat_id, result, cfg, url]() {
+                    for (int i = 0; i < 10; i++) {
+                        Sleep(1000);
+                        if (!sara::remote::CloudflaredManager::instance().is_tunnel_alive()) {
+                            g_telegram.send_message(chat_id,
+                                "❌ Cloudflare tunnel died during startup.\n"
+                                "Try `/workspace` again in a few seconds.");
+                            return;
+                        }
+                    }
+                    std::string base = url;
+                    if (!base.empty() && base.back() == '/') base.pop_back();
+                    std::string file_url = base + "/workspace/?token=" + result.token;
+                    g_telegram.send_message(chat_id,
+                        "💻 *SARA Workspace Ready*\n\n"
+                        "🟢 Secure HTTPS via Cloudflare\n\n"
+                        "Open in browser:\n" + file_url);
+                }).detach();
+            };
+
+            bool cf_ok = false;
+            if (cfg.cloudflare_mode == "named" && !cfg.cloudflare_tunnel_name.empty()) {
+                cf_ok = sara::remote::CloudflaredManager::instance().start_named_tunnel(cfg.cloudflare_tunnel_name, on_url);
+            } else {
+                cf_ok = sara::remote::CloudflaredManager::instance().start_quick_tunnel(g_actual_terminal_port, on_url);
+            }
+            if (!cf_ok) {
+                g_telegram.send_message(chat_id, "❌ Failed to start Cloudflare tunnel.");
+            }
+            return;
+        }
+
+        std::string base_url;
+        if (!cf_url.empty()) {
+            base_url = cf_url;
+            if (base_url.back() == '/') base_url.pop_back();
+        } else {
+            base_url = "http://" + cfg.terminal_host + ":" + std::to_string(g_actual_terminal_port);
+        }
+
+        std::string file_url = base_url + "/workspace/?token=" + result.token;
+        std::string cf_note = cf_url.empty()
+            ? "🔴 Cloudflare not ready. URL is local-only."
+            : "🟢 Secure HTTPS via Cloudflare";
+
+        g_telegram.send_message(chat_id,
+            "💻 *SARA Workspace Ready*\n\n"
+            + cf_note + "\n\n"
+            "Open in browser:\n" + file_url);
+        return;
+    }
+    // ── End Workspace command ──────────────────────────────────────────────────
     if (text == "/monitor") {
         auto stats = g_runtime.get_summary();
         std::string msg = "📊 System Monitor\n"

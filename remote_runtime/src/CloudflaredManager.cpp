@@ -183,13 +183,15 @@ static void kill_zombie_cloudflared() {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 bool CloudflaredManager::start_quick_tunnel(int local_port,
-    std::function<void(const std::string& url)> on_url_ready)
-{
+                                            std::function<void(const std::string&)> on_url_ready,
+                                            bool kill_zombies) {
     // Always stop any existing tunnel first
     stop();
     
     // Kill any zombie cloudflared from previous process instances
-    kill_zombie_cloudflared();
+    if (kill_zombies) {
+        kill_zombie_cloudflared();
+    }
 
     // Find cloudflared.exe in PATH or current dir
     // (ensure_cloudflared should have been called before this)
@@ -202,7 +204,7 @@ bool CloudflaredManager::start_quick_tunnel(int local_port,
     if (cf_path.empty()) return false;
 
     std::string cmd = "\"" + cf_path + "\" tunnel --url http://localhost:" +
-                      std::to_string(local_port) + " --no-autoupdate";
+                      std::to_string(local_port) + " --http-host-header localhost --no-autoupdate";
 
     if (!launch_process(cmd, proc_handle_, stderr_read_)) return false;
 

@@ -178,7 +178,7 @@ bool FileBrowserManager::start() {
     std::string config_cmd = "\"" + fb_path + "\" config set"
         " -a 127.0.0.1 -p " + std::to_string(port_) +
         " --baseURL /files"
-        " --auth.method noauth"
+        " --auth.method proxy --auth.header X-Remote-User"
         " -d \"" + db_path_ + "\" > NUL 2>&1";
     system(config_cmd.c_str());
 
