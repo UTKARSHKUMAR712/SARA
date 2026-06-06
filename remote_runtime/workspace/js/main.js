@@ -136,32 +136,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     let isResizing = false;
     let startY, startHeight;
     
-    resizer.addEventListener('mousedown', (e) => {
+    const startPanelResize = (e) => {
         isResizing = true;
-        startY = e.clientY;
+        startY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
         startHeight = parseInt(document.defaultView.getComputedStyle(bottomPanel).height, 10);
         document.body.style.cursor = 'ns-resize';
-        e.preventDefault(); // prevent text selection
-    });
+        if (e.type === 'mousedown') e.preventDefault();
+    };
+
+    resizer.addEventListener('mousedown', startPanelResize);
+    resizer.addEventListener('touchstart', startPanelResize, { passive: true });
     
-    window.addEventListener('mousemove', (e) => {
+    const doPanelResize = (clientY) => {
         if (!isResizing) return;
-        const dy = startY - e.clientY; // moving mouse up increases height
+        const dy = startY - clientY;
         const newHeight = startHeight + dy;
-        // Don't resize if maximized
         if (!bottomPanel.classList.contains('maximized')) {
             bottomPanel.style.height = `${newHeight}px`;
         }
-    });
+    };
+
+    window.addEventListener('mousemove', (e) => doPanelResize(e.clientY));
+    window.addEventListener('touchmove', (e) => {
+        if (isResizing && e.touches.length > 0) {
+            doPanelResize(e.touches[0].clientY);
+        }
+    }, { passive: true });
     
-    window.addEventListener('mouseup', () => {
+    const stopPanelResize = () => {
         if (isResizing) {
             isResizing = false;
             document.body.style.cursor = 'default';
-            // trigger terminal fit
             window.dispatchEvent(new Event('resize'));
         }
-    });
+    };
+
+    window.addEventListener('mouseup', stopPanelResize);
+    window.addEventListener('touchend', stopPanelResize);
+    window.addEventListener('touchcancel', stopPanelResize);
     
     // Maximize Panel logic
     document.getElementById('btn-maximize-panel').addEventListener('click', (e) => {

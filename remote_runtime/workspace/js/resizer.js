@@ -7,29 +7,45 @@ export function initSidebarResizer() {
     
     let isResizing = false;
     
-    resizer.addEventListener('mousedown', (e) => {
+    const startResize = (e) => {
         isResizing = true;
         document.body.style.cursor = 'ew-resize';
-        e.preventDefault();
-    });
+        // Prevent default only for mouse events, not touch (can block scroll if not careful, but okay for resizer)
+        if (e.type === 'mousedown') e.preventDefault();
+    };
+
+    resizer.addEventListener('mousedown', startResize);
+    resizer.addEventListener('touchstart', (e) => {
+        startResize(e);
+        // e.preventDefault(); // Sometimes needed to prevent click/scroll
+    }, { passive: true });
     
-    document.addEventListener('mousemove', (e) => {
+    const doResize = (clientX) => {
         if (!isResizing) return;
-        // Calculate new width: mouse X minus activity bar width
-        let newWidth = e.clientX - state.layout.activityBarWidth;
-        // Constrain width
+        let newWidth = clientX - state.layout.activityBarWidth;
         if (newWidth < 150) newWidth = 150;
         if (newWidth > 800) newWidth = 800;
         
         state.layout.explorerWidth = newWidth;
-        applyAllSettings(); // Applies CSS variables instantly
-    });
+        applyAllSettings();
+    };
+
+    document.addEventListener('mousemove', (e) => doResize(e.clientX));
+    document.addEventListener('touchmove', (e) => {
+        if (isResizing && e.touches.length > 0) {
+            doResize(e.touches[0].clientX);
+        }
+    }, { passive: true });
     
-    document.addEventListener('mouseup', () => {
+    const stopResize = () => {
         if (isResizing) {
             isResizing = false;
             document.body.style.cursor = 'default';
             saveSettings();
         }
-    });
+    };
+
+    document.addEventListener('mouseup', stopResize);
+    document.addEventListener('touchend', stopResize);
+    document.addEventListener('touchcancel', stopResize);
 }

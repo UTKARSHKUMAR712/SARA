@@ -129,3 +129,13 @@ body, html {
         display: flex;
     }
 }
+
+/* Compact Mode */
+body.compact-mode #tabs-bar { height: 28px; }
+body.compact-mode .tab { height: 28px; padding: 0 8px; font-size: 12px; }
+body.compact-mode .sidebar-header { height: 28px; }
+body.compact-mode .tree-item { padding: 1px 0; line-height: 18px; font-size: 12px; }
+body.compact-mode #bottom-panel .panel-header { height: 28px; }
+body.compact-mode #bottom-panel .panel-tab { padding: 0 10px; font-size: 11px; }
+body.compact-mode .activity-item { height: 36px; }
+body.compact-mode .activity-item svg { width: 20px; height: 20px; }
