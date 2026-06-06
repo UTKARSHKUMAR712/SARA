@@ -149,6 +149,7 @@ export function initSettingsUI() {
     bindInput('setting-editor-wrap', 'editorSettings', 'wordWrap', null);
     bindInput('setting-editor-minimap', 'editorSettings', 'minimap', null);
     bindInput('setting-editor-lines', 'editorSettings', 'lineNumbers', null);
+    bindInput('setting-editor-decorations', 'editorSettings', 'lineDecorationsWidth', parseInt);
     bindInput('setting-editor-tab', 'editorSettings', 'tabSize', parseInt);
 
     // Terminal
@@ -213,6 +214,7 @@ function populateSettingsUI() {
     setVal('setting-editor-wrap', state.editorSettings.wordWrap);
     setVal('setting-editor-minimap', state.editorSettings.minimap);
     setVal('setting-editor-lines', state.editorSettings.lineNumbers);
+    setVal('setting-editor-decorations', state.editorSettings.lineDecorationsWidth ?? 10);
     setVal('setting-editor-tab', state.editorSettings.tabSize);
 
     setVal('setting-term-font', state.terminalSettings.fontSize);

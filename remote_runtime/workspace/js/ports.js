@@ -1,5 +1,6 @@
 import { apiFetch } from './api.js';
 import { state } from './state.js';
+import { fitActiveTerminal } from './terminal.js';
 
 export function initPortsPanel() {
     const btnPorts = document.getElementById('btn-ports');
@@ -44,6 +45,7 @@ export function initPortsPanel() {
             terminalContainer.style.display = 'flex';
             terminalContent.style.display = 'block';
             stopPolling();
+            fitActiveTerminal();
         });
     }
 }

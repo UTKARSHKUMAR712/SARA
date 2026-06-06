@@ -15,7 +15,8 @@ export const state = {
         wordWrap: true,
         minimap: true,
         lineNumbers: true,
-        tabSize: 4
+        tabSize: 4,
+        lineDecorationsWidth: 10
     },
     terminalSettings: {
         fontSize: 14,

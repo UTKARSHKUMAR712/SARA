@@ -240,6 +240,7 @@ export function updateEditorOptions() {
         wordWrap: state.editorSettings.wordWrap ? 'on' : 'off',
         minimap: { enabled: state.editorSettings.minimap !== false },
         lineNumbers: state.editorSettings.lineNumbers ? 'on' : 'off',
+        lineDecorationsWidth: state.editorSettings.lineDecorationsWidth !== undefined ? state.editorSettings.lineDecorationsWidth : 10,
         tabSize: state.editorSettings.tabSize || 4
     });
 }

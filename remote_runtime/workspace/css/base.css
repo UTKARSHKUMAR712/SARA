@@ -77,6 +77,21 @@ body, html {
 }
 
 /* Sidebar (Explorer) */
+#sidebar-resizer {
+    position: relative;
+    width: 4px;
+    cursor: ew-resize;
+    background-color: var(--border-color);
+}
+#sidebar-resizer::after {
+    content: '';
+    position: absolute;
+    left: -5px;
+    right: -5px;
+    top: 0;
+    bottom: 0;
+    z-index: 10;
+}
 #sidebar {
     width: var(--sidebar-width);
     height: 100%;

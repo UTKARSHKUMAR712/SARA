@@ -10,15 +10,14 @@ export function initSidebarResizer() {
     const startResize = (e) => {
         isResizing = true;
         document.body.style.cursor = 'ew-resize';
-        // Prevent default only for mouse events, not touch (can block scroll if not careful, but okay for resizer)
         if (e.type === 'mousedown') e.preventDefault();
     };
 
     resizer.addEventListener('mousedown', startResize);
     resizer.addEventListener('touchstart', (e) => {
         startResize(e);
-        // e.preventDefault(); // Sometimes needed to prevent click/scroll
-    }, { passive: true });
+        if (e.cancelable) e.preventDefault(); // Prevent click/scroll
+    }, { passive: false });
     
     const doResize = (clientX) => {
         if (!isResizing) return;
@@ -33,9 +32,10 @@ export function initSidebarResizer() {
     document.addEventListener('mousemove', (e) => doResize(e.clientX));
     document.addEventListener('touchmove', (e) => {
         if (isResizing && e.touches.length > 0) {
+            if (e.cancelable) e.preventDefault();
             doResize(e.touches[0].clientX);
         }
-    }, { passive: true });
+    }, { passive: false });
     
     const stopResize = () => {
         if (isResizing) {

@@ -161,7 +161,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     resizer.addEventListener('mousedown', startPanelResize);
-    resizer.addEventListener('touchstart', startPanelResize, { passive: true });
+    resizer.addEventListener('touchstart', (e) => {
+        startPanelResize(e);
+        if (e.cancelable) e.preventDefault();
+    }, { passive: false });
     
     const doPanelResize = (clientY) => {
         if (!isResizing) return;
@@ -175,9 +178,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('mousemove', (e) => doPanelResize(e.clientY));
     window.addEventListener('touchmove', (e) => {
         if (isResizing && e.touches.length > 0) {
+            if (e.cancelable) e.preventDefault();
             doPanelResize(e.touches[0].clientY);
         }
-    }, { passive: true });
+    }, { passive: false });
     
     const stopPanelResize = () => {
         if (isResizing) {
