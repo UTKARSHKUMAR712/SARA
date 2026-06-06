@@ -51,15 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.currentTarget.classList.toggle('active', !sb.classList.contains('hide-sidebar'));
     });
 
-    document.getElementById('btn-ports').addEventListener('click', () => {
-        const bottomPanel = document.getElementById('bottom-panel');
-        if (bottomPanel.classList.contains('hidden')) {
-            bottomPanel.classList.remove('hidden');
-            // Trigger resize to fix any layout issues
-            setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
-        }
-        document.getElementById('tab-ports').click();
-    });
+
 
     document.getElementById('menu-new-file').addEventListener('click', createNewFile);
     document.getElementById('menu-new-folder').addEventListener('click', createNewFolder);
