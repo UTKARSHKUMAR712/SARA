@@ -9,14 +9,14 @@ export function initMonaco() {
         state.editor = monaco.editor.create(document.getElementById('monaco-container'), {
             value: '',
             language: 'plaintext',
-            theme: state.editor.theme || 'vs-dark',
+            theme: state.editorSettings.theme || 'vs-dark',
             automaticLayout: true,
-            minimap: { enabled: state.editor.minimap !== false },
-            fontSize: state.editor.fontSize || 14,
+            minimap: { enabled: state.editorSettings.minimap !== false },
+            fontSize: state.editorSettings.fontSize || 14,
             fontFamily: "'Consolas', 'Courier New', monospace",
-            wordWrap: state.editor.wordWrap ? "on" : "off",
-            lineNumbers: state.editor.lineNumbers ? "on" : "off",
-            tabSize: state.editor.tabSize || 4
+            wordWrap: state.editorSettings.wordWrap ? "on" : "off",
+            lineNumbers: state.editorSettings.lineNumbers ? "on" : "off",
+            tabSize: state.editorSettings.tabSize || 4
         });
         
         state.editor.addAction({
@@ -201,14 +201,14 @@ export function renderTabs() {
 }
 
 export function updateEditorOptions() {
-    if (!state.editor) return;
+    if (typeof monaco === 'undefined' || !state.editor) return;
     // @ts-ignore
-    monaco.editor.setTheme(state.editor.theme || 'vs-dark');
+    monaco.editor.setTheme(state.editorSettings.theme || 'vs-dark');
     state.editor.updateOptions({
-        fontSize: state.editor.fontSize || 14,
-        wordWrap: state.editor.wordWrap ? 'on' : 'off',
-        minimap: { enabled: state.editor.minimap !== false },
-        lineNumbers: state.editor.lineNumbers ? 'on' : 'off',
-        tabSize: state.editor.tabSize || 4
+        fontSize: state.editorSettings.fontSize || 14,
+        wordWrap: state.editorSettings.wordWrap ? 'on' : 'off',
+        minimap: { enabled: state.editorSettings.minimap !== false },
+        lineNumbers: state.editorSettings.lineNumbers ? 'on' : 'off',
+        tabSize: state.editorSettings.tabSize || 4
     });
 }

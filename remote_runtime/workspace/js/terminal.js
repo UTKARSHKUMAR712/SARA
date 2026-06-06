@@ -54,15 +54,15 @@ export function initTerminal() {
     // Init xterm
     // @ts-ignore
     const xterm = new Terminal({
-        cursorBlink: state.terminal.cursorBlink !== false,
-        cursorStyle: state.terminal.cursorStyle || 'block',
-        scrollback: state.terminal.scrollback || 5000,
+        cursorBlink: state.terminalSettings.cursorBlink !== false,
+        cursorStyle: state.terminalSettings.cursorStyle || 'block',
+        scrollback: state.terminalSettings.scrollback || 5000,
         theme: {
             background: '#1e1e1e',
             foreground: '#cccccc'
         },
         fontFamily: 'Consolas, "Courier New", monospace',
-        fontSize: state.terminal.fontSize || 14
+        fontSize: state.terminalSettings.fontSize || 14
     });
 
     // @ts-ignore
@@ -179,7 +179,7 @@ export function fitActiveTerminal() {
 async function startSessionAndConnect(termObj) {
     try {
         const parentToken = getAuthToken();
-        const shell = state.terminal.defaultShell === 'cmd' ? 'cmd.exe' : 'powershell.exe';
+        const shell = state.terminalSettings.defaultShell === 'cmd' ? 'cmd.exe' : 'powershell.exe';
         const res = await fetch(`/api/new_session?parent_token=${parentToken}&shell=${shell}`);
         if (!res.ok) throw new Error("Failed to create session");
         const data = await res.json();

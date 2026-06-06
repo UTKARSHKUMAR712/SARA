@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (settings.currentWorkspace) state.currentWorkspace = settings.currentWorkspace;
             if (settings.autoSaveEnabled !== undefined) state.autoSaveEnabled = settings.autoSaveEnabled;
             
-            if (settings.editor) Object.assign(state.editor, settings.editor);
-            if (settings.terminal) Object.assign(state.terminal, settings.terminal);
+            if (settings.editor) Object.assign(state.editorSettings, settings.editor);
+            if (settings.terminal) Object.assign(state.terminalSettings, settings.terminal);
             if (settings.layout) Object.assign(state.layout, settings.layout);
         }
     } catch (e) {

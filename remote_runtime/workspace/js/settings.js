@@ -10,8 +10,8 @@ export async function saveSettings() {
             body: JSON.stringify({
                 currentWorkspace: state.currentWorkspace,
                 autoSaveEnabled: state.autoSaveEnabled,
-                editor: state.editor,
-                terminal: state.terminal,
+                editor: state.editorSettings,
+                terminal: state.terminalSettings,
                 layout: state.layout
             })
         });
@@ -39,7 +39,7 @@ export function applyAllSettings() {
     updateEditorOptions();
 
     // 3. Apply Terminal Settings
-    updateTerminalFontSize(state.terminal.fontSize);
+    updateTerminalFontSize(state.terminalSettings.fontSize);
 }
 
 export function initSettingsUI() {
@@ -101,19 +101,21 @@ export function initSettingsUI() {
     bindInput('setting-explorer-width', 'layout', 'explorerWidth', parseInt);
 
     // Editor
-    bindInput('setting-editor-font', 'editor', 'fontSize', parseInt);
-    bindInput('setting-editor-wrap', 'editor', 'wordWrap', null);
-    bindInput('setting-editor-minimap', 'editor', 'minimap', null);
-    bindInput('setting-editor-lines', 'editor', 'lineNumbers', null);
-    bindInput('setting-editor-tab', 'editor', 'tabSize', parseInt);
-    bindInput('setting-editor-theme', 'editor', 'theme', null);
+    // Editor
+    bindInput('setting-editor-font', 'editorSettings', 'fontSize', parseInt);
+    bindInput('setting-editor-wrap', 'editorSettings', 'wordWrap', null);
+    bindInput('setting-editor-minimap', 'editorSettings', 'minimap', null);
+    bindInput('setting-editor-lines', 'editorSettings', 'lineNumbers', null);
+    bindInput('setting-editor-tab', 'editorSettings', 'tabSize', parseInt);
+    bindInput('setting-editor-theme', 'editorSettings', 'theme', null);
 
     // Terminal
-    bindInput('setting-term-font', 'terminal', 'fontSize', parseInt);
-    bindInput('setting-term-cursor', 'terminal', 'cursorStyle', null);
-    bindInput('setting-term-blink', 'terminal', 'cursorBlink', null);
-    bindInput('setting-term-scroll', 'terminal', 'scrollback', parseInt);
-    bindInput('setting-term-shell', 'terminal', 'defaultShell', null);
+    // Terminal
+    bindInput('setting-term-font', 'terminalSettings', 'fontSize', parseInt);
+    bindInput('setting-term-cursor', 'terminalSettings', 'cursorStyle', null);
+    bindInput('setting-term-blink', 'terminalSettings', 'cursorBlink', null);
+    bindInput('setting-term-scroll', 'terminalSettings', 'scrollback', parseInt);
+    bindInput('setting-term-shell', 'terminalSettings', 'defaultShell', null);
 }
 
 function populateSettingsUI() {
@@ -129,16 +131,16 @@ function populateSettingsUI() {
     setVal('setting-activity-bar', state.layout.activityBarWidth);
     setVal('setting-explorer-width', state.layout.explorerWidth);
 
-    setVal('setting-editor-font', state.editor.fontSize);
-    setVal('setting-editor-wrap', state.editor.wordWrap);
-    setVal('setting-editor-minimap', state.editor.minimap);
-    setVal('setting-editor-lines', state.editor.lineNumbers);
-    setVal('setting-editor-tab', state.editor.tabSize);
-    setVal('setting-editor-theme', state.editor.theme);
+    setVal('setting-editor-font', state.editorSettings.fontSize);
+    setVal('setting-editor-wrap', state.editorSettings.wordWrap);
+    setVal('setting-editor-minimap', state.editorSettings.minimap);
+    setVal('setting-editor-lines', state.editorSettings.lineNumbers);
+    setVal('setting-editor-tab', state.editorSettings.tabSize);
+    setVal('setting-editor-theme', state.editorSettings.theme);
 
-    setVal('setting-term-font', state.terminal.fontSize);
-    setVal('setting-term-cursor', state.terminal.cursorStyle);
-    setVal('setting-term-blink', state.terminal.cursorBlink);
-    setVal('setting-term-scroll', state.terminal.scrollback);
-    setVal('setting-term-shell', state.terminal.defaultShell);
+    setVal('setting-term-font', state.terminalSettings.fontSize);
+    setVal('setting-term-cursor', state.terminalSettings.cursorStyle);
+    setVal('setting-term-blink', state.terminalSettings.cursorBlink);
+    setVal('setting-term-scroll', state.terminalSettings.scrollback);
+    setVal('setting-term-shell', state.terminalSettings.defaultShell);
 }

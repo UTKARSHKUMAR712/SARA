@@ -1,5 +1,5 @@
 export const state = {
-    editor: null,
+    editor: null, // Monaco instance
     currentFile: null,
     openTabs: [], // { path: string, content: string, dirty: boolean, model: MonacoModel }
     currentWorkspace: '',
@@ -10,7 +10,7 @@ export const state = {
     contextMenuTarget: null, // target path for context menu
     
     // New nested settings structure
-    editor: {
+    editorSettings: {
         fontSize: 14,
         wordWrap: true,
         minimap: true,
@@ -18,7 +18,7 @@ export const state = {
         tabSize: 4,
         theme: 'vs-dark'
     },
-    terminal: {
+    terminalSettings: {
         fontSize: 14,
         cursorBlink: true,
         cursorStyle: 'block',
