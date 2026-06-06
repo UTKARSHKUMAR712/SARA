@@ -2,8 +2,9 @@ import { state } from './state.js';
 import { apiFetch } from './api.js';
 import { startLiveServer } from './ports.js';
 import { IconRegistry } from './icons.js';
+import { saveSettings } from './settings.js';
 
-export function initMonaco() {
+export function initMonaco(onReady) {
     // @ts-ignore
     require(['vs/editor/editor.main'], function () {
         // @ts-ignore
@@ -70,6 +71,10 @@ export function initMonaco() {
                 }
             }
         });
+        
+        if (typeof onReady === 'function') {
+            onReady();
+        }
     });
 }
 
@@ -125,6 +130,9 @@ export function switchToTab(tab) {
             n.classList.remove('selected');
         }
     });
+    
+    // Save state (debounced ideally, but settings.js handles it)
+    saveSettings();
 }
 
 export function closeTab(path, force = false) {
@@ -156,6 +164,8 @@ export function closeTab(path, force = false) {
     } else {
         renderTabs();
     }
+    
+    saveSettings();
 }
 
 export async function saveCurrentFile() {
@@ -199,13 +209,12 @@ export function renderTabs() {
         titleEl.className = 'tab-title';
         
         if (tab.isSettings) {
-            titleEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon" style="width: 14px; height: 14px; margin-right: 6px; vertical-align: middle;"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings`;
+            titleEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon" style="width: 14px; height: 14px; margin-right: 6px; vertical-align: middle; flex-shrink: 0;"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span>Settings</span>`;
         } else {
             const iconHtml = IconRegistry.getFileIcon(name);
-            titleEl.innerHTML = `<span style="margin-right: 6px; display: inline-flex; align-items: center; vertical-align: middle; width: 14px; height: 14px;">${iconHtml}</span>${name}`;
+            titleEl.innerHTML = `<span style="margin-right: 6px; display: inline-flex; align-items: center; vertical-align: middle; width: 14px; height: 14px; flex-shrink: 0;">${iconHtml}</span><span>${name}</span>`;
         }
         
-        titleEl.title = tab.isSettings ? 'Workspace Settings' : tab.path;
         el.appendChild(titleEl);
         
         const closeEl = document.createElement('div');

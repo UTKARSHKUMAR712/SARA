@@ -14,7 +14,9 @@ export async function saveSettings() {
                 terminal: state.terminalSettings,
                 layout: state.layout,
                 theme: state.theme,
-                themeOverrides: state.themeOverrides
+                themeOverrides: state.themeOverrides,
+                openFiles: state.openTabs.map(t => t.isSettings ? 'settings://' : t.path),
+                currentFile: state.currentFile
             })
         });
     } catch (e) {

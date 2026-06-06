@@ -67,7 +67,7 @@
 }
 
 .tree-item.selected {
-    background-color: #37373d;
+    background-color: var(--bg-tab);
     color: var(--fg-active);
 }
 

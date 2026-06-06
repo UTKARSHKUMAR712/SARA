@@ -21,26 +21,28 @@ export async function applyTheme() {
             return null; // fallback to CSS default if none specified
         };
 
+        const isDark = themeData.type === 'dark';
+
         // Apply Activity Bar
-        const abBg = getColor('activityBar', 'background');
-        if (abBg) root.style.setProperty('--bg-activity', abBg);
-        const abFg = getColor('activityBar', 'foreground');
-        if (abFg) root.style.setProperty('--fg-activity', abFg);
+        const abBg = getColor('activityBar', 'background') || (isDark ? '#333333' : '#e8e8e8');
+        root.style.setProperty('--bg-activity', abBg);
+        const abFg = getColor('activityBar', 'foreground') || (isDark ? '#cccccc' : '#333333');
+        root.style.setProperty('--fg-activity', abFg);
 
         // Apply Explorer
-        const exBg = getColor('explorer', 'background');
-        if (exBg) root.style.setProperty('--bg-sidebar', exBg);
-        const exFg = getColor('explorer', 'foreground');
-        if (exFg) root.style.setProperty('--fg-sidebar', exFg);
+        const exBg = getColor('explorer', 'background') || (isDark ? '#252526' : '#f3f3f3');
+        root.style.setProperty('--bg-sidebar', exBg);
+        const exFg = getColor('explorer', 'foreground') || (isDark ? '#cccccc' : '#333333');
+        root.style.setProperty('--fg-sidebar', exFg);
 
-        const isDark = themeData.type === 'dark';
-        
+
         // Apply Global Variables (Inputs, Headings)
         root.style.setProperty('--input-bg', isDark ? '#3c3c3c' : '#ffffff');
         root.style.setProperty('--input-fg', isDark ? '#cccccc' : '#333333');
         root.style.setProperty('--fg-muted', isDark ? '#aaaaaa' : '#666666');
         root.style.setProperty('--fg-heading', isDark ? '#ffffff' : '#000000');
         root.style.setProperty('--input-border', isDark ? 'transparent' : '#cecece');
+        root.style.setProperty('--hover-bg', isDark ? '#2a2d2e' : '#e0e0e0');
         
         // Apply Editor (for UI surrounding monaco if needed)
         const edBg = getColor('editor', 'background');
@@ -49,18 +51,18 @@ export async function applyTheme() {
         if (edFg) root.style.setProperty('--fg-base', edFg);
 
         // Apply Terminal
-        const tmBg = getColor('terminal', 'background');
-        if (tmBg) root.style.setProperty('--bg-terminal', tmBg);
-        const tmFg = getColor('terminal', 'foreground');
-        if (tmFg) root.style.setProperty('--fg-terminal', tmFg);
+        const tmBg = getColor('terminal', 'background') || (isDark ? '#1e1e1e' : '#ffffff');
+        root.style.setProperty('--bg-terminal', tmBg);
+        const tmFg = getColor('terminal', 'foreground') || (isDark ? '#cccccc' : '#333333');
+        root.style.setProperty('--fg-terminal', tmFg);
 
         // Apply Tabs
-        const tbActiveBg = getColor('tabs', 'activeBackground');
-        if (tbActiveBg) root.style.setProperty('--bg-tab-active', tbActiveBg);
-        const tbInactiveBg = getColor('tabs', 'inactiveBackground');
-        if (tbInactiveBg) root.style.setProperty('--bg-tab', tbInactiveBg);
-        const tbBorder = getColor('tabs', 'border');
-        if (tbBorder) root.style.setProperty('--border-color', tbBorder);
+        const tbActiveBg = getColor('tabs', 'activeBackground') || (isDark ? '#1e1e1e' : '#ffffff');
+        root.style.setProperty('--bg-tab-active', tbActiveBg);
+        const tbInactiveBg = getColor('tabs', 'inactiveBackground') || (isDark ? '#2d2d2d' : '#ececec');
+        root.style.setProperty('--bg-tab', tbInactiveBg);
+        const tbBorder = getColor('tabs', 'border') || (isDark ? '#3c3c3c' : '#cecece');
+        root.style.setProperty('--border-color', tbBorder);
 
         // Apply to Monaco
         if (typeof monaco !== 'undefined') {

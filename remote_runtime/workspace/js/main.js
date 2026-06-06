@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (settings.layout) Object.assign(state.layout, settings.layout);
             if (settings.theme) state.theme = settings.theme;
             if (settings.themeOverrides) state.themeOverrides = settings.themeOverrides;
+            
+            if (settings.openFiles) state._pendingOpenFiles = settings.openFiles;
+            if (settings.currentFile) state._pendingCurrentFile = settings.currentFile;
         }
     } catch (e) {
         console.error("Failed to load settings:", e);
@@ -39,7 +42,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     // 2. Load Monaco Editor
-    initMonaco();
+    initMonaco(async () => {
+        // Restore open files
+        if (state._pendingOpenFiles && state._pendingOpenFiles.length > 0) {
+            const { openFile, openSettingsTab, switchToTab } = await import('./editor.js');
+            for (const path of state._pendingOpenFiles) {
+                if (path === 'settings://') {
+                    openSettingsTab();
+                } else {
+                    await openFile(path);
+                }
+            }
+        }
+        if (state._pendingCurrentFile) {
+            const { switchToTab, openSettingsTab } = await import('./editor.js');
+            const tab = state.openTabs.find(t => t.path === state._pendingCurrentFile);
+            if (tab) {
+                switchToTab(tab);
+            } else if (state._pendingCurrentFile === 'settings://') {
+                openSettingsTab();
+            }
+        }
+    });
     
     // 3. UI interactions
     document.getElementById('btn-explorer').addEventListener('click', (e) => {
