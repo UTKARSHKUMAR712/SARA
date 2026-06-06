@@ -35,6 +35,13 @@ export async function applyTheme() {
 
         const isDark = themeData.type === 'dark';
         
+        // Apply Global Variables (Inputs, Headings)
+        root.style.setProperty('--input-bg', isDark ? '#3c3c3c' : '#ffffff');
+        root.style.setProperty('--input-fg', isDark ? '#cccccc' : '#333333');
+        root.style.setProperty('--fg-muted', isDark ? '#aaaaaa' : '#666666');
+        root.style.setProperty('--fg-heading', isDark ? '#ffffff' : '#000000');
+        root.style.setProperty('--input-border', isDark ? 'transparent' : '#cecece');
+        
         // Apply Editor (for UI surrounding monaco if needed)
         const edBg = getColor('editor', 'background');
         if (edBg) root.style.setProperty('--bg-base', edBg);

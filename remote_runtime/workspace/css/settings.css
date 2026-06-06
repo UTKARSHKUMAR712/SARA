@@ -3,28 +3,28 @@
 
 .settings-header { padding: 20px 30px; border-bottom: 1px solid var(--border-color); }
 .settings-search-wrapper { position: relative; max-width: 600px; }
-.settings-search-wrapper input { width: 100%; padding: 8px 12px 8px 30px; background: #3c3c3c; border: 1px solid transparent; color: #ccc; outline: none; border-radius: 2px; font-size: 14px; }
-.settings-search-wrapper input:focus { border-color: var(--accent); background: #3c3c3c; }
-.settings-search-wrapper .search-icon { position: absolute; left: 8px; top: 9px; color: #858585; }
+.settings-search-wrapper input { width: 100%; padding: 8px 12px 8px 30px; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); outline: none; border-radius: 2px; font-size: 14px; }
+.settings-search-wrapper input:focus { border-color: var(--accent); background: var(--input-bg); }
+.settings-search-wrapper .search-icon { position: absolute; left: 8px; top: 9px; color: var(--fg-muted); }
 
 .settings-body-split { display: flex; flex: 1; overflow: hidden; }
 
 .settings-tree { width: 200px; padding: 20px 0; border-right: 1px solid var(--border-color); overflow-y: auto; }
-.settings-tree-item { padding: 4px 20px; cursor: pointer; color: #cccccc; font-size: 13px; line-height: 22px; white-space: nowrap; }
-.settings-tree-item:hover { color: #ffffff; }
-.settings-tree-item.active { color: #ffffff; font-weight: bold; }
+.settings-tree-item { padding: 4px 20px; cursor: pointer; color: var(--input-fg); font-size: 13px; line-height: 22px; white-space: nowrap; }
+.settings-tree-item:hover { color: var(--fg-heading); }
+.settings-tree-item.active { color: var(--fg-heading); font-weight: bold; }
 
 .settings-main-content { flex: 1; padding: 20px 40px; overflow-y: auto; scroll-behavior: smooth; }
 
 .settings-section { margin-bottom: 40px; }
-.settings-section h2 { font-size: 18px; font-weight: normal; margin-bottom: 20px; color: #ffffff; }
+.settings-section h2 { font-size: 18px; font-weight: normal; margin-bottom: 20px; color: var(--fg-heading); }
 
 .setting-block { margin-bottom: 24px; max-width: 800px; }
 .setting-info { margin-bottom: 8px; }
-.setting-name { font-size: 14px; font-weight: 500; color: #ffffff; margin-bottom: 4px; }
-.setting-desc { font-size: 13px; color: #aaaaaa; }
+.setting-name { font-size: 14px; font-weight: 500; color: var(--fg-heading); margin-bottom: 4px; }
+.setting-desc { font-size: 13px; color: var(--fg-muted); }
 
-.setting-control input[type='text'], .setting-control input[type='number'], .setting-control select { background: #3c3c3c; color: #cccccc; border: 1px solid transparent; padding: 4px 8px; font-size: 13px; outline: none; border-radius: 2px; width: 300px; }
+.setting-control input[type='text'], .setting-control input[type='number'], .setting-control select { background: var(--input-bg); color: var(--input-fg); border: 1px solid var(--input-border); padding: 4px 8px; font-size: 13px; outline: none; border-radius: 2px; width: 300px; }
 .setting-control input[type='number']:focus, .setting-control select:focus { border-color: var(--accent); }
 .setting-control input[type='checkbox'] { width: 16px; height: 16px; accent-color: var(--accent); }
 
