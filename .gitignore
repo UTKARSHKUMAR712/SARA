@@ -49,3 +49,7 @@ _deps/
 Thumbs.db
 Desktop.ini
 *.lnk
+
+node_modules
+vite-test
+

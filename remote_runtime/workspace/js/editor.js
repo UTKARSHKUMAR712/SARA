@@ -9,12 +9,14 @@ export function initMonaco() {
         state.editor = monaco.editor.create(document.getElementById('monaco-container'), {
             value: '',
             language: 'plaintext',
-            theme: 'vs-dark',
+            theme: state.editor.theme || 'vs-dark',
             automaticLayout: true,
-            minimap: { enabled: false },
-            fontSize: 14,
+            minimap: { enabled: state.editor.minimap !== false },
+            fontSize: state.editor.fontSize || 14,
             fontFamily: "'Consolas', 'Courier New', monospace",
-            wordWrap: "on"
+            wordWrap: state.editor.wordWrap ? "on" : "off",
+            lineNumbers: state.editor.lineNumbers ? "on" : "off",
+            tabSize: state.editor.tabSize || 4
         });
         
         state.editor.addAction({
@@ -195,5 +197,18 @@ export function renderTabs() {
         el.addEventListener('click', () => switchToTab(tab));
         
         bar.appendChild(el);
+    });
+}
+
+export function updateEditorOptions() {
+    if (!state.editor) return;
+    // @ts-ignore
+    monaco.editor.setTheme(state.editor.theme || 'vs-dark');
+    state.editor.updateOptions({
+        fontSize: state.editor.fontSize || 14,
+        wordWrap: state.editor.wordWrap ? 'on' : 'off',
+        minimap: { enabled: state.editor.minimap !== false },
+        lineNumbers: state.editor.lineNumbers ? 'on' : 'off',
+        tabSize: state.editor.tabSize || 4
     });
 }

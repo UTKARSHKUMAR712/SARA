@@ -54,13 +54,15 @@ export function initTerminal() {
     // Init xterm
     // @ts-ignore
     const xterm = new Terminal({
-        cursorBlink: true,
+        cursorBlink: state.terminal.cursorBlink !== false,
+        cursorStyle: state.terminal.cursorStyle || 'block',
+        scrollback: state.terminal.scrollback || 5000,
         theme: {
             background: '#1e1e1e',
             foreground: '#cccccc'
         },
         fontFamily: 'Consolas, "Courier New", monospace',
-        fontSize: 14
+        fontSize: state.terminal.fontSize || 14
     });
 
     // @ts-ignore
@@ -177,7 +179,8 @@ export function fitActiveTerminal() {
 async function startSessionAndConnect(termObj) {
     try {
         const parentToken = getAuthToken();
-        const res = await fetch(`/api/new_session?parent_token=${parentToken}&shell=powershell.exe`);
+        const shell = state.terminal.defaultShell === 'cmd' ? 'cmd.exe' : 'powershell.exe';
+        const res = await fetch(`/api/new_session?parent_token=${parentToken}&shell=${shell}`);
         if (!res.ok) throw new Error("Failed to create session");
         const data = await res.json();
         
@@ -198,11 +201,19 @@ function connectTerminalWs(termObj, sessionId, token) {
     
     ws.onopen = () => {
         if (state.currentWorkspace) {
-            const cdCmd = `cd "${state.currentWorkspace}"\r\n`;
-            ws.send(JSON.stringify({ type: 'input', data: btoa(unescape(encodeURIComponent(cdCmd))) }));
-            
-            const clearCmd = `clear\r\n`;
-            ws.send(JSON.stringify({ type: 'input', data: btoa(unescape(encodeURIComponent(clearCmd))) }));
+            setTimeout(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    const cdCmd = `cd "${state.currentWorkspace}"\r`;
+                    ws.send(JSON.stringify({ type: 'input', data: btoa(unescape(encodeURIComponent(cdCmd))) }));
+                    
+                    setTimeout(() => {
+                        if (ws.readyState === WebSocket.OPEN) {
+                            const clearCmd = `clear\r`;
+                            ws.send(JSON.stringify({ type: 'input', data: btoa(unescape(encodeURIComponent(clearCmd))) }));
+                        }
+                    }, 100);
+                }
+            }, 500); // Wait for PowerShell to fully initialize
         }
     };
     
@@ -293,4 +304,11 @@ const resizeObserver = new ResizeObserver(() => {
 const termContainer = document.getElementById('terminal-container');
 if (termContainer) {
     resizeObserver.observe(termContainer);
+}
+
+export function updateTerminalFontSize(size) {
+    terminals.forEach(t => {
+        t.xterm.options.fontSize = size;
+        t.fitAddon.fit();
+    });
 }

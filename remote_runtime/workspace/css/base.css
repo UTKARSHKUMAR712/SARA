@@ -9,6 +9,9 @@
     --border-color: #3c3c3c;
     --accent: #007acc;
     --hover-bg: #2a2d2e;
+    
+    --activity-bar-width: 48px;
+    --sidebar-width: 260px;
 }
 
 * {
@@ -35,7 +38,7 @@ body, html {
 
 /* Activity Bar */
 #activity-bar {
-    width: 36px;
+    width: var(--activity-bar-width);
     height: 100%;
     background-color: var(--bg-activity);
     display: flex;
@@ -46,9 +49,20 @@ body, html {
     flex-shrink: 0;
 }
 
+/* Sidebar (Explorer) */
+#sidebar {
+    width: var(--sidebar-width);
+    height: 100%;
+    background-color: var(--bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
 .activity-item {
-    width: 36px;
-    height: 36px;
+    width: var(--activity-bar-width);
+    height: 48px;
     display: flex;
     justify-content: center;
     align-items: center;

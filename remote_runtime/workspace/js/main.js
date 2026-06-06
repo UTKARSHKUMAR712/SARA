@@ -1,9 +1,10 @@
 import { state } from './state.js';
 import { apiFetch } from './api.js';
 import { initMonaco, saveCurrentFile, toggleAutoSave, closeTab, renderTabs } from './editor.js';
-import { refreshExplorer, createNewFile, createNewFolder, openFolderModal, closeFolderModal, confirmFolder, loadFolderPicker, hideContextMenu, saveSettings } from './explorer.js';
+import { refreshExplorer, createNewFile, createNewFolder, openFolderModal, closeFolderModal, confirmFolder, loadFolderPicker, hideContextMenu } from './explorer.js';
 import { toggleTerminal, killTerminal, initTerminal } from './terminal.js';
 import { initPortsPanel, startLiveServer } from './ports.js';
+import { initSettingsUI, applyAllSettings, saveSettings } from './settings.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initial State
@@ -13,10 +14,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             const settings = await res.json();
             if (settings.currentWorkspace) state.currentWorkspace = settings.currentWorkspace;
             if (settings.autoSaveEnabled !== undefined) state.autoSaveEnabled = settings.autoSaveEnabled;
+            
+            if (settings.editor) Object.assign(state.editor, settings.editor);
+            if (settings.terminal) Object.assign(state.terminal, settings.terminal);
+            if (settings.layout) Object.assign(state.layout, settings.layout);
         }
     } catch (e) {
         console.error("Failed to load settings:", e);
     }
+    
+    applyAllSettings();
+    initSettingsUI();
     
     document.getElementById('autosave-check').textContent = state.autoSaveEnabled ? '✓' : '';
     

@@ -2,17 +2,7 @@ import { state } from './state.js';
 import { apiFetch } from './api.js';
 import { IconRegistry } from './icons.js';
 import { openFile, closeTab, renderTabs } from './editor.js';
-
-export async function saveSettings() {
-    try {
-        await apiFetch('/settings', {
-            method: 'POST',
-            body: JSON.stringify({ currentWorkspace: state.currentWorkspace, autoSaveEnabled: state.autoSaveEnabled })
-        });
-    } catch (e) {
-        console.error("Failed to save settings:", e);
-    }
-}
+import { saveSettings } from './settings.js';
 
 export function refreshExplorer() {
     const treeRoot = document.getElementById('explorer-tree');

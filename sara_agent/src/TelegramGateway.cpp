@@ -77,7 +77,8 @@ bool TelegramGateway::set_my_commands() {
                 {{"command", "rules"}, {"description", "Event automation rules"}},
                 {{"command", "files"}, {"description", "Manage files via File Browser"}},
                 {{"command", "filesshutdown"}, {"description", "Shutdown File Browser completely"}},
-
+                {{"command", "workspace"}, {"description", "Open SARA IDE workspace"}},
+                {{"command", "workspaceshutdown"}, {"description", "Shutdown SARA IDE workspace"}},
                 {{"command", "sp_help"}, {"description", "Spotify commands list"}}
             })}
         };
