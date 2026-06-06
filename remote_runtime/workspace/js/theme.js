@@ -3,7 +3,7 @@ import { state } from './state.js';
 export async function applyTheme() {
     try {
         const themeName = state.theme || 'vs-dark';
-        const res = await fetch(`/themes/${themeName}.json`);
+        const res = await fetch(`./themes/${themeName}.json`);
         if (!res.ok) return;
         const themeData = await res.json();
 
