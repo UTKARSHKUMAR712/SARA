@@ -33,6 +33,8 @@ export async function applyTheme() {
         const exFg = getColor('explorer', 'foreground');
         if (exFg) root.style.setProperty('--fg-sidebar', exFg);
 
+        const isDark = themeData.type === 'dark';
+        
         // Apply Editor (for UI surrounding monaco if needed)
         const edBg = getColor('editor', 'background');
         if (edBg) root.style.setProperty('--bg-base', edBg);
@@ -56,12 +58,12 @@ export async function applyTheme() {
         // Apply to Monaco
         if (typeof monaco !== 'undefined') {
             monaco.editor.defineTheme('sara-custom-theme', {
-                base: themeData.type === 'dark' ? 'vs-dark' : 'vs',
+                base: isDark ? 'vs-dark' : 'vs',
                 inherit: true,
                 rules: themeData.monacoRules || [],
                 colors: {
-                    'editor.background': edBg || '#1e1e1e',
-                    'editor.foreground': edFg || '#cccccc'
+                    'editor.background': edBg || (isDark ? '#1e1e1e' : '#ffffff'),
+                    'editor.foreground': edFg || (isDark ? '#cccccc' : '#000000')
                 }
             });
             monaco.editor.setTheme('sara-custom-theme');

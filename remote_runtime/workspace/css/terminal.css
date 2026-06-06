@@ -8,6 +8,7 @@
     flex-direction: column;
     background-color: #1e1e1e;
     position: relative; /* For resizer */
+    z-index: 10; /* Keep above monaco's absolute elements like minimap */
 }
 
 /* Resizer handle */
