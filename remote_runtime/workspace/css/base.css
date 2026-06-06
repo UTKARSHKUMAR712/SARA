@@ -18,6 +18,7 @@
     --activity-bar-width: 48px;
     --sidebar-width: 260px;
     --tab-height: 35px;
+    --tab-padding: 15px;
 }
 
 * {

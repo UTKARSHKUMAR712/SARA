@@ -34,11 +34,11 @@
     display: inline-flex;
     align-items: center;
     height: var(--tab-height);
-    padding: 0 10px;
+    padding: 0 var(--tab-padding);
     background-color: var(--bg-tab);
     border-right: 1px solid var(--border-color);
     cursor: pointer;
-    min-width: 100px;
+    min-width: 50px;
     max-width: 200px;
 }
 

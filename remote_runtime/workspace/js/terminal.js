@@ -150,7 +150,7 @@ export function initTerminal() {
     });
 
     xterm.onResize((size) => {
-        if (termObj.ws && termObj.ws.readyState === WebSocket.OPEN) {
+        if (size.cols > 0 && size.rows > 0 && termObj.ws && termObj.ws.readyState === WebSocket.OPEN) {
             termObj.ws.send(JSON.stringify({
                 type: 'resize',
                 cols: size.cols,
@@ -169,7 +169,10 @@ function switchToTerminal(id) {
             t.tabEl.classList.add('active');
             t.containerEl.classList.add('active');
             setTimeout(() => {
-                t.fitAddon.fit();
+                const termContainer = document.getElementById('terminal-container');
+                if (termContainer && termContainer.style.display !== 'none' && document.getElementById('bottom-panel') && !document.getElementById('bottom-panel').classList.contains('hidden')) {
+                    t.fitAddon.fit();
+                }
                 t.xterm.focus();
             }, 50);
         } else {
@@ -180,6 +183,11 @@ function switchToTerminal(id) {
 }
 
 export function fitActiveTerminal() {
+    const termContainer = document.getElementById('terminal-container');
+    const bottomPanel = document.getElementById('bottom-panel');
+    if (termContainer && termContainer.style.display === 'none') return;
+    if (bottomPanel && bottomPanel.classList.contains('hidden')) return;
+    
     const active = terminals.find(t => t.id === activeTerminalId);
     if (active) {
         setTimeout(() => active.fitAddon.fit(), 50);

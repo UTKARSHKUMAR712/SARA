@@ -1,3 +1,3 @@
-#sidebar-resizer { width: 4px; background: transparent; cursor: ew-resize; z-index: 100; transition: background 0.1s; }
+#sidebar-resizer { width: 2px; background: transparent; cursor: ew-resize; z-index: 100; transition: background 0.1s; }
 #sidebar-resizer:hover { background: var(--accent); }
 #sidebar-resizer:active { background: var(--accent); }

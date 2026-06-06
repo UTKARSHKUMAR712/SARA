@@ -30,6 +30,7 @@ export function applyAllSettings() {
     root.style.setProperty('--activity-bar-width', `${state.layout.activityBarWidth}px`);
     root.style.setProperty('--sidebar-width', `${state.layout.explorerWidth}px`);
     root.style.setProperty('--tab-height', `${state.layout.tabHeight}px`);
+    root.style.setProperty('--tab-padding', `${state.layout.tabPadding}px`);
     
     // We could bind terminal height but right now it's flex-based or dragged, but if we need a set height:
     // root.style.setProperty('--terminal-height', `${state.layout.terminalHeight}px`);
@@ -162,6 +163,7 @@ export function initSettingsUI() {
 
     // Appearance / Theme
     bindInput('setting-tab-height', 'layout', 'tabHeight', parseInt);
+    bindInput('setting-tab-padding', 'layout', 'tabPadding', parseInt);
     bindInput('setting-theme', null, 'theme', null);
     bindInput('setting-theme-activity', 'themeOverrides', (val) => state.themeOverrides.activityBar.background = val, null);
     bindInput('setting-theme-explorer', 'themeOverrides', (val) => state.themeOverrides.explorer.background = val, null);
@@ -185,7 +187,7 @@ export function initSettingsUI() {
         btnResetAll.addEventListener('click', () => {
             if (confirm("Are you sure you want to reset all settings to their default values?")) {
                 state.autoSaveEnabled = false;
-                state.layout = { activityBarWidth: 36, explorerWidth: 200, tabHeight: 35, terminalHeight: 280, compactMode: false };
+                state.layout = { activityBarWidth: 36, explorerWidth: 200, tabHeight: 35, tabPadding: 10, terminalHeight: 280, compactMode: false };
                 state.editorSettings = { fontSize: 14, wordWrap: true, minimap: true, lineNumbers: true, lineDecorationsWidth: 10, tabSize: 4 };
                 state.terminalSettings = { fontSize: 14, cursorBlink: true, cursorStyle: 'block', scrollback: 5000, defaultShell: 'powershell' };
                 state.theme = 'vs-dark';
@@ -227,6 +229,7 @@ function populateSettingsUI() {
 
     setVal('setting-theme', state.theme || 'vs-dark');
     setVal('setting-tab-height', state.layout.tabHeight ?? 35);
+    setVal('setting-tab-padding', state.layout.tabPadding ?? 10);
     setVal('setting-theme-activity', state.themeOverrides.activityBar.background || '');
     setVal('setting-theme-explorer', state.themeOverrides.explorer.background || '');
     setVal('setting-theme-editor', state.themeOverrides.editor.background || '');
