@@ -10,8 +10,14 @@ let terminalCounter = 1;
 
 export function toggleTerminal() {
     const panel = document.getElementById('bottom-panel');
+    const btnTerminal = document.getElementById('btn-terminal');
+    
     if (panel.classList.contains('hidden')) {
         panel.classList.remove('hidden');
+        if (btnTerminal) {
+            document.querySelectorAll('.activity-item').forEach(el => el.classList.remove('active'));
+            btnTerminal.classList.add('active');
+        }
         isTerminalOpen = true;
         if (terminals.length === 0) {
             initTerminal();
@@ -20,6 +26,7 @@ export function toggleTerminal() {
         }
     } else {
         panel.classList.add('hidden');
+        if (btnTerminal) btnTerminal.classList.remove('active');
         isTerminalOpen = false;
     }
 }

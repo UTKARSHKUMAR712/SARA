@@ -122,7 +122,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    document.getElementById('btn-terminal').addEventListener('click', toggleTerminal);
+    document.getElementById('btn-terminal').addEventListener('click', () => {
+        const bottomPanel = document.getElementById('bottom-panel');
+        const portsContainer = document.getElementById('ports-container');
+        
+        // If panel is hidden, always open it and show terminal
+        if (bottomPanel.classList.contains('hidden')) {
+            toggleTerminal();
+        } else {
+            // If panel is open but showing ports, just switch to terminal
+            if (portsContainer && portsContainer.style.display === 'block') {
+                // ports.js handles the switching logic via its own listener
+            } else {
+                // If panel is open and showing terminal, toggle it (hide)
+                toggleTerminal();
+            }
+        }
+    });
     
     document.getElementById('btn-add-terminal').addEventListener('click', () => {
         initTerminal(); // now creates a new terminal instance

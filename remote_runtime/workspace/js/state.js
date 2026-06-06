@@ -25,8 +25,8 @@ export const state = {
         defaultShell: 'powershell'
     },
     layout: {
-        activityBarWidth: 48,
-        explorerWidth: 260,
+        activityBarWidth: 36,
+        explorerWidth: 200,
         terminalHeight: 280,
         compactMode: false
     },

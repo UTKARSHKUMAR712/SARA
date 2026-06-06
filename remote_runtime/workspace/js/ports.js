@@ -2,31 +2,50 @@ import { apiFetch } from './api.js';
 import { state } from './state.js';
 
 export function initPortsPanel() {
-    const tabPorts = document.getElementById('tab-ports');
-    const tabTerminal = document.getElementById('tab-terminal');
+    const btnPorts = document.getElementById('btn-ports');
     const portsContainer = document.getElementById('ports-container');
     const terminalContainer = document.getElementById('terminal-tabs-container');
     const terminalContent = document.getElementById('terminal-container');
+    const bottomPanel = document.getElementById('bottom-panel');
+    const btnTerminal = document.getElementById('btn-terminal');
     
-    // Switch to Ports
-    tabPorts.addEventListener('click', () => {
-        tabPorts.classList.add('active');
-        tabTerminal.classList.remove('active');
-        portsContainer.style.display = 'block';
-        terminalContainer.style.display = 'none';
-        terminalContent.style.display = 'none';
-        startPolling();
-    });
+    // Toggle Ports
+    if (btnPorts) {
+        btnPorts.addEventListener('click', () => {
+            if (btnPorts.classList.contains('active')) {
+                bottomPanel.classList.add('hidden');
+                btnPorts.classList.remove('active');
+                return;
+            }
+            // Remove active from others, make this active
+            document.querySelectorAll('.activity-item').forEach(el => el.classList.remove('active'));
+            btnPorts.classList.add('active');
+            
+            // Show bottom panel if hidden
+            if (bottomPanel.classList.contains('hidden')) {
+                bottomPanel.classList.remove('hidden');
+            }
+            
+            // Show ports, hide terminal
+            portsContainer.style.display = 'block';
+            terminalContainer.style.display = 'none';
+            terminalContent.style.display = 'none';
+            startPolling();
+        });
+    }
     
-    // Switch to Terminal
-    tabTerminal.addEventListener('click', () => {
-        tabTerminal.classList.add('active');
-        tabPorts.classList.remove('active');
-        terminalContainer.style.display = 'flex';
-        terminalContent.style.display = 'block';
-        portsContainer.style.display = 'none';
-        stopPolling();
-    });
+    // If they click Terminal, we should stop polling and show terminal
+    if (btnTerminal) {
+        btnTerminal.addEventListener('click', () => {
+            document.querySelectorAll('.activity-item').forEach(el => el.classList.remove('active'));
+            btnTerminal.classList.add('active');
+            
+            portsContainer.style.display = 'none';
+            terminalContainer.style.display = 'flex';
+            terminalContent.style.display = 'block';
+            stopPolling();
+        });
+    }
 }
 
 let pollingInterval = null;
