@@ -174,7 +174,7 @@ bool TerminalSessionManager::validate_any_token(const std::string& token) const 
 }
 
 CreateSessionResult TerminalSessionManager::issue_auth_token(
-    const std::string& chat_id, int expiry_minutes)
+    const std::string& chat_id, int expiry_minutes, const std::string& token_type)
 {
     auto sid   = generate_session_id();
     auto token = generate_token();
@@ -185,7 +185,7 @@ CreateSessionResult TerminalSessionManager::issue_auth_token(
     sess->token          = token;
     sess->owner_chat_id  = chat_id;
     sess->admin_mode     = false;
-    sess->shell_cmd      = "files"; // marker — no PTY
+    sess->shell_cmd      = token_type; // marker — no PTY
     sess->created_at     = now;
     sess->last_active    = now;
     sess->expires_at     = now + (int64_t)expiry_minutes * 60;
@@ -218,6 +218,20 @@ void TerminalSessionManager::cleanup_expired() {
         if (it->second->expired()) {
             ws_send_raw(it->second->ws_socket,
                 "{\"type\":\"exit\",\"code\":-2,\"reason\":\"Session expired\"}");
+            it->second->pty.stop();
+            it = sessions_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void TerminalSessionManager::destroy_sessions_by_type(const std::string& type) {
+    std::lock_guard<std::mutex> lock(sessions_mutex_);
+    for (auto it = sessions_.begin(); it != sessions_.end(); ) {
+        if (it->second->shell_cmd == type) {
+            ws_send_raw(it->second->ws_socket,
+                "{\"type\":\"exit\",\"code\":-1,\"reason\":\"Session destroyed\"}");
             it->second->pty.stop();
             it = sessions_.erase(it);
         } else {

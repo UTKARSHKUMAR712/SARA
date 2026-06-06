@@ -99,10 +99,14 @@ public:
     // Used for /files File Browser authentication.
     // Returns {session_id, token, true} on success.
     CreateSessionResult issue_auth_token(const std::string& chat_id,
-                                         int expiry_minutes = 120);
+                                         int expiry_minutes = 120,
+                                         const std::string& token_type = "files");
 
     // Cleanup expired sessions (called every 60s by background thread).
     void cleanup_expired();
+
+    // Destroy all sessions that match a specific token_type.
+    void destroy_sessions_by_type(const std::string& type);
 
     // Shutdown all sessions.
     void shutdown_all();

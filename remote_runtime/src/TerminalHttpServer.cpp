@@ -15,6 +15,7 @@
 #include <fstream>
 #include <thread>
 #include <chrono>
+#include <nlohmann/json.hpp>
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "crypt32.lib")
@@ -265,6 +266,91 @@ void TerminalHttpServer::handle_client(int sock) {
             if (!validate_request_token()) { send_403(sock); closesocket(sock); return; }
             LiveServer::instance().stop();
             send_http(sock, 200, "application/json", "{\"status\":\"ok\"}");
+            closesocket(sock); return;
+        } else if (path == "/workspace/api/search_code") {
+            if (!validate_request_token()) { send_403(sock); closesocket(sock); return; }
+            auto url_decode = [](const std::string& in) {
+                std::string out;
+                for (size_t i = 0; i < in.length(); ++i) {
+                    if (in[i] == '%' && i + 2 < in.length()) {
+                        std::string hex = in.substr(i + 1, 2);
+                        out += (char)std::strtol(hex.c_str(), nullptr, 16);
+                        i += 2;
+                    } else if (in[i] == '+') {
+                        out += ' ';
+                    } else {
+                        out += in[i];
+                    }
+                }
+                return out;
+            };
+            std::string q = url_decode(parse_query_param(req, "q"));
+            std::string dir = url_decode(parse_query_param(req, "dir"));
+            
+            std::string q_lower = q;
+            for (char& c : q_lower) c = std::tolower(c);
+            if (dir.empty()) dir = ".";
+
+            nlohmann::json results = nlohmann::json::array();
+            if (!q.empty()) {
+                try {
+                    for (auto it = std::filesystem::recursive_directory_iterator(dir, std::filesystem::directory_options::skip_permission_denied); 
+                         it != std::filesystem::recursive_directory_iterator(); ++it) {
+                        
+                        auto& p = *it;
+                        if (p.is_directory()) {
+                            std::string fname = p.path().filename().string();
+                            if (fname == ".git" || fname == "node_modules" || fname == "build" || fname == "dist" || fname == "__pycache__" || fname == ".vs" || fname == ".gemini") {
+                                it.disable_recursion_pending();
+                            }
+                            continue;
+                        }
+                        if (!p.is_regular_file()) continue;
+                        
+                        std::string ext = p.path().extension().string();
+                        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+                        if (ext == ".exe" || ext == ".dll" || ext == ".lib" || ext == ".a" || ext == ".o" || ext == ".obj" || ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".gif" || ext == ".ico" || ext == ".ttf" || ext == ".woff" || ext == ".woff2" || ext == ".zip" || ext == ".tar" || ext == ".gz" || ext == ".pdf" || ext == ".mp3" || ext == ".mp4" || ext == ".db" || ext == ".sqlite" || ext == ".sqlite3") {
+                            continue;
+                        }
+
+                        std::ifstream file(p.path(), std::ios::binary);
+                        if (!file.is_open()) continue;
+                        
+                        char buf[1024];
+                        file.read(buf, sizeof(buf));
+                        int read_bytes = file.gcount();
+                        bool is_binary = false;
+                        for(int i=0; i<read_bytes; i++) {
+                            if (buf[i] == '\0') { is_binary = true; break; }
+                        }
+                        if (is_binary) continue;
+                        
+                        file.clear();
+                        file.seekg(0);
+                        
+                        std::string line;
+                        int line_no = 1;
+                        while (std::getline(file, line)) {
+                            std::string line_lower = line;
+                            for (char& c : line_lower) c = std::tolower(c);
+                            
+                            if (line_lower.find(q_lower) != std::string::npos) {
+                                nlohmann::json match;
+                                std::string rel_path = std::filesystem::relative(p.path(), dir).string();
+                                std::replace(rel_path.begin(), rel_path.end(), '\\', '/');
+                                match["file"] = rel_path;
+                                match["line"] = line_no;
+                                match["content"] = line;
+                                results.push_back(match);
+                                if (results.size() >= 150) break;
+                            }
+                            line_no++;
+                        }
+                        if (results.size() >= 150) break;
+                    }
+                } catch (...) {}
+            }
+            send_http(sock, 200, "application/json", results.dump());
             closesocket(sock); return;
         } else if (path.find("/workspace/api/ports/tunnel/") == 0) {
             if (!validate_request_token()) { send_403(sock); closesocket(sock); return; }
@@ -930,11 +1016,7 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
         }
         auto hdr_end = fwd_req.find("\r\n\r\n");
         if (hdr_end != std::string::npos) {
-            std::string inject = "X-Forwarded-For: 127.0.0.1\r\nX-Real-IP: 127.0.0.1\r\nX-Remote-User: admin\r\n";
-            std::string echo_token = parse_query_param(raw_request, "token");
-            if (!echo_token.empty()) {
-                inject += "Connection: close\r\n";
-            }
+            std::string inject = "X-Forwarded-For: 127.0.0.1\r\nX-Real-IP: 127.0.0.1\r\nX-Remote-User: admin\r\nConnection: close\r\n";
             fwd_req.insert(hdr_end + 2, inject);
         }
     }

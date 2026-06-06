@@ -6,6 +6,7 @@ import { toggleTerminal, killTerminal, initTerminal } from './terminal.js';
 import { initPortsPanel, startLiveServer } from './ports.js';
 import { initSettingsUI, applyAllSettings, saveSettings } from './settings.js';
 import { initSidebarResizer } from './resizer.js';
+import { initSearch } from './search.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initial State
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyAllSettings();
     initSettingsUI();
     initSidebarResizer();
+    initSearch();
     
     document.getElementById('autosave-check').textContent = state.autoSaveEnabled ? '✓' : '';
     
@@ -68,11 +70,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 3. UI interactions
     document.getElementById('btn-explorer').addEventListener('click', (e) => {
         const sb = document.getElementById('sidebar');
-        sb.classList.toggle('hide-sidebar');
-        if (window.innerWidth <= 768) {
-            sb.classList.toggle('show');
+        const searchView = document.getElementById('search-view');
+        const explorerView = document.getElementById('explorer-view');
+        
+        if (searchView.style.display === 'block') {
+            searchView.style.display = 'none';
+            explorerView.style.display = 'block';
+            document.getElementById('sidebar-title').textContent = 'EXPLORER';
+            document.getElementById('explorer-actions').style.display = 'flex';
+            document.getElementById('btn-search').classList.remove('active');
+            e.currentTarget.classList.add('active');
+        } else {
+            sb.classList.toggle('hide-sidebar');
+            if (window.innerWidth <= 768) {
+                sb.classList.toggle('show');
+            }
+            e.currentTarget.classList.toggle('active', !sb.classList.contains('hide-sidebar'));
         }
-        e.currentTarget.classList.toggle('active', !sb.classList.contains('hide-sidebar'));
+    });
+
+    document.getElementById('btn-search').addEventListener('click', (e) => {
+        const sb = document.getElementById('sidebar');
+        const searchView = document.getElementById('search-view');
+        const explorerView = document.getElementById('explorer-view');
+        
+        if (sb.classList.contains('hide-sidebar')) {
+            sb.classList.remove('hide-sidebar');
+        }
+        if (window.innerWidth <= 768) {
+            sb.classList.add('show');
+        }
+        
+        explorerView.style.display = 'none';
+        searchView.style.display = 'block';
+        document.getElementById('sidebar-title').textContent = 'SEARCH';
+        document.getElementById('explorer-actions').style.display = 'none';
+        
+        document.getElementById('btn-explorer').classList.remove('active');
+        e.currentTarget.classList.add('active');
+        
+        document.getElementById('search-input').focus();
     });
 
 

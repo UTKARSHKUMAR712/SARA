@@ -485,6 +485,12 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
         g_telegram.send_message(chat_id, "🛑 File Browser has been completely shut down.");
         return;
     }
+    
+    if (text == "/workspaceshutdown") {
+        sara::remote::TerminalSessionManager::instance().destroy_sessions_by_type("workspace");
+        g_telegram.send_message(chat_id, "🛑 Workspace sessions have been closed. (File Browser remains active)");
+        return;
+    }
 
     // ── End File Browser commands ──────────────────────────────────────────────
 
@@ -506,7 +512,7 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
         // Issue auth token
         auto result = sara::remote::TerminalSessionManager::instance().issue_auth_token(
             chat_id,
-            cfg.terminal_expiry_minutes);
+            cfg.terminal_expiry_minutes, "workspace");
         if (!result.success) {
             g_telegram.send_message(chat_id, "❌ Failed to create workspace session: " + result.error);
             return;

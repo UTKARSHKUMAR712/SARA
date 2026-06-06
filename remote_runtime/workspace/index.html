@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="./css/terminal.css">
     <link rel="stylesheet" href="./css/components.css">
     <link rel="stylesheet" href="./css/settings.css">
+    <link rel="stylesheet" href="./css/search.css">
 </head>
 <body>
     <div id="workspace">
@@ -56,8 +57,8 @@
 
         <div id="sidebar">
             <div class="sidebar-header">
-                <span>EXPLORER</span>
-                <div class="sidebar-actions" style="display: flex; gap: 4px;">
+                <span id="sidebar-title">EXPLORER</span>
+                <div class="sidebar-actions" style="display: flex; gap: 4px;" id="explorer-actions">
                     <button id="btn-new-file" title="New File" style="background:none; border:none; color:#bbb; cursor:pointer; padding:2px;">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
                     </button>
@@ -66,12 +67,26 @@
                     </button>
                 </div>
             </div>
-            <div id="sidebar-empty">
-                <p>You have not yet opened a folder.</p>
-                <button id="btn-open-folder" class="primary-btn">Open Folder</button>
+            
+            <!-- Explorer View -->
+            <div id="explorer-view">
+                <div id="sidebar-empty">
+                    <p>You have not yet opened a folder.</p>
+                    <button id="btn-open-folder" class="primary-btn">Open Folder</button>
+                </div>
+                <div class="sidebar-content" id="explorer-tree" style="display: none;">
+                    <!-- File tree populated by JS -->
+                </div>
             </div>
-            <div class="sidebar-content" id="explorer-tree" style="display: none;">
-                <!-- File tree populated by JS -->
+
+            <!-- Search View -->
+            <div id="search-view" style="display: none;">
+                <div class="search-input-container">
+                    <input type="text" id="search-input" placeholder="Search (Enter to search)">
+                </div>
+                <div class="sidebar-content" id="search-results">
+                    <!-- Search results populated by JS -->
+                </div>
             </div>
         </div>
 
