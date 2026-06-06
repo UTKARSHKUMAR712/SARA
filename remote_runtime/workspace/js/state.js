@@ -28,6 +28,7 @@ export const state = {
     layout: {
         activityBarWidth: 36,
         explorerWidth: 200,
+        tabHeight: 35,
         terminalHeight: 280,
         compactMode: false
     },

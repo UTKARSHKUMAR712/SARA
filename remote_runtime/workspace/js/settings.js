@@ -29,6 +29,7 @@ export function applyAllSettings() {
     const root = document.documentElement;
     root.style.setProperty('--activity-bar-width', `${state.layout.activityBarWidth}px`);
     root.style.setProperty('--sidebar-width', `${state.layout.explorerWidth}px`);
+    root.style.setProperty('--tab-height', `${state.layout.tabHeight}px`);
     
     // We could bind terminal height but right now it's flex-based or dragged, but if we need a set height:
     // root.style.setProperty('--terminal-height', `${state.layout.terminalHeight}px`);
@@ -160,6 +161,7 @@ export function initSettingsUI() {
     bindInput('setting-term-shell', 'terminalSettings', 'defaultShell', null);
 
     // Appearance / Theme
+    bindInput('setting-tab-height', 'layout', 'tabHeight', parseInt);
     bindInput('setting-theme', null, 'theme', null);
     bindInput('setting-theme-activity', 'themeOverrides', (val) => state.themeOverrides.activityBar.background = val, null);
     bindInput('setting-theme-explorer', 'themeOverrides', (val) => state.themeOverrides.explorer.background = val, null);
@@ -183,8 +185,8 @@ export function initSettingsUI() {
         btnResetAll.addEventListener('click', () => {
             if (confirm("Are you sure you want to reset all settings to their default values?")) {
                 state.autoSaveEnabled = false;
-                state.layout = { activityBarWidth: 48, explorerWidth: 260, terminalHeight: 280, compactMode: false };
-                state.editorSettings = { fontSize: 14, wordWrap: true, minimap: true, lineNumbers: true, tabSize: 4 };
+                state.layout = { activityBarWidth: 36, explorerWidth: 200, tabHeight: 35, terminalHeight: 280, compactMode: false };
+                state.editorSettings = { fontSize: 14, wordWrap: true, minimap: true, lineNumbers: true, lineDecorationsWidth: 10, tabSize: 4 };
                 state.terminalSettings = { fontSize: 14, cursorBlink: true, cursorStyle: 'block', scrollback: 5000, defaultShell: 'powershell' };
                 state.theme = 'vs-dark';
                 state.themeOverrides = { activityBar: {}, explorer: {}, editor: {}, terminal: {}, tabs: {} };
@@ -224,6 +226,7 @@ function populateSettingsUI() {
     setVal('setting-term-shell', state.terminalSettings.defaultShell);
 
     setVal('setting-theme', state.theme || 'vs-dark');
+    setVal('setting-tab-height', state.layout.tabHeight ?? 35);
     setVal('setting-theme-activity', state.themeOverrides.activityBar.background || '');
     setVal('setting-theme-explorer', state.themeOverrides.explorer.background || '');
     setVal('setting-theme-editor', state.themeOverrides.editor.background || '');

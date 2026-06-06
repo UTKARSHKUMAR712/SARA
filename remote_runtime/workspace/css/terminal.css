@@ -48,7 +48,7 @@
 }
 
 .panel-header {
-    height: 35px;
+    height: var(--tab-height);
     display: flex;
     align-items: center;
     justify-content: space-between;

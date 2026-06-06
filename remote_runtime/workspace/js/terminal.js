@@ -19,6 +19,9 @@ export function toggleTerminal() {
             btnTerminal.classList.add('active');
         }
         isTerminalOpen = true;
+        document.getElementById('ports-container').style.display = 'none';
+        document.getElementById('terminal-tabs-container').style.display = 'flex';
+        document.getElementById('terminal-container').style.display = 'block';
         if (terminals.length === 0) {
             initTerminal();
         } else {
@@ -26,7 +29,7 @@ export function toggleTerminal() {
         }
     } else {
         panel.classList.add('hidden');
-        if (btnTerminal) btnTerminal.classList.remove('active');
+        document.querySelectorAll('.activity-item').forEach(el => el.classList.remove('active'));
         isTerminalOpen = false;
     }
 }

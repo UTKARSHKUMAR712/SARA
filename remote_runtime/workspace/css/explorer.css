@@ -14,7 +14,7 @@
 }
 
 .sidebar-header {
-    height: 35px;
+    height: var(--tab-height);
     display: flex;
     justify-content: space-between;
     align-items: center;

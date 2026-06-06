@@ -17,6 +17,7 @@
     
     --activity-bar-width: 48px;
     --sidebar-width: 260px;
+    --tab-height: 35px;
 }
 
 * {
@@ -37,8 +38,8 @@ body, html {
 
 /* Thin Scrollbars */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 4px;
+    height: 4px;
 }
 ::-webkit-scrollbar-track {
     background: transparent;
@@ -136,7 +137,7 @@ body, html {
 @media (max-width: 768px) {
     #sidebar {
         position: absolute;
-        left: 36px;
+        left: var(--activity-bar-width);
         z-index: 100;
         box-shadow: 2px 0 5px rgba(0,0,0,0.5);
         display: none; /* Collapsed by default */

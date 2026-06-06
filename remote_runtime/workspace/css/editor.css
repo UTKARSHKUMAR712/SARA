@@ -16,7 +16,7 @@
 }
 
 #tabs-bar {
-    height: 35px;
+    height: var(--tab-height);
     background-color: var(--bg-sidebar);
     display: flex;
     overflow-x: auto;
@@ -33,7 +33,7 @@
 .tab {
     display: inline-flex;
     align-items: center;
-    height: 35px;
+    height: var(--tab-height);
     padding: 0 10px;
     background-color: var(--bg-tab);
     border-right: 1px solid var(--border-color);
