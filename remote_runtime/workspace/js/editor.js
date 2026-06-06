@@ -18,7 +18,11 @@ export function initMonaco(onReady) {
             fontFamily: "'Consolas', 'Courier New', monospace",
             wordWrap: state.editorSettings.wordWrap ? "on" : "off",
             lineNumbers: state.editorSettings.lineNumbers ? "on" : "off",
-            tabSize: state.editorSettings.tabSize || 4
+            tabSize: state.editorSettings.tabSize || 4,
+            scrollbar: {
+                verticalScrollbarSize: 2,
+                horizontalScrollbarSize: 2
+            }
         });
         
         state.editor.addAction({
@@ -241,7 +245,11 @@ export function updateEditorOptions() {
         minimap: { enabled: state.editorSettings.minimap !== false },
         lineNumbers: state.editorSettings.lineNumbers ? 'on' : 'off',
         lineDecorationsWidth: state.editorSettings.lineDecorationsWidth !== undefined ? state.editorSettings.lineDecorationsWidth : 10,
-        tabSize: state.editorSettings.tabSize || 4
+        tabSize: state.editorSettings.tabSize || 4,
+        scrollbar: {
+            verticalScrollbarSize: 2,
+            horizontalScrollbarSize: 2
+        }
     });
 }
 

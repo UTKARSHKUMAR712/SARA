@@ -1,3 +1,22 @@
-#sidebar-resizer { width: 2px; background: transparent; cursor: ew-resize; z-index: 100; transition: background 0.1s; }
-#sidebar-resizer:hover { background: var(--accent); }
-#sidebar-resizer:active { background: var(--accent); }
+#sidebar-resizer {
+    width: 16px;
+    margin-left: -7px;
+    background: transparent;
+    cursor: ew-resize;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+}
+
+#sidebar-resizer::after {
+    content: '';
+    width: 2px;
+    height: 100%;
+    background: transparent;
+    transition: background 0.1s;
+}
+
+#sidebar-resizer:hover::after,
+#sidebar-resizer:active::after {
+    background: var(--accent);
+}
