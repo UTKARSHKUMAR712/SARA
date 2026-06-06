@@ -1,0 +1,27 @@
+{
+  "name": "vs-dark",
+  "type": "dark",
+  "colors": {
+    "activityBar": {
+      "background": "#333333",
+      "foreground": "#ffffff"
+    },
+    "explorer": {
+      "background": "#252526",
+      "foreground": "#cccccc"
+    },
+    "editor": {
+      "background": "#1e1e1e",
+      "foreground": "#d4d4d4"
+    },
+    "terminal": {
+      "background": "#1e1e1e",
+      "foreground": "#cccccc"
+    },
+    "tabs": {
+      "activeBackground": "#1e1e1e",
+      "inactiveBackground": "#2d2d2d",
+      "border": "#3c3c3c"
+    }
+  }
+}

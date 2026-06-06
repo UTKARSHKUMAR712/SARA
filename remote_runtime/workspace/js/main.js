@@ -5,6 +5,7 @@ import { refreshExplorer, createNewFile, createNewFolder, openFolderModal, close
 import { toggleTerminal, killTerminal, initTerminal } from './terminal.js';
 import { initPortsPanel, startLiveServer } from './ports.js';
 import { initSettingsUI, applyAllSettings, saveSettings } from './settings.js';
+import { initSidebarResizer } from './resizer.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initial State
@@ -18,6 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (settings.editor) Object.assign(state.editorSettings, settings.editor);
             if (settings.terminal) Object.assign(state.terminalSettings, settings.terminal);
             if (settings.layout) Object.assign(state.layout, settings.layout);
+            if (settings.theme) state.theme = settings.theme;
+            if (settings.themeOverrides) state.themeOverrides = settings.themeOverrides;
         }
     } catch (e) {
         console.error("Failed to load settings:", e);
@@ -25,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     applyAllSettings();
     initSettingsUI();
+    initSidebarResizer();
     
     document.getElementById('autosave-check').textContent = state.autoSaveEnabled ? '✓' : '';
     

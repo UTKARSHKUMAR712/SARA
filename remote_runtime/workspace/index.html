@@ -15,6 +15,7 @@
     </script>
     <link rel="stylesheet" href="./css/base.css">
     <link rel="stylesheet" href="./css/explorer.css">
+    <link rel="stylesheet" href="./css/resizer.css">
     <link rel="stylesheet" href="./css/editor.css">
     <link rel="stylesheet" href="./css/terminal.css">
     <link rel="stylesheet" href="./css/components.css">
@@ -73,6 +74,8 @@
             </div>
         </div>
 
+        <div id="sidebar-resizer"></div>
+
         <div id="editor-area">
             <div id="editor-top">
                 <div id="tabs-bar">
@@ -119,19 +122,6 @@
                                     </div>
                                     <div class="setting-control">
                                         <input type="number" id="setting-editor-font" value="14">
-                                    </div>
-                                </div>
-                                <div class="setting-block" data-keywords="theme editor appearance colors">
-                                    <div class="setting-info">
-                                        <div class="setting-name">Workbench: Color Theme</div>
-                                        <div class="setting-desc">Specifies the color theme used in the workbench.</div>
-                                    </div>
-                                    <div class="setting-control">
-                                        <select id="setting-editor-theme">
-                                            <option value="vs-dark">Dark</option>
-                                            <option value="vs">Light</option>
-                                            <option value="hc-black">High Contrast</option>
-                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -252,6 +242,67 @@
                             <!-- Appearance -->
                             <div class="settings-section" id="section-appearance">
                                 <h2>Appearance</h2>
+                                <div class="setting-block" data-keywords="theme editor appearance colors global">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Workbench: Color Theme</div>
+                                        <div class="setting-desc">Specifies the base color theme used across the entire workspace.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <select id="setting-theme">
+                                            <option value="vs-dark">Dark (VS Code)</option>
+                                            <option value="vs-light">Light (VS Code)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <h3 style="margin-top: 20px; margin-bottom: 15px; color: #fff; font-size: 15px;">Theme Overrides</h3>
+                                
+                                <div class="setting-block" data-keywords="theme override activity bar background color">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Activity Bar: Background</div>
+                                        <div class="setting-desc">Override the activity bar background color (e.g. #111111).</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="text" id="setting-theme-activity" placeholder="Default">
+                                    </div>
+                                </div>
+
+                                <div class="setting-block" data-keywords="theme override explorer sidebar background color">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Explorer: Background</div>
+                                        <div class="setting-desc">Override the explorer sidebar background color.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="text" id="setting-theme-explorer" placeholder="Default">
+                                    </div>
+                                </div>
+
+                                <div class="setting-block" data-keywords="theme override editor background color">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Editor: Background</div>
+                                        <div class="setting-desc">Override the editor area background color.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="text" id="setting-theme-editor" placeholder="Default">
+                                    </div>
+                                </div>
+
+                                <div class="setting-block" data-keywords="theme override terminal background color">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Terminal: Background</div>
+                                        <div class="setting-desc">Override the terminal background color.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="text" id="setting-theme-terminal" placeholder="Default">
+                                    </div>
+                                </div>
+
+                                <div class="setting-block">
+                                    <button id="btn-reset-overrides" class="secondary-btn" style="padding: 6px 12px;">Reset Overrides</button>
+                                </div>
+
+                                <h3 style="margin-top: 30px; margin-bottom: 15px; color: #fff; font-size: 15px;">Layout</h3>
+
                                 <div class="setting-block" data-keywords="compact mode ui layout small">
                                     <div class="setting-info">
                                         <div class="setting-name">Window: Compact Mode</div>
@@ -278,6 +329,10 @@
                                     <div class="setting-control">
                                         <input type="number" id="setting-explorer-width" value="260">
                                     </div>
+                                </div>
+                                
+                                <div class="setting-block" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                                    <button id="btn-reset-all" class="secondary-btn" style="padding: 6px 12px; border-color: #f44336; color: #f44336;">Reset All Settings to Default</button>
                                 </div>
                             </div>
                         </div>

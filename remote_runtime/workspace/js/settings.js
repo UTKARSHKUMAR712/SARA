@@ -12,7 +12,9 @@ export async function saveSettings() {
                 autoSaveEnabled: state.autoSaveEnabled,
                 editor: state.editorSettings,
                 terminal: state.terminalSettings,
-                layout: state.layout
+                layout: state.layout,
+                theme: state.theme,
+                themeOverrides: state.themeOverrides
             })
         });
     } catch (e) {
@@ -40,9 +42,13 @@ export function applyAllSettings() {
 
     // 3. Apply Terminal Settings
     updateTerminalFontSize(state.terminalSettings.fontSize);
+
+    // 4. Apply Theme
+    applyTheme();
 }
 
 import { openSettingsTab } from './editor.js';
+import { applyTheme } from './theme.js';
 
 export function initSettingsUI() {
     const btnSettings = document.getElementById('btn-settings');
@@ -92,10 +98,22 @@ export function initSettingsUI() {
     const bindInput = (id, stateObj, stateKey, parser) => {
         const el = document.getElementById(id);
         if (!el) return;
-        el.addEventListener('change', (e) => {
+        
+        // Use 'input' for instant feedback, 'change' as fallback
+        const eventType = (el.tagName === 'SELECT' || el.type === 'checkbox') ? 'change' : 'input';
+        
+        el.addEventListener(eventType, (e) => {
             let val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
             if (parser) val = parser(val);
-            state[stateObj][stateKey] = val;
+            if (stateObj) {
+                if (typeof stateKey === 'function') {
+                    stateKey(val); // Custom setter
+                } else {
+                    state[stateObj][stateKey] = val;
+                }
+            } else {
+                state[stateKey] = val; // Root state property
+            }
             applyAllSettings();
             saveSettings();
         });
@@ -125,21 +143,54 @@ export function initSettingsUI() {
     bindInput('setting-explorer-width', 'layout', 'explorerWidth', parseInt);
 
     // Editor
-    // Editor
     bindInput('setting-editor-font', 'editorSettings', 'fontSize', parseInt);
     bindInput('setting-editor-wrap', 'editorSettings', 'wordWrap', null);
     bindInput('setting-editor-minimap', 'editorSettings', 'minimap', null);
     bindInput('setting-editor-lines', 'editorSettings', 'lineNumbers', null);
     bindInput('setting-editor-tab', 'editorSettings', 'tabSize', parseInt);
-    bindInput('setting-editor-theme', 'editorSettings', 'theme', null);
 
-    // Terminal
     // Terminal
     bindInput('setting-term-font', 'terminalSettings', 'fontSize', parseInt);
     bindInput('setting-term-cursor', 'terminalSettings', 'cursorStyle', null);
     bindInput('setting-term-blink', 'terminalSettings', 'cursorBlink', null);
     bindInput('setting-term-scroll', 'terminalSettings', 'scrollback', parseInt);
     bindInput('setting-term-shell', 'terminalSettings', 'defaultShell', null);
+
+    // Appearance / Theme
+    bindInput('setting-theme', null, 'theme', null);
+    bindInput('setting-theme-activity', 'themeOverrides', (val) => state.themeOverrides.activityBar.background = val, null);
+    bindInput('setting-theme-explorer', 'themeOverrides', (val) => state.themeOverrides.explorer.background = val, null);
+    bindInput('setting-theme-editor', 'themeOverrides', (val) => state.themeOverrides.editor.background = val, null);
+    bindInput('setting-theme-terminal', 'themeOverrides', (val) => state.themeOverrides.terminal.background = val, null);
+
+    // Reset Overrides
+    const btnResetOverrides = document.getElementById('btn-reset-overrides');
+    if (btnResetOverrides) {
+        btnResetOverrides.addEventListener('click', () => {
+            state.themeOverrides = { activityBar: {}, explorer: {}, editor: {}, terminal: {}, tabs: {} };
+            populateSettingsUI();
+            applyAllSettings();
+            saveSettings();
+        });
+    }
+
+    // Reset All Settings
+    const btnResetAll = document.getElementById('btn-reset-all');
+    if (btnResetAll) {
+        btnResetAll.addEventListener('click', () => {
+            if (confirm("Are you sure you want to reset all settings to their default values?")) {
+                state.autoSaveEnabled = false;
+                state.layout = { activityBarWidth: 48, explorerWidth: 260, terminalHeight: 280, compactMode: false };
+                state.editorSettings = { fontSize: 14, wordWrap: true, minimap: true, lineNumbers: true, tabSize: 4 };
+                state.terminalSettings = { fontSize: 14, cursorBlink: true, cursorStyle: 'block', scrollback: 5000, defaultShell: 'powershell' };
+                state.theme = 'vs-dark';
+                state.themeOverrides = { activityBar: {}, explorer: {}, editor: {}, terminal: {}, tabs: {} };
+                populateSettingsUI();
+                applyAllSettings();
+                saveSettings();
+            }
+        });
+    }
 }
 
 function populateSettingsUI() {
@@ -161,11 +212,16 @@ function populateSettingsUI() {
     setVal('setting-editor-minimap', state.editorSettings.minimap);
     setVal('setting-editor-lines', state.editorSettings.lineNumbers);
     setVal('setting-editor-tab', state.editorSettings.tabSize);
-    setVal('setting-editor-theme', state.editorSettings.theme);
 
     setVal('setting-term-font', state.terminalSettings.fontSize);
     setVal('setting-term-cursor', state.terminalSettings.cursorStyle);
     setVal('setting-term-blink', state.terminalSettings.cursorBlink);
     setVal('setting-term-scroll', state.terminalSettings.scrollback);
     setVal('setting-term-shell', state.terminalSettings.defaultShell);
+
+    setVal('setting-theme', state.theme || 'vs-dark');
+    setVal('setting-theme-activity', state.themeOverrides.activityBar.background || '');
+    setVal('setting-theme-explorer', state.themeOverrides.explorer.background || '');
+    setVal('setting-theme-editor', state.themeOverrides.editor.background || '');
+    setVal('setting-theme-terminal', state.themeOverrides.terminal.background || '');
 }

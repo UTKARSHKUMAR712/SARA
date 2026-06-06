@@ -15,8 +15,7 @@ export const state = {
         wordWrap: true,
         minimap: true,
         lineNumbers: true,
-        tabSize: 4,
-        theme: 'vs-dark'
+        tabSize: 4
     },
     terminalSettings: {
         fontSize: 14,
@@ -30,5 +29,13 @@ export const state = {
         explorerWidth: 260,
         terminalHeight: 280,
         compactMode: false
+    },
+    theme: 'vs-dark',
+    themeOverrides: {
+        activityBar: {},
+        explorer: {},
+        editor: {},
+        terminal: {},
+        tabs: {}
     }
 };

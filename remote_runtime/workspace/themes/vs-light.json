@@ -1,0 +1,27 @@
+{
+  "name": "vs-light",
+  "type": "light",
+  "colors": {
+    "activityBar": {
+      "background": "#2c2c2c",
+      "foreground": "#ffffff"
+    },
+    "explorer": {
+      "background": "#f3f3f3",
+      "foreground": "#333333"
+    },
+    "editor": {
+      "background": "#ffffff",
+      "foreground": "#000000"
+    },
+    "terminal": {
+      "background": "#ffffff",
+      "foreground": "#333333"
+    },
+    "tabs": {
+      "activeBackground": "#ffffff",
+      "inactiveBackground": "#ececec",
+      "border": "#cccccc"
+    }
+  }
+}
