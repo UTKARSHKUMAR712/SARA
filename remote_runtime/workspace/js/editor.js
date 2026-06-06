@@ -97,6 +97,17 @@ export async function openFile(path) {
 
 export function switchToTab(tab) {
     state.currentFile = tab.path;
+    
+    // Check if it's the settings tab
+    if (tab.isSettings) {
+        document.getElementById('welcome-screen').style.display = 'none';
+        document.getElementById('monaco-container').style.display = 'none';
+        document.getElementById('settings-container').style.display = 'flex';
+        renderTabs();
+        return;
+    }
+    
+    document.getElementById('settings-container').style.display = 'none';
     state.editor.setModel(tab.model);
     
     document.getElementById('welcome-screen').style.display = 'none';
@@ -126,7 +137,9 @@ export function closeTab(path, force = false) {
         }
     }
 
-    tab.model.dispose();
+    if (tab.model) {
+        tab.model.dispose();
+    }
     state.openTabs.splice(idx, 1);
     
     if (state.currentFile === path) {
@@ -134,6 +147,7 @@ export function closeTab(path, force = false) {
             switchToTab(state.openTabs[Math.max(0, idx - 1)]);
         } else {
             state.currentFile = null;
+            document.getElementById('settings-container').style.display = 'none';
             document.getElementById('monaco-container').style.display = 'none';
             document.getElementById('welcome-screen').style.display = 'flex';
             renderTabs();
@@ -182,8 +196,8 @@ export function renderTabs() {
         
         const titleEl = document.createElement('div');
         titleEl.className = 'tab-title';
-        titleEl.textContent = name;
-        titleEl.title = tab.path;
+        titleEl.textContent = tab.isSettings ? 'Settings' : name;
+        titleEl.title = tab.isSettings ? 'Workspace Settings' : tab.path;
         el.appendChild(titleEl);
         
         const closeEl = document.createElement('div');
@@ -211,4 +225,13 @@ export function updateEditorOptions() {
         lineNumbers: state.editorSettings.lineNumbers ? 'on' : 'off',
         tabSize: state.editorSettings.tabSize || 4
     });
+}
+
+export function openSettingsTab() {
+    let tab = state.openTabs.find(t => t.isSettings);
+    if (!tab) {
+        tab = { path: 'settings://', dirty: false, isSettings: true };
+        state.openTabs.push(tab);
+    }
+    switchToTab(tab);
 }

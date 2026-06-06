@@ -42,34 +42,51 @@ export function applyAllSettings() {
     updateTerminalFontSize(state.terminalSettings.fontSize);
 }
 
+import { openSettingsTab } from './editor.js';
+
 export function initSettingsUI() {
     const btnSettings = document.getElementById('btn-settings');
-    const modal = document.getElementById('settings-modal');
-    const btnClose = document.getElementById('btn-close-settings');
+    if (btnSettings) {
+        btnSettings.addEventListener('click', () => {
+            populateSettingsUI();
+            openSettingsTab();
+        });
+    }
 
-    if (!btnSettings || !modal) return;
-
-    // Open/Close Modal
-    btnSettings.addEventListener('click', () => {
-        populateSettingsUI();
-        modal.style.display = 'flex';
-    });
-
-    btnClose.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    // Tab Switching
-    const tabs = document.querySelectorAll('.settings-tab');
-    const panels = document.querySelectorAll('.settings-panel');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            panels.forEach(p => p.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.target).classList.add('active');
+    // Tab Switching (Scrolling)
+    const treeItems = document.querySelectorAll('.settings-tree-item');
+    treeItems.forEach(item => {
+        item.addEventListener('click', () => {
+            treeItems.forEach(t => t.classList.remove('active'));
+            item.classList.add('active');
+            const targetId = item.getAttribute('data-target');
+            const targetEl = document.getElementById(targetId);
+            if (targetEl) {
+                targetEl.scrollIntoView({ behavior: 'smooth' });
+            }
         });
     });
+
+    // Search Filtering
+    const searchInput = document.getElementById('settings-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const blocks = document.querySelectorAll('.setting-block');
+            
+            blocks.forEach(block => {
+                const keywords = block.getAttribute('data-keywords') || '';
+                const name = block.querySelector('.setting-name').textContent.toLowerCase();
+                const desc = block.querySelector('.setting-desc').textContent.toLowerCase();
+                
+                if (term === '' || keywords.includes(term) || name.includes(term) || desc.includes(term)) {
+                    block.style.display = 'flex';
+                } else {
+                    block.style.display = 'none';
+                }
+            });
+        });
+    }
 
     // --- Bind Inputs to State & Trigger Apply ---
     const bindInput = (id, stateObj, stateKey, parser) => {
@@ -85,16 +102,23 @@ export function initSettingsUI() {
     };
 
     // General
-    bindInput('setting-autosave', '', 'autoSaveEnabled', null);
-    // Since autoSaveEnabled is directly on state, not state.editor, we handle it specially:
-    const autoSaveEl = document.getElementById('setting-autosave');
-    if (autoSaveEl) {
-        autoSaveEl.addEventListener('change', (e) => {
-            state.autoSaveEnabled = e.target.checked;
-            document.getElementById('autosave-check').textContent = state.autoSaveEnabled ? '✓' : '';
-            saveSettings();
-        });
-    }
+    // General / Workspace
+    const handleAutosave = (e) => {
+        state.autoSaveEnabled = e.target.checked;
+        document.getElementById('autosave-check').textContent = state.autoSaveEnabled ? '✓' : '';
+        // Sync both checkboxes
+        const a1 = document.getElementById('setting-autosave');
+        const a2 = document.getElementById('setting-autosave-workspace');
+        if (a1) a1.checked = state.autoSaveEnabled;
+        if (a2) a2.checked = state.autoSaveEnabled;
+        saveSettings();
+    };
+
+    const autoSaveEl1 = document.getElementById('setting-autosave');
+    if (autoSaveEl1) autoSaveEl1.addEventListener('change', handleAutosave);
+    
+    const autoSaveEl2 = document.getElementById('setting-autosave-workspace');
+    if (autoSaveEl2) autoSaveEl2.addEventListener('change', handleAutosave);
 
     bindInput('setting-compact-mode', 'layout', 'compactMode', null);
     bindInput('setting-activity-bar', 'layout', 'activityBarWidth', parseInt);
@@ -127,6 +151,7 @@ function populateSettingsUI() {
     };
 
     setVal('setting-autosave', state.autoSaveEnabled);
+    setVal('setting-autosave-workspace', state.autoSaveEnabled);
     setVal('setting-compact-mode', state.layout.compactMode);
     setVal('setting-activity-bar', state.layout.activityBarWidth);
     setVal('setting-explorer-width', state.layout.explorerWidth);

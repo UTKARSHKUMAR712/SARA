@@ -83,6 +83,206 @@
                     <h2>SARA Workspace</h2>
                     <p>Select a file from the Explorer to edit.</p>
                 </div>
+                
+                <div id="settings-container" style="display: none;">
+                    <div class="settings-header">
+                        <div class="settings-search-wrapper">
+                            <input type="text" id="settings-search" placeholder="Search settings">
+                            <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                    </div>
+                    <div class="settings-body-split">
+                        <div class="settings-tree">
+                            <div class="settings-tree-item active" data-target="section-commonly-used">Commonly Used</div>
+                            <div class="settings-tree-item" data-target="section-workspace">Workspace</div>
+                            <div class="settings-tree-item" data-target="section-editor">Editor</div>
+                            <div class="settings-tree-item" data-target="section-terminal">Terminal</div>
+                            <div class="settings-tree-item" data-target="section-appearance">Appearance</div>
+                        </div>
+                        <div class="settings-main-content">
+                            <!-- Commonly Used -->
+                            <div class="settings-section" id="section-commonly-used">
+                                <h2>Commonly Used</h2>
+                                <div class="setting-block" data-keywords="auto save workspace">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Files: Auto Save</div>
+                                        <div class="setting-desc">Controls whether editors automatically save files.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="checkbox" id="setting-autosave">
+                                    </div>
+                                </div>
+                                <div class="setting-block" data-keywords="font size editor text">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Editor: Font Size</div>
+                                        <div class="setting-desc">Controls the font size in pixels.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="number" id="setting-editor-font" value="14">
+                                    </div>
+                                </div>
+                                <div class="setting-block" data-keywords="theme editor appearance colors">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Workbench: Color Theme</div>
+                                        <div class="setting-desc">Specifies the color theme used in the workbench.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <select id="setting-editor-theme">
+                                            <option value="vs-dark">Dark</option>
+                                            <option value="vs">Light</option>
+                                            <option value="hc-black">High Contrast</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Workspace -->
+                            <div class="settings-section" id="section-workspace">
+                                <h2>Workspace</h2>
+                                <div class="setting-block" data-keywords="auto save files">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Files: Auto Save</div>
+                                        <div class="setting-desc">Controls whether editors automatically save files after a delay.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <!-- Shared ID, we'll sync it or use duplicate handling -->
+                                        <input type="checkbox" id="setting-autosave-workspace">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Editor -->
+                            <div class="settings-section" id="section-editor">
+                                <h2>Editor</h2>
+                                <div class="setting-block" data-keywords="word wrap editor text overflow">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Editor: Word Wrap</div>
+                                        <div class="setting-desc">Controls how lines should wrap.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="checkbox" id="setting-editor-wrap">
+                                    </div>
+                                </div>
+                                <div class="setting-block" data-keywords="minimap outline editor">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Editor: Minimap</div>
+                                        <div class="setting-desc">Controls whether the minimap is shown.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="checkbox" id="setting-editor-minimap">
+                                    </div>
+                                </div>
+                                <div class="setting-block" data-keywords="line numbers editor">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Editor: Line Numbers</div>
+                                        <div class="setting-desc">Controls the display of line numbers.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="checkbox" id="setting-editor-lines">
+                                    </div>
+                                </div>
+                                <div class="setting-block" data-keywords="tab size spaces indent">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Editor: Tab Size</div>
+                                        <div class="setting-desc">The number of spaces a tab is equal to.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="number" id="setting-editor-tab" value="4">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Terminal -->
+                            <div class="settings-section" id="section-terminal">
+                                <h2>Terminal</h2>
+                                <div class="setting-block" data-keywords="terminal font size">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Terminal: Font Size</div>
+                                        <div class="setting-desc">Controls the font size of the terminal.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="number" id="setting-term-font" value="14">
+                                    </div>
+                                </div>
+                                <div class="setting-block" data-keywords="terminal shell default powershell cmd">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Terminal: Default Profile</div>
+                                        <div class="setting-desc">The default profile used for new terminals.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <select id="setting-term-shell">
+                                            <option value="powershell">PowerShell</option>
+                                            <option value="cmd">Command Prompt</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="setting-block" data-keywords="terminal cursor style line block underline">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Terminal: Cursor Style</div>
+                                        <div class="setting-desc">Controls the style of terminal cursor.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <select id="setting-term-cursor">
+                                            <option value="block">Block</option>
+                                            <option value="underline">Underline</option>
+                                            <option value="bar">Bar</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="setting-block" data-keywords="terminal cursor blink animation">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Terminal: Cursor Blinking</div>
+                                        <div class="setting-desc">Controls whether the terminal cursor blinks.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="checkbox" id="setting-term-blink">
+                                    </div>
+                                </div>
+                                <div class="setting-block" data-keywords="terminal scrollback buffer history lines">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Terminal: Scrollback</div>
+                                        <div class="setting-desc">Controls the maximum amount of lines the terminal keeps in its buffer.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="number" id="setting-term-scroll" value="5000">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Appearance -->
+                            <div class="settings-section" id="section-appearance">
+                                <h2>Appearance</h2>
+                                <div class="setting-block" data-keywords="compact mode ui layout small">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Window: Compact Mode</div>
+                                        <div class="setting-desc">Reduces UI padding and shrinks sidebars to maximize editor space.</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="checkbox" id="setting-compact-mode">
+                                    </div>
+                                </div>
+                                <div class="setting-block" data-keywords="activity bar width layout appearance">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Workbench: Activity Bar Width</div>
+                                        <div class="setting-desc">Width of the far-left activity bar (pixels).</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="number" id="setting-activity-bar" value="48">
+                                    </div>
+                                </div>
+                                <div class="setting-block" data-keywords="explorer sidebar width layout appearance">
+                                    <div class="setting-info">
+                                        <div class="setting-name">Workbench: Explorer Width</div>
+                                        <div class="setting-desc">Width of the file explorer sidebar (pixels).</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <input type="number" id="setting-explorer-width" value="260">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Bottom Panel -->
@@ -183,106 +383,7 @@
     <script>var require = { paths: { 'vs': './vendor/monaco' } };</script>
     <script src="./vendor/monaco/loader.js"></script>
     
-    <div id="settings-modal" class="modal-overlay" style="display: none;">
-        <div class="modal settings-modal">
-            <div class="modal-header">
-                <h2>Settings</h2>
-                <span class="close-modal" id="btn-close-settings">&times;</span>
-            </div>
-            <div class="settings-body">
-                <div class="settings-sidebar">
-                    <div class="settings-tab active" data-target="settings-general">General</div>
-                    <div class="settings-tab" data-target="settings-editor">Code Editor</div>
-                    <div class="settings-tab" data-target="settings-terminal">Terminal</div>
-                </div>
-                <div class="settings-content">
-                    <!-- General -->
-                    <div class="settings-panel active" id="settings-general">
-                        <h3>General Settings</h3>
-                        <div class="setting-row">
-                            <label>Auto Save</label>
-                            <input type="checkbox" id="setting-autosave">
-                        </div>
-                        <div class="setting-row">
-                            <label>Compact Mode</label>
-                            <input type="checkbox" id="setting-compact-mode">
-                        </div>
-                        <div class="setting-row">
-                            <label>Activity Bar Width</label>
-                            <input type="number" id="setting-activity-bar" value="48">
-                        </div>
-                        <div class="setting-row">
-                            <label>Explorer Width</label>
-                            <input type="number" id="setting-explorer-width" value="260">
-                        </div>
-                    </div>
-                    <!-- Editor -->
-                    <div class="settings-panel" id="settings-editor">
-                        <h3>Editor Settings</h3>
-                        <div class="setting-row">
-                            <label>Theme</label>
-                            <select id="setting-editor-theme">
-                                <option value="vs-dark">Dark</option>
-                                <option value="vs">Light</option>
-                                <option value="hc-black">High Contrast</option>
-                            </select>
-                        </div>
-                        <div class="setting-row">
-                            <label>Font Size</label>
-                            <input type="number" id="setting-editor-font" value="14">
-                        </div>
-                        <div class="setting-row">
-                            <label>Tab Size</label>
-                            <input type="number" id="setting-editor-tab" value="4">
-                        </div>
-                        <div class="setting-row">
-                            <label>Word Wrap</label>
-                            <input type="checkbox" id="setting-editor-wrap">
-                        </div>
-                        <div class="setting-row">
-                            <label>Minimap</label>
-                            <input type="checkbox" id="setting-editor-minimap">
-                        </div>
-                        <div class="setting-row">
-                            <label>Line Numbers</label>
-                            <input type="checkbox" id="setting-editor-lines">
-                        </div>
-                    </div>
-                    <!-- Terminal -->
-                    <div class="settings-panel" id="settings-terminal">
-                        <h3>Terminal Settings</h3>
-                        <div class="setting-row">
-                            <label>Default Shell</label>
-                            <select id="setting-term-shell">
-                                <option value="powershell">PowerShell</option>
-                                <option value="cmd">CMD</option>
-                            </select>
-                        </div>
-                        <div class="setting-row">
-                            <label>Font Size</label>
-                            <input type="number" id="setting-term-font" value="14">
-                        </div>
-                        <div class="setting-row">
-                            <label>Scrollback</label>
-                            <input type="number" id="setting-term-scroll" value="5000">
-                        </div>
-                        <div class="setting-row">
-                            <label>Cursor Style</label>
-                            <select id="setting-term-cursor">
-                                <option value="block">Block</option>
-                                <option value="underline">Underline</option>
-                                <option value="bar">Bar</option>
-                            </select>
-                        </div>
-                        <div class="setting-row">
-                            <label>Cursor Blink</label>
-                            <input type="checkbox" id="setting-term-blink">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
     
     <script type="module" src="./js/main.js"></script>
 </body>
