@@ -743,6 +743,30 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
                 if (query.empty()) { g_telegram.send_message(chat_id, "❌ What should I play?"); return; }
                 std::string q_lower = query;
                 for (auto& c : q_lower) if (c >= 'A' && c <= 'Z') c += 32;
+
+                bool is_youtube = false;
+                std::string yquery = query;
+
+                if (q_lower.size() >= 3 && q_lower.rfind(" yt") == q_lower.size() - 3) {
+                    yquery = query.substr(0, query.size() - 3);
+                    is_youtube = true;
+                } else if (q_lower.size() >= 8 && q_lower.rfind(" youtube") == q_lower.size() - 8) {
+                    yquery = query.substr(0, query.size() - 8);
+                    is_youtube = true;
+                }
+
+                if (is_youtube) {
+                    // Strip optional " on" or " in" before yt/youtube
+                    if (yquery.size() >= 3 && yquery.rfind(" on") == yquery.size() - 3) {
+                        yquery = yquery.substr(0, yquery.size() - 3);
+                    } else if (yquery.size() >= 3 && yquery.rfind(" in") == yquery.size() - 3) {
+                        yquery = yquery.substr(0, yquery.size() - 3);
+                    }
+                    auto res = dispatch_action("play_youtube", {{"query", yquery}});
+                    g_telegram.send_message(chat_id, res.success ? "🎵 Playing on YouTube: " + yquery : "❌ " + res.message);
+                    return;
+                }
+
                 if (q_lower.size() >= 9 && q_lower.rfind(" playlist") == q_lower.size() - 9) {
                     std::string pname = query.substr(0, query.size() - 9);
                     { std::lock_guard<std::mutex> lock(g_last_playlist_mutex); g_last_playlist = pname; }
