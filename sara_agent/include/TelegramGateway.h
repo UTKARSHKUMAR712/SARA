@@ -39,6 +39,7 @@ public:
 
     int send_message(const std::string& chat_id, const std::string& text, const std::string& parse_mode = "");
     bool send_inline_keyboard(const std::string& chat_id, const std::string& text, const json& inline_keyboard);
+    int  send_with_keyboard(const std::string& chat_id, const std::string& text, const json& inline_keyboard);
     bool edit_message_text(const std::string& chat_id, int message_id, const std::string& text, const json& inline_keyboard = nullptr);
     bool answer_callback_query(const std::string& callback_query_id, const std::string& text = "", bool show_alert = false);
     

@@ -305,6 +305,25 @@ bool TelegramGateway::send_inline_keyboard(const std::string& chat_id, const std
     return ok;
 }
 
+int TelegramGateway::send_with_keyboard(const std::string& chat_id, const std::string& text, const json& inline_keyboard) {
+    json payload = {
+        {"chat_id", chat_id},
+        {"text", text},
+        {"reply_markup", {{"inline_keyboard", inline_keyboard}}}
+    };
+    auto result = api_call("sendMessage", payload);
+    bool ok = result.value("ok", false);
+    if (!ok) {
+        Logger::instance().err("Telegram send_with_keyboard failed: " + result.dump());
+        return 0;
+    }
+    if (result.contains("result") && result["result"].contains("message_id")) {
+        return result["result"]["message_id"].get<int>();
+    }
+    return 0;
+}
+
+
 bool TelegramGateway::edit_message_text(const std::string& chat_id, int message_id, const std::string& text, const json& inline_keyboard) {
     json payload = {
         {"chat_id", chat_id},

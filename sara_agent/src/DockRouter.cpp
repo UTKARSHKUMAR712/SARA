@@ -85,9 +85,20 @@ bool DockRouter::handle_callback(const std::string& chat_id, const std::string& 
     }
 
     if (prefix == "dock_media") {
-        Logger::instance().info("[DockRouter] dock_media action: " + action);
+        // Format: dock_media:action:session_id  OR  dock_media:action:
+        std::string action_and_sid = action; // everything after first colon
+        std::string media_action, session_id;
+        size_t second_colon = action_and_sid.find(':');
+        if (second_colon != std::string::npos) {
+            media_action = action_and_sid.substr(0, second_colon);
+            session_id   = action_and_sid.substr(second_colon + 1);
+        } else {
+            media_action = action_and_sid;
+            session_id   = "";
+        }
+        Logger::instance().info("[DockRouter] dock_media action=" + media_action + " session=" + session_id);
         std::thread([=]() {
-            MediaDock::instance().handle_action(chat_id, action, callback_query_id, message_id);
+            MediaDock::instance().handle_action(chat_id, media_action, callback_query_id, message_id, session_id);
         }).detach();
         return true;
     }
