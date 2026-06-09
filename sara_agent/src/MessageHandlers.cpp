@@ -104,7 +104,7 @@ long long parse_delay_suffix(const std::string& original_text, std::string& clea
     return (long long)calculated;
 }
 
-void handle_telegram_message(const std::string& chat_id, const std::string& text, const nlohmann::json& raw_message) {
+void handle_telegram_message(const std::string& chat_id, std::string text, const nlohmann::json& raw_message) {
     long long user_id = raw_message.value("sara_user_id", 0LL);
     if (user_id == 0) {
         try { user_id = std::stoll(chat_id); } catch (...) {}
@@ -116,6 +116,22 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
     std::string from_name = raw_message.contains("from") ? raw_message["from"].value("first_name", "Unknown") : "Unknown";
 
     Logger::instance().info("Telegram: [" + std::to_string(user_id) + " | " + from_name + "] " + text);
+
+    // --- Natural Language Alias Processing ---
+    std::string lower_text = text;
+    std::transform(lower_text.begin(), lower_text.end(), lower_text.begin(), ::tolower);
+    // Trim extra spaces
+    while (!lower_text.empty() && lower_text.back() == ' ') lower_text.pop_back();
+    while (!lower_text.empty() && lower_text.front() == ' ') lower_text.erase(lower_text.begin());
+    
+    if (lower_text == "sara shutdown" || lower_text == "shutdown sara") {
+        text = "/sarashutdown";
+    } else if (lower_text == "sara shutdown pc" || lower_text == "sara shutdownmy pc" || lower_text == "sara shutdown my pc" || lower_text == "shutdown pc") {
+        text = "/shutdown";
+    } else if (lower_text == "sara open media dock" || lower_text == "sara open media" || lower_text == "open media dock") {
+        text = "/media";
+    }
+    // ------------------------------------------
 
     if (!SecurityManager::instance().check_rate_limit(user_id)) return;
 
@@ -246,6 +262,10 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
             "/files       — Open File Browser\n"
             "/sararestart — Restart SARA and Cloudflare completely\n"
             "/sarashutdown — Kill SARA completely (no restart)\n\n"
+            "🗣️ **Conversational Commands**\n"
+            "\"sara shutdown\" — Shuts down the SARA bot\n"
+            "\"sara shutdown pc\" — Shuts down the host Windows PC\n"
+            "\"sara open media dock\" — Opens the media controller\n\n"
             "🔍 **Web Search**\n"
             "/search <query>       — Search the web (fast)\n"
             "/searchscrape <query> — Deep search with page content\n\n"
