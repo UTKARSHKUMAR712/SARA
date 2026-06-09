@@ -1,7 +1,10 @@
 #include "../include/AgentInitializer.h"
 #include "../include/Logger.h"
+#include "../include/MediaDock.h"
+#include "../../plugins/media/media_service.h"
 #include <windows.h>
 #include <csignal>
+#include <winrt/Windows.Foundation.h>
 
 namespace sara {
 
@@ -53,6 +56,15 @@ bool AgentInitializer::initialize(int argc, char* argv[]) {
     g_running_ptr = &running_;
     signal(SIGINT, agent_signal_handler);
     signal(SIGTERM, agent_signal_handler);
+
+    // Initialize WinRT apartment for GSMTC and other Windows Runtime APIs
+    winrt::init_apartment();
+
+    // Initialize Media Session Service (GSMTC)
+    sara::media::MediaService::instance().init();
+
+    // Pre-warm MediaDock singleton so GSMTC event callbacks are registered
+    (void)sara::MediaDock::instance();
 
     Logger::instance().info("=== SARA v4.0 AgentInitializer ===");
     return true;

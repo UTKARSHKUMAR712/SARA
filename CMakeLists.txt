@@ -44,6 +44,7 @@ add_executable(sara_agent
     # Telegram Dock System
     sara_agent/src/DockRouter.cpp
     sara_agent/src/MediaDock.cpp
+    plugins/media/media_service.cpp
     sara_agent/src/SystemDock.cpp
     sara_agent/src/MonitorDock.cpp
     sara_agent/src/AutomationDock.cpp
@@ -91,9 +92,17 @@ target_include_directories(sara_agent PRIVATE
     sara_agent/include
     shared
     plugins/spotify
+    plugins/media
     remote_runtime/include
+    C:/msys64/ucrt64/include/winrt
+    C:/msys64/ucrt64/include
 )
 
+target_compile_options(sara_agent PRIVATE
+    -std=gnu++20
+    -fcoroutines
+    -DWINRT_LEAN_AND_MEAN
+)
 target_link_options(sara_agent PRIVATE -static-libstdc++ -static-libgcc -mwindows)
 
 target_link_libraries(sara_agent PRIVATE
@@ -115,6 +124,7 @@ target_link_libraries(sara_agent PRIVATE
     mfuuid
     shlwapi
     bcrypt
+    windowsapp
 )
 
 # Embed UAC admin manifest so sara_agent.exe always requests elevation

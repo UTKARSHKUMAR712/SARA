@@ -202,7 +202,7 @@ void handle_telegram_message(const std::string& chat_id, const std::string& text
     if (!text.empty() && text[0] == '/') {
         if (text.rfind("/dock", 0) == 0 || text.rfind("/system", 0) == 0 || 
             text.rfind("/monitor", 0) == 0 || text.rfind("/tasks", 0) == 0 ||
-            text.rfind("/rules", 0) == 0) {
+            text.rfind("/rules", 0) == 0 || text.rfind("/media", 0) == 0) {
             if (DockRouter::handle_command(chat_id, text)) return;
         }
         if (NativeCommandRouter::handle(chat_id, text)) return;
