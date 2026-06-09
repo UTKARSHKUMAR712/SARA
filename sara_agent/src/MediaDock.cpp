@@ -12,50 +12,57 @@ extern sara::TelegramGateway g_telegram;
 
 namespace sara {
 
-// ─── Emoji as raw UTF-8 byte arrays (avoids unicode escape issues) ─────────
-static const std::string E_MUSIC   = "\xF0\x9F\x8E\xB5";  // musical note
-static const std::string E_LABEL   = "\xF0\x9F\x8F\xB7";  // label tag
-static const std::string E_PERSON  = "\xF0\x9F\x91\xA4";  // person
-static const std::string E_DISC    = "\xF0\x9F\x92\xBF";  // optical disc
-static const std::string E_PLAY    = "\xE2\x96\xB6\xEF\xB8\x8F"; // play button
-static const std::string E_PAUSE   = "\xE2\x8F\xB8\xEF\xB8\x8F"; // pause button
-static const std::string E_STOP    = "\xE2\x8F\xB9\xEF\xB8\x8F"; // stop button
-static const std::string E_PREV    = "\xE2\x8F\xAE\xEF\xB8\x8F"; // prev track
-static const std::string E_NEXT    = "\xE2\x8F\xAD\xEF\xB8\x8F"; // next track
-static const std::string E_REFRESH = "\xF0\x9F\x94\x84";  // counter-clockwise arrows
-static const std::string E_BULLET  = "\xF0\x9F\x94\x98";  // red circle (progress dot)
-static const std::string E_BAR     = "\xE2\x96\xAC";      // black rectangle (progress bar)
-static const std::string E_NOTE    = "\xF0\x9F\x8E\xB8";  // guitar (genres)
-static const std::string E_ART     = "\xF0\x9F\x96\xBC\xEF\xB8\x8F"; // framed picture
-static const std::string E_CROSS   = "\xE2\x9D\x8C";      // red X
-static const std::string E_INFO    = "\xE2\x84\xB9\xEF\xB8\x8F";     // info
-static const std::string E_DASH    = "\xE2\x80\x94";       // em dash
+// ─── Emoji UTF-8 byte constants ──────────────────────────────────────────────
+static const std::string E_MUSIC   = "\xF0\x9F\x8E\xB5";
+static const std::string E_LABEL   = "\xF0\x9F\x8F\xB7";
+static const std::string E_PERSON  = "\xF0\x9F\x91\xA4";
+static const std::string E_DISC    = "\xF0\x9F\x92\xBF";
+static const std::string E_PLAY    = "\xE2\x96\xB6\xEF\xB8\x8F";
+static const std::string E_PAUSE   = "\xE2\x8F\xB8\xEF\xB8\x8F";
+static const std::string E_STOP    = "\xE2\x8F\xB9\xEF\xB8\x8F";
+static const std::string E_PREV    = "\xE2\x8F\xAE\xEF\xB8\x8F";
+static const std::string E_NEXT    = "\xE2\x8F\xAD\xEF\xB8\x8F";
+static const std::string E_REFRESH = "\xF0\x9F\x94\x84";
+static const std::string E_BULLET  = "\xF0\x9F\x94\x98";
+static const std::string E_BAR     = "\xE2\x96\xAC";
+static const std::string E_NOTE    = "\xF0\x9F\x8E\xB8";
+static const std::string E_CROSS   = "\xE2\x9D\x8C";
+static const std::string E_INFO    = "\xE2\x84\xB9\xEF\xB8\x8F";
+static const std::string E_DASH    = "\xE2\x80\x94";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Short session hash for callback_data (Telegram limit: 64 bytes) ─────────
+// FNV-1a 32-bit → 8-char hex. "dock_media:play_pause:xxxxxxxx" = 31 chars, safe.
+static std::string short_sid(const std::string& session_id) {
+    uint32_t h = 2166136261u;
+    for (unsigned char c : session_id) { h ^= c; h *= 16777619u; }
+    char buf[9]; snprintf(buf, sizeof(buf), "%08x", h);
+    return std::string(buf);
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 static std::string fmt_time(int64_t ms) {
     if (ms <= 0) return "00:00";
     int s = (int)(ms / 1000);
-    char buf[16];
-    snprintf(buf, sizeof(buf), "%02d:%02d", s / 60, s % 60);
+    char buf[16]; snprintf(buf, sizeof(buf), "%02d:%02d", s / 60, s % 60);
     return buf;
 }
 
 static json build_keyboard(const media::MediaSessionInfo& info) {
     bool playing = (info.playback_status == "Playing");
-    std::string sid = info.session_id;
+    std::string sh = short_sid(info.session_id); // safe short hash
     return json::array({
         json::array({
             {{"text", E_PREV + " Prev"},
-             {"callback_data", "dock_media:prev:" + sid}},
-            {{"text", (playing ? E_PAUSE + " Pause" : E_PLAY + " Play")},
-             {"callback_data", "dock_media:play_pause:" + sid}},
+             {"callback_data", "dock_media:prev:" + sh}},
+            {{"text", playing ? E_PAUSE + " Pause" : E_PLAY + " Play"},
+             {"callback_data", "dock_media:play_pause:" + sh}},
             {{"text", "Next " + E_NEXT},
-             {"callback_data", "dock_media:next:" + sid}}
+             {"callback_data", "dock_media:next:" + sh}}
         }),
         json::array({
             {{"text", E_REFRESH + " Refresh"},
-             {"callback_data", "dock_media:refresh:" + sid}}
+             {"callback_data", "dock_media:refresh:" + sh}}
         })
     });
 }
@@ -68,29 +75,26 @@ static std::string build_text(const media::MediaSessionInfo& info) {
     if (!info.album.empty())  text += E_DISC   + " " + info.album  + "\n";
     text += "\n";
 
-    // Status icon + live time
-    std::string sicon;
-    if      (info.playback_status == "Playing") sicon = E_PLAY;
-    else if (info.playback_status == "Paused")  sicon = E_PAUSE;
-    else                                        sicon = E_STOP;
+    std::string sicon = (info.playback_status == "Playing") ? E_PLAY :
+                        (info.playback_status == "Paused")  ? E_PAUSE : E_STOP;
     text += sicon + " " + info.playback_status;
 
     if (info.duration_ms > 0) {
+        // Estimate live position: pos = stored_pos + time_elapsed_since_last_update
         int64_t pos = info.position_ms;
-        // Live-advance if playing
         if (info.playback_status == "Playing" && info.last_updated_time_ms > 0) {
             auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now().time_since_epoch()).count();
-            // GSMTC LastUpdatedTime: Windows FILETIME (1601 epoch)
-            // Unix epoch offset = 11644473600000 ms
+            // GSMTC epoch = Windows FILETIME (1601), Unix offset = 11644473600000 ms
             int64_t lut_unix = info.last_updated_time_ms - 11644473600000LL;
             int64_t elapsed  = now_ms - lut_unix;
-            if (elapsed > 0 && elapsed < 60000) pos += elapsed;
+            if (elapsed > 0 && elapsed < 3600000LL) {
+                pos += elapsed;
+            }
             if (pos > info.duration_ms) pos = info.duration_ms;
         }
         text += "  `" + fmt_time(pos) + " / " + fmt_time(info.duration_ms) + "`\n";
 
-        // 20-slot progress bar
         int slot = (int)((double)pos / info.duration_ms * 20.0);
         if (slot < 0) slot = 0; if (slot > 20) slot = 20;
         std::string bar;
@@ -108,8 +112,6 @@ static std::string build_text(const media::MediaSessionInfo& info) {
         }
         text += "\n";
     }
-    if (info.thumbnail_available) text += E_ART + " _Artwork cached_\n";
-
     return text;
 }
 
@@ -125,53 +127,66 @@ MediaDock& MediaDock::instance() {
 MediaDock::MediaDock() {
     Logger::instance().info("[MediaDock] Initializing");
 
-    // Register event-driven GSMTC callback
+    // GSMTC event callback — only fires if no action is in progress
     media::MediaService::instance().set_global_update_callback(
         [this](const media::MediaSessionInfo& info) {
-            Logger::instance().info("[MediaDock] GSMTC event: " + info.title
-                + " [" + info.playback_status + "] sid=" + info.session_id);
+            Logger::instance().info("[MediaDock] GSMTC event: "
+                + info.title + " [" + info.playback_status + "]");
 
-            std::vector<std::pair<std::string, int>> to_update;
+            // Skip event refresh if a button action is in progress (prevents race condition)
+            auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+            if ((now - m_last_action_ns.load()) < 1200000000LL) { // 1.2 seconds
+                Logger::instance().info("[MediaDock] Event refresh skipped — action in progress");
+                return;
+            }
+
+            std::vector<std::pair<std::string, int>> to_refresh;
             {
                 std::lock_guard<std::mutex> lk(m_mutex);
                 for (auto& [cid, smap] : m_docks) {
                     auto it = smap.find(info.session_id);
                     if (it != smap.end() && it->second.message_id > 0)
-                        to_update.push_back({cid, it->second.message_id});
+                        to_refresh.push_back({cid, it->second.message_id});
                 }
             }
-            for (auto& [cid, mid] : to_update)
-                refresh_session(cid, info.session_id, mid);
+            for (auto& [cid, mid] : to_refresh)
+                do_edit(cid, info.session_id, mid, false);
         }
     );
 
-    // 5-second fallback: refresh all tracked docks even without GSMTC events
+    // 5-second fallback loop — always refreshes, no skip-if-same
     std::thread([this]() { update_loop(); }).detach();
     Logger::instance().info("[MediaDock] Initialized OK");
 }
 
-MediaDock::~MediaDock() {
-    m_running = false;
-}
+MediaDock::~MediaDock() { m_running = false; }
 
-// ─── refresh_session ─────────────────────────────────────────────────────────
+// ─── Internal edit — makes the actual HTTP call ───────────────────────────────
+// force=true skips the content-equality check (used by 5s loop and button refresh)
 
-void MediaDock::refresh_session(const std::string& chat_id,
-                                const std::string& session_id,
-                                int message_id)
+void MediaDock::do_edit(const std::string& chat_id,
+                        const std::string& session_id,
+                        int message_id,
+                        bool force)
 {
+    // Get fresh info (get_info now reads timeline synchronously)
     auto all = media::MediaService::instance().get_all_sessions();
     media::MediaSessionInfo info;
     bool found = false;
-    for (auto& s : all) { if (s.session_id == session_id) { info = s; found = true; break; } }
-    if (!found) return;
+    for (auto& s : all) {
+        if (s.session_id == session_id) { info = s; found = true; break; }
+    }
+    if (!found) {
+        Logger::instance().info("[MediaDock] Session not found: " + session_id);
+        return;
+    }
 
-    std::string nt = build_text(info);
-    json        nk = build_keyboard(info);
+    std::string nt  = build_text(info);
+    json        nk  = build_keyboard(info);
     std::string nks = nk.dump();
 
-    // No-op if nothing changed
-    {
+    if (!force) {
+        // Skip if content unchanged (for event-driven path only)
         std::lock_guard<std::mutex> lk(m_mutex);
         auto ci = m_docks.find(chat_id);
         if (ci == m_docks.end()) return;
@@ -181,9 +196,9 @@ void MediaDock::refresh_session(const std::string& chat_id,
     }
 
     // HTTP call — NO mutex held
+    Logger::instance().info("[MediaDock] Editing msg=" + std::to_string(message_id)
+                            + " force=" + (force ? "yes" : "no"));
     bool ok = g_telegram.edit_message_text(chat_id, message_id, nt, nk);
-    Logger::instance().info("[MediaDock] edit msg=" + std::to_string(message_id)
-                            + " ok=" + (ok ? "yes" : "no"));
 
     std::lock_guard<std::mutex> lk(m_mutex);
     if (ok) {
@@ -191,7 +206,7 @@ void MediaDock::refresh_session(const std::string& chat_id,
         d.last_text = nt;
         d.last_kb   = nks;
     } else {
-        // Message was deleted — remove tracking
+        // Message deleted or Telegram error — remove tracking
         auto ci = m_docks.find(chat_id);
         if (ci != m_docks.end()) ci->second.erase(session_id);
     }
@@ -202,13 +217,18 @@ void MediaDock::refresh_session(const std::string& chat_id,
 void MediaDock::send_dock(const std::string& chat_id) {
     Logger::instance().info("[MediaDock] send_dock chat=" + chat_id);
 
+    // Clear old tracking for this chat
+    {
+        std::lock_guard<std::mutex> lk(m_mutex);
+        m_docks.erase(chat_id);
+    }
+
     auto sessions = media::MediaService::instance().get_all_sessions();
     Logger::instance().info("[MediaDock] Sessions: " + std::to_string(sessions.size()));
 
     if (sessions.empty()) {
         json kb = json::array({
-            json::array({{{"text", E_REFRESH + " Refresh"},
-                          {"callback_data", "dock_media:refresh:"}}})
+            json::array({{{"text", E_REFRESH + " Refresh"}, {"callback_data", "dock_media:refresh:"}}})
         });
         int mid = g_telegram.send_with_keyboard(chat_id,
             E_MUSIC + " **SARA Media Dock**\n\n"
@@ -221,15 +241,14 @@ void MediaDock::send_dock(const std::string& chat_id) {
         return;
     }
 
-    // One dock per session
     for (auto& info : sessions) {
-        Logger::instance().info("[MediaDock] Sending: " + info.title + " [" + info.source_app + "]");
+        Logger::instance().info("[MediaDock] Sending: " + info.title
+                                + " [" + info.source_app + "] sid=" + info.session_id);
         std::string t = build_text(info);
         json        k = build_keyboard(info);
 
-        int mid = g_telegram.send_with_keyboard(chat_id, t, k);  // HTTP, no mutex
-        Logger::instance().info("[MediaDock] msg_id=" + std::to_string(mid)
-                                + " sid=" + info.session_id);
+        int mid = g_telegram.send_with_keyboard(chat_id, t, k);
+        Logger::instance().info("[MediaDock] msg_id=" + std::to_string(mid));
 
         if (mid > 0) {
             std::lock_guard<std::mutex> lk(m_mutex);
@@ -237,24 +256,64 @@ void MediaDock::send_dock(const std::string& chat_id) {
             d.message_id = mid;
             d.last_text  = t;
             d.last_kb    = k.dump();
+
+            // Also store the short_sid → session_id mapping
+            m_hash_to_sid[short_sid(info.session_id)] = info.session_id;
         }
     }
+}
+
+// ─── resolve_session_id — maps short hash back to full session_id ─────────────
+
+std::string MediaDock::resolve_sid(const std::string& hash_or_sid,
+                                   const std::string& chat_id)
+{
+    // Try direct match first
+    auto all = media::MediaService::instance().get_all_sessions();
+    for (auto& s : all) if (s.session_id == hash_or_sid) return hash_or_sid;
+
+    // Look up in hash map
+    {
+        std::lock_guard<std::mutex> lk(m_mutex);
+        auto it = m_hash_to_sid.find(hash_or_sid);
+        if (it != m_hash_to_sid.end()) return it->second;
+    }
+
+    // Fall back: check all tracked sessions for this chat
+    {
+        std::lock_guard<std::mutex> lk(m_mutex);
+        auto ci = m_docks.find(chat_id);
+        if (ci != m_docks.end() && !ci->second.empty()) {
+            return ci->second.begin()->first; // first tracked session
+        }
+    }
+
+    // Last resort: active session
+    return media::MediaService::instance().get_active_session().session_id;
 }
 
 // ─── handle_action ───────────────────────────────────────────────────────────
 
 void MediaDock::handle_action(const std::string& chat_id, const std::string& action,
                               const std::string& callback_query_id, int message_id,
-                              const std::string& session_id)
+                              const std::string& sid_hint)
 {
-    Logger::instance().info("[MediaDock] action=" + action + " sid=" + session_id);
+    Logger::instance().info("[MediaDock] action=" + action + " hint=" + sid_hint);
+
+    std::string session_id = resolve_sid(sid_hint, chat_id);
+    Logger::instance().info("[MediaDock] Resolved session: " + session_id);
+
+    // Mark action in progress — suppresses GSMTC event-based refreshes for 1.2s
+    m_last_action_ns.store(
+        std::chrono::steady_clock::now().time_since_epoch().count());
 
     auto& svc = media::MediaService::instance();
     if      (action == "play_pause") svc.toggle_play_pause(session_id);
     else if (action == "next")       svc.next(session_id);
     else if (action == "prev")       svc.previous(session_id);
+    // "refresh" just falls through
 
-    // Ack immediately (stops Telegram spinner)
+    // Ack button immediately (stops Telegram spinner)
     g_telegram.answer_callback_query(callback_query_id, "");
 
     // Ensure session is tracked with this message_id
@@ -262,14 +321,18 @@ void MediaDock::handle_action(const std::string& chat_id, const std::string& act
         std::lock_guard<std::mutex> lk(m_mutex);
         auto& d = m_docks[chat_id][session_id];
         if (d.message_id <= 0) d.message_id = message_id;
+        m_hash_to_sid[sid_hint] = session_id;
     }
 
-    // Brief wait for GSMTC to process, then force refresh
-    std::this_thread::sleep_for(std::chrono::milliseconds(350));
-    refresh_session(chat_id, session_id, message_id);
+    // Wait for GSMTC to process (600ms), then do ONE authoritative refresh
+    std::this_thread::sleep_for(std::chrono::milliseconds(600));
+    do_edit(chat_id, session_id, message_id, true); // force=true, always updates
+
+    // Clear action flag
+    m_last_action_ns.store(0);
 }
 
-// ─── update_loop ─────────────────────────────────────────────────────────────
+// ─── update_loop — 5-second forced refresh ───────────────────────────────────
 
 void MediaDock::update_loop() {
     while (m_running) {
@@ -286,7 +349,7 @@ void MediaDock::update_loop() {
 
         Logger::instance().info("[MediaDock] 5s tick: " + std::to_string(snap.size()) + " docks");
         for (auto& [cid, sid, mid] : snap)
-            refresh_session(cid, sid, mid);
+            do_edit(cid, sid, mid, true); // force=true: always edit even if text seems same
     }
 }
 

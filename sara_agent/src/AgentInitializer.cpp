@@ -63,6 +63,9 @@ bool AgentInitializer::initialize(int argc, char* argv[]) {
     // Initialize Media Session Service (GSMTC)
     sara::media::MediaService::instance().init();
 
+    // Start the 2-second position refresh timer (WinRT-aware thread)
+    sara::media::MediaService::instance().start_refresh_timer();
+
     // Pre-warm MediaDock singleton so GSMTC event callbacks are registered
     (void)sara::MediaDock::instance();
 

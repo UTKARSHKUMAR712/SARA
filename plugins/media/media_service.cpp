@@ -6,6 +6,7 @@
 #include <chrono>
 #include <algorithm>
 #include <windows.h>
+#include <thread>
 
 using namespace winrt;
 using namespace Windows::Media::Control;
@@ -147,35 +148,49 @@ winrt::fire_and_forget MediaSessionWrapper::refresh_all() {
 
 void MediaSessionWrapper::refresh_playback_and_timeline() {
     try {
-        std::lock_guard<std::mutex> lock(m_mutex);
-
+        // 1. Make WinRT synchronous RPC calls OUTSIDE the mutex!
+        // These can occasionally block if the target app is hung.
         auto playback = m_session.GetPlaybackInfo();
-        if (playback) {
-            switch (playback.PlaybackStatus()) {
-                case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Playing:  m_info.playback_status = "Playing";  break;
-                case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Paused:   m_info.playback_status = "Paused";   break;
-                case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Stopped:  m_info.playback_status = "Stopped";  break;
-                case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Closed:   m_info.playback_status = "Closed";   break;
-                default:                                                                m_info.playback_status = "Unknown";  break;
-            }
-            auto ctrl = playback.Controls();
-            m_info.capabilities.can_play     = ctrl.IsPlayEnabled();
-            m_info.capabilities.can_pause    = ctrl.IsPauseEnabled();
-            m_info.capabilities.can_next     = ctrl.IsNextEnabled();
-            m_info.capabilities.can_previous = ctrl.IsPreviousEnabled();
-        }
-
         auto timeline = m_session.GetTimelineProperties();
-        if (timeline) {
-            m_info.position_ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeline.Position()).count();
-            m_info.duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeline.EndTime()).count();
-            // LastUpdatedTime is a Windows::Foundation::DateTime (100-ns ticks from 1601)
-            auto lut = timeline.LastUpdatedTime().time_since_epoch().count(); // 100ns ticks
-            m_info.last_updated_time_ms = lut / 10000; // convert to ms
+
+        std::function<void(const MediaSessionInfo&)> cb;
+        MediaSessionInfo info_copy;
+
+        // 2. Lock briefly just to update and copy m_info
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+
+            if (playback) {
+                switch (playback.PlaybackStatus()) {
+                    case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Playing:  m_info.playback_status = "Playing";  break;
+                    case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Paused:   m_info.playback_status = "Paused";   break;
+                    case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Stopped:  m_info.playback_status = "Stopped";  break;
+                    case GlobalSystemMediaTransportControlsSessionPlaybackStatus::Closed:   m_info.playback_status = "Closed";   break;
+                    default:                                                                m_info.playback_status = "Unknown";  break;
+                }
+                auto ctrl = playback.Controls();
+                m_info.capabilities.can_play     = ctrl.IsPlayEnabled();
+                m_info.capabilities.can_pause    = ctrl.IsPauseEnabled();
+                m_info.capabilities.can_next     = ctrl.IsNextEnabled();
+                m_info.capabilities.can_previous = ctrl.IsPreviousEnabled();
+            }
+
+            if (timeline) {
+                m_info.position_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    timeline.Position()).count();
+                m_info.duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    timeline.EndTime()).count();
+                auto now_unix_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count();
+                m_info.last_updated_time_ms = now_unix_ms + 11644473600000LL;
+            }
+
+            cb = m_callback;
+            info_copy = m_info;
         }
 
-        auto cb = m_callback;
-        if (cb) cb(m_info);
+        // 3. Invoke callback outside lock
+        if (cb) cb(info_copy);
     } catch (...) {}
 }
 
@@ -340,6 +355,29 @@ std::vector<MediaSessionInfo> MediaService::get_all_sessions() {
 void MediaService::set_global_update_callback(std::function<void(const MediaSessionInfo&)> cb) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_global_callback = std::move(cb);
+}
+
+void MediaService::start_refresh_timer() {
+    // Dedicated thread that initializes a WinRT apartment so it can
+    // call GetTimelineProperties / GetPlaybackInfo every 2 seconds.
+    // This is the ONLY place we call WinRT from a non-event-thread.
+    std::thread([this]() {
+        winrt::init_apartment(); // join MTA so WinRT calls work from this thread
+        while (true) {
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+
+            // Snapshot session list under lock, then work outside lock
+            std::vector<std::shared_ptr<MediaSessionWrapper>> wrappers;
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                for (auto& [id, w] : m_sessions) wrappers.push_back(w);
+            }
+
+            for (auto& w : wrappers) {
+                w->refresh_playback_and_timeline();
+            }
+        }
+    }).detach();
 }
 
 void MediaService::play(const std::string& session_id) {

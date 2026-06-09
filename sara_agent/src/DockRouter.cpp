@@ -7,6 +7,7 @@
 #include "../include/Logger.h"
 #include "../../plugins/spotify/spotify_plugin.hpp"
 #include <thread>
+#include <winrt/Windows.Foundation.h>
 
 extern sara::TelegramGateway g_telegram;
 
@@ -98,6 +99,7 @@ bool DockRouter::handle_callback(const std::string& chat_id, const std::string& 
         }
         Logger::instance().info("[DockRouter] dock_media action=" + media_action + " session=" + session_id);
         std::thread([=]() {
+            winrt::init_apartment(); // WinRT controls need apartment
             MediaDock::instance().handle_action(chat_id, media_action, callback_query_id, message_id, session_id);
         }).detach();
         return true;

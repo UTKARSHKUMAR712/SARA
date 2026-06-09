@@ -38,9 +38,11 @@ public:
     void next();
     void previous();
 
+    // Called by MediaService's refresh timer thread (must be public)
+    void refresh_playback_and_timeline();
+
 private:
     winrt::fire_and_forget refresh_all();
-    void                   refresh_playback_and_timeline();
 
     winrt::fire_and_forget extract_thumbnail(
         winrt::Windows::Storage::Streams::IRandomAccessStreamReference thumbnail_ref,
@@ -77,6 +79,9 @@ public:
     void toggle_play_pause(const std::string& session_id = "");
     void next           (const std::string& session_id = "");
     void previous       (const std::string& session_id = "");
+
+    // Start a dedicated refresh thread (call once after init())
+    void start_refresh_timer();
 
     void set_global_update_callback(std::function<void(const MediaSessionInfo&)> callback);
 
