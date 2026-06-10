@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SARA Web Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css?v=9">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-robot"></i>
+                    <span>SARA LAN</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-item">
+                    <i class="fa-solid fa-message"></i>
+                    <span>Chat</span>
+                </a>
+                <a href="/dashboard" class="nav-item active">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="dot" id="ws-status-dot"></span>
+                    <span id="ws-status-text">Disconnected</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Dashboard Area -->
+        <main class="dashboard-area">
+            <header class="dash-header">
+                <button class="mobile-menu-btn" aria-label="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="dash-title">
+                    <h2>Dashboard</h2>
+                    <p>System Overview</p>
+                </div>
+            </header>
+
+            <div class="dashboard-scroll">
+                <!-- ====== LEFT / MAIN COLUMN ====== -->
+                <div class="col-main">
+
+                    <!-- Media Widgets (horizontal swipe on mobile) -->
+                    <div id="media-widgets-container" class="media-column">
+                        <!-- placeholder -->
+                        <div class="widget" id="dash-media-default">
+                            <div class="widget-header">
+                                <i class="fa-solid fa-music"></i> Media
+                            </div>
+                            <div class="media-content">
+                                <div class="media-info">
+                                    <div class="media-track muted">Waiting for media...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Controls -->
+                    <div class="widget" id="dash-quick">
+                        <div class="widget-header">
+                            <i class="fa-solid fa-sliders"></i> Quick Controls
+                        </div>
+                        <div class="sliders-wrapper">
+                            <div class="slider-row">
+                                <i class="fa-solid fa-volume-high slider-icon"></i>
+                                <input type="range" id="dash-vol-slider" min="0" max="100" value="50">
+                            </div>
+                            <div class="slider-row">
+                                <i class="fa-solid fa-sun slider-icon"></i>
+                                <input type="range" id="dash-bright-slider" min="0" max="100" value="50">
+                            </div>
+                        </div>
+                        <div class="quick-grid">
+                            <button class="quick-btn" onclick="sendCommand('/lock')"><i class="fa-solid fa-lock"></i> Lock PC</button>
+                            <button class="quick-btn" onclick="sendCommand('/sleep')"><i class="fa-solid fa-moon"></i> Sleep</button>
+                            <button class="quick-btn" onclick="sendCommand('mute volume')"><i class="fa-solid fa-volume-xmark"></i> Mute</button>
+                            <button class="quick-btn" onclick="sendCommand('/monitor')"><i class="fa-solid fa-desktop"></i> Monitor</button>
+                            <button class="quick-btn danger" onclick="if(confirm('Shutdown PC?')) sendCommand('/shutdown')"><i class="fa-solid fa-power-off"></i> Shutdown PC</button>
+                            <button class="quick-btn danger" onclick="if(confirm('Restart PC?')) sendCommand('/restart')"><i class="fa-solid fa-rotate-right"></i> Restart PC</button>
+                            <button class="quick-btn danger" onclick="if(confirm('Shutdown SARA completely?')) sendCommand('/sarashutdown')"><i class="fa-solid fa-robot"></i> Shutdown SARA</button>
+                            <button class="quick-btn danger" onclick="if(confirm('Restart SARA agent?')) sendCommand('/sararestart')"><i class="fa-solid fa-arrows-rotate"></i> Restart SARA</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ====== RIGHT / SIDE COLUMN ====== -->
+                <div class="col-side">
+
+                    <!-- System Status -->
+                    <div class="widget" id="dash-system">
+                        <div class="widget-header">
+                            <i class="fa-solid fa-microchip"></i> System Status
+                        </div>
+                        <div class="system-stats">
+                            <div class="stat-row">
+                                <span class="stat-label">CPU</span>
+                                <div class="progress-bar"><div class="progress-fill" id="dash-cpu-fill" style="width:0%"></div></div>
+                                <span class="stat-val" id="dash-cpu-val">0%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">RAM</span>
+                                <div class="progress-bar"><div class="progress-fill" id="dash-ram-fill" style="width:0%"></div></div>
+                                <span class="stat-val" id="dash-ram-val">0%</span>
+                            </div>
+                        </div>
+                        <div class="top-process" id="dash-top-process">⚠️ Top Process: -</div>
+                        <button class="clean-ram-btn" onclick="sendCommand('/cleanram')">
+                            <i class="fa-solid fa-broom"></i> Clean RAM
+                        </button>
+                        <div class="widget-controls" id="dash-system-controls"></div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Image Modal -->
+    <div id="image-modal" class="modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modal-img">
+        <div id="modal-caption"></div>
+    </div>
+
+    <script src="dashboard.js?v=4"></script>
+</body>
+</html>

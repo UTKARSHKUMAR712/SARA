@@ -38,11 +38,26 @@ void NativeCommandRouter::execute_and_reply(const std::string& chat_id, const st
                     return;
                 }
                 std::string msg = res.message;
-                if (!res.data.empty() && res.data.is_object()) {
+                if (!res.data.empty()) {
                     std::string pretty_data;
-                    for (auto& el : res.data.items()) {
-                        std::string val = el.value().is_string() ? el.value().get<std::string>() : el.value().dump();
-                        pretty_data += "• **" + el.key() + "**: " + val + "\n";
+                    if (res.data.is_object()) {
+                        for (auto& el : res.data.items()) {
+                            std::string val = el.value().is_string() ? el.value().get<std::string>() : el.value().dump();
+                            pretty_data += "• **" + el.key() + "**: " + val + "\n";
+                        }
+                    } else if (res.data.is_array()) {
+                        for (auto& el : res.data) {
+                            if (el.is_object()) {
+                                for (auto& prop : el.items()) {
+                                    std::string val = prop.value().is_string() ? prop.value().get<std::string>() : prop.value().dump();
+                                    pretty_data += "**" + prop.key() + "**: " + val + "  ";
+                                }
+                                pretty_data += "\n";
+                            } else {
+                                std::string val = el.is_string() ? el.get<std::string>() : el.dump();
+                                pretty_data += "• " + val + "\n";
+                            }
+                        }
                     }
                     if (!pretty_data.empty()) {
                         msg += "\n\n" + pretty_data;
@@ -143,7 +158,7 @@ bool NativeCommandRouter::handle(const std::string& chat_id, const std::string& 
                                 "🔆 **Brightness**: /bright[0-100]\n"
                                 "📸 **Screenshot**: /ss0, /ss1, /ssw0, /ssm1\n"
                                 "📷 **Camera**: /cam0, /cam1, /camv0, /camoff\n"
-                                "💻 **System**: /lock, /sleep, /shutdown, /restart, /logoff, /desktop, /monitoroff, /screensaver\n"
+                                "💻 **System**: /lock, /sleep, /shutdown, /restart, /logoff, /desktop, /monitoroff, /screensaver, /cleanram\n"
                                 "🔄 **Restart**: /sararestart (Restart SARA and Cloudflare completely)\n"
                                 "📊 **Monitor**: /cpu, /ram, /gpu, /bat, /disk, /temp, /uptime, /idle\n"
                                 "🌐 **Network**: /wifi0, /wifi1, /bt0, /bt1, /ip, /pubip, /net, /ping\n"
@@ -222,6 +237,7 @@ bool NativeCommandRouter::handle_system(const std::string& chat_id, const std::s
     if (text == "/desktop") { execute_and_reply(chat_id, "show_desktop", {}, true); return true; }
     if (text == "/monitoroff") { execute_and_reply(chat_id, "monitor_off", {}, true); return true; }
     if (text == "/screensaver") { execute_and_reply(chat_id, "start_screensaver", {}, true); return true; }
+    if (text == "/cleanram" || text == "/cleanpc") { execute_and_reply(chat_id, "clean_memory", {}, true); return true; }
     return false;
 }
 

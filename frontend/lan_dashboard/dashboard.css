@@ -1,0 +1,603 @@
+/* ============================================================
+   SARA Dashboard CSS — Mobile First
+   ============================================================ */
+
+/* --- Variables --- */
+:root {
+    --bg:          #0d0f14;
+    --bg-panel:    #14161c;
+    --bg-widget:   #1a1d26;
+    --border:      rgba(255,255,255,0.07);
+    --text:        #e2e8f0;
+    --muted:       #64748b;
+    --accent:      #3b82f6;
+    --accent-glow: rgba(59,130,246,0.18);
+    --green:       #10b981;
+    --danger:      #ef4444;
+    --danger-glow: rgba(239,68,68,0.18);
+    --spotify:     #1db954;
+    --radius:      14px;
+    --radius-sm:   8px;
+    --shadow:      0 4px 24px rgba(0,0,0,0.35);
+}
+
+/* --- Reset --- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+
+.app-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 200;
+    transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+}
+
+.sidebar-header {
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+.logo i { color: var(--accent); font-size: 1.1rem; }
+
+.sidebar-nav {
+    flex: 1;
+    padding: 10px 0;
+    overflow-y: auto;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 18px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-right: 3px solid transparent;
+    transition: all 0.18s;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.nav-item.active { color: var(--accent); background: var(--accent-glow); border-right-color: var(--accent); }
+
+.sidebar-footer {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+.dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--danger);
+    box-shadow: 0 0 6px var(--danger);
+    flex-shrink: 0;
+}
+.dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+/* Overlay for mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 150;
+}
+
+/* --- Main Area --- */
+.dashboard-area {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* --- Header --- */
+.dash-header {
+    height: 58px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    background: rgba(20,22,28,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+}
+
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.15rem;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    line-height: 1;
+}
+.mobile-menu-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+.dash-title h2 { font-size: 1rem; font-weight: 700; }
+.dash-title p  { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+
+/* --- Scroll wrapper --- */
+.dashboard-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    align-items: start;
+    gap: 16px;
+}
+
+/* ============================================================
+   COLUMNS
+   ============================================================ */
+
+.col-main {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    /* NO overflow:hidden here - it clips the media content */
+    max-width: 100%;
+}
+
+.col-side {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+/* ============================================================
+   WIDGETS
+   ============================================================ */
+
+.widget {
+    background: var(--bg-widget);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+}
+
+.widget-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+.widget-header i { color: var(--accent); }
+
+/* ============================================================
+   MEDIA COLUMN — horizontal swipe on mobile
+   ============================================================ */
+
+.media-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Desktop: each media widget constrained to column width */
+.media-column .widget {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* Media content row */
+.media-content {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    min-width: 0;
+}
+
+.media-art {
+    width: 88px;
+    height: 88px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+}
+
+.media-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.media-track {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.media-track.muted { color: var(--muted); font-weight: 400; }
+.media-artist {
+    font-size: 0.8rem;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.media-album {
+    font-size: 0.75rem;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.media-status {
+    font-size: 0.78rem;
+    color: var(--accent);
+    margin-top: 5px;
+    font-family: monospace;
+}
+
+/* Media controls keyboard */
+.inline-keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 10px;
+}
+.keyboard-row {
+    display: flex;
+    gap: 5px;
+}
+.keyboard-btn {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 7px 4px;
+    border-radius: 7px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.keyboard-btn:hover { background: var(--accent-glow); border-color: rgba(59,130,246,0.3); }
+.keyboard-btn:active { transform: scale(0.97); }
+
+/* --- Dock Bar (Media / Spotify buttons) --- */
+.dock-bar {
+    display: flex;
+    gap: 8px;
+}
+
+.dock-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-widget);
+    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+    min-width: 0;
+}
+.dock-btn:hover { background: var(--accent-glow); border-color: rgba(59,130,246,0.3); color: #fff; }
+.dock-btn:active { transform: scale(0.97); }
+.dock-btn.spotify { color: var(--spotify); }
+.dock-btn.spotify:hover { background: rgba(29,185,84,0.15); border-color: rgba(29,185,84,0.3); }
+
+/* ============================================================
+   SYSTEM STATUS
+   ============================================================ */
+
+.system-stats { display: flex; flex-direction: column; gap: 10px; }
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+}
+.stat-label { width: 36px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
+.stat-val   { min-width: 70px; text-align: right; font-weight: 600; font-size: 0.78rem; flex-shrink: 0; white-space: nowrap; }
+.progress-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #60a5fa);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+.top-process {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.clean-ram-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.18s;
+}
+.clean-ram-btn:hover { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.3); color: #fff; }
+
+.widget-controls { margin-top: 6px; }
+.widget-controls .inline-keyboard { margin-top: 0; }
+
+/* ============================================================
+   QUICK CONTROLS
+   ============================================================ */
+
+.quick-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+.quick-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 9px 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+    white-space: nowrap;
+}
+.quick-btn:hover { background: var(--accent-glow); border-color: rgba(59,130,246,0.3); color: #fff; }
+.quick-btn:active { transform: scale(0.96); }
+.quick-btn.danger { color: var(--danger); border-color: rgba(239,68,68,0.2); }
+.quick-btn.danger:hover { background: var(--danger-glow); border-color: rgba(239,68,68,0.4); color: var(--danger); }
+
+/* Sliders */
+.sliders-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+.slider-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.slider-icon { color: var(--muted); font-size: 0.85rem; width: 16px; flex-shrink: 0; }
+.slider-row input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.1);
+    outline: none;
+    cursor: pointer;
+}
+.slider-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 6px var(--accent-glow);
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+.modal.open { display: flex; }
+.modal-content {
+    max-width: 90vw;
+    max-height: 80vh;
+    border-radius: 10px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.close-modal {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 2rem;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    line-height: 1;
+}
+.close-modal:hover { color: #fff; }
+
+/* ============================================================
+   MOBILE  (≤ 768px)  — primary target
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+    /* Sidebar slides off-screen */
+    .sidebar {
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        transform: translateX(-100%);
+        width: 220px;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay.open { display: block; }
+
+    .mobile-menu-btn { display: flex; }
+
+    /* Stack columns vertically */
+    .dashboard-scroll {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+        padding-bottom: 32px;
+    }
+
+    /* Media column becomes horizontal scroll carousel on mobile */
+    .media-column {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: visible;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        gap: 10px;
+        padding-bottom: 8px;
+        /* Must NOT have max-width:100% here - needs to scroll freely */
+        width: 100%;
+        max-width: none;
+    }
+
+    .media-column .widget {
+        /* Exactly one card width = screen minus padding (12px each side) */
+        flex: 0 0 calc(100vw - 60px);
+        width: calc(100vw - 60px);
+        max-width: calc(100vw - 60px);
+        min-width: 0;
+        scroll-snap-align: start;
+        overflow: hidden;
+    }
+
+    /* Dock bar: compact on mobile */
+    .dock-bar {
+        gap: 6px;
+    }
+    .dock-btn {
+        font-size: 0.78rem;
+        padding: 9px 8px;
+    }
+
+    /* Quick grid: 2 cols on mobile */
+    .quick-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+    .quick-btn { padding: 8px 4px; font-size: 0.74rem; }
+
+    /* Reduce widget padding on mobile */
+    .widget { padding: 13px; }
+    .widget-header { font-size: 0.85rem; margin-bottom: 11px; padding-bottom: 8px; }
+}
+
+/* ============================================================
+   LARGE DESKTOP  (≥ 1200px)
+   ============================================================ */
+
+@media (min-width: 1200px) {
+    .dashboard-scroll {
+        grid-template-columns: 1fr 340px;
+        padding: 20px;
+        gap: 20px;
+    }
+}

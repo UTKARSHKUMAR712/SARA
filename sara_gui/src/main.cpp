@@ -13,6 +13,7 @@
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
+#include "../../shared/qrcodegen/qrcodegen.h"
 
 using json = nlohmann::json;
 using namespace sara;
@@ -418,6 +419,68 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int show) {
                             ImGui::PopID();
                         }
                         ImGui::EndTable();
+                    }
+                }
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("LAN Dashboard")) {
+                ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Local Network Web Dashboard");
+                ImGui::Spacing();
+                
+                static bool lan_enabled = false;
+                static std::string lan_url;
+                
+                if (ImGui::Checkbox("Enable LAN Dashboard", &lan_enabled)) {
+                    if (lan_enabled) {
+                        auto rr = g_ipc.send_command("start_lan_dashboard");
+                        if (rr.contains("payload") && rr["payload"].contains("url")) {
+                            lan_url = rr["payload"]["url"].get<std::string>();
+                        } else {
+                            lan_enabled = false;
+                            log("Failed to start LAN dashboard");
+                        }
+                    } else {
+                        g_ipc.send_command("stop_lan_dashboard");
+                        lan_url = "";
+                    }
+                }
+                
+                if (lan_enabled && !lan_url.empty()) {
+                    ImGui::Spacing();
+                    ImGui::Text("Dashboard URL: ");
+                    ImGui::SameLine();
+                    ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "%s", lan_url.c_str());
+                    ImGui::SameLine();
+                    if (ImGui::Button("Open in Browser")) {
+                        ShellExecuteA(NULL, "open", lan_url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                    }
+                    ImGui::Spacing();
+                    ImGui::Text("Scan to open:");
+                    
+                    uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
+                    uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
+                    if (qrcodegen_encodeText(lan_url.c_str(), tempBuffer, qrcode, qrcodegen_Ecc_LOW,
+                        qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true)) {
+                        
+                        int size = qrcodegen_getSize(qrcode);
+                        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                        ImVec2 p = ImGui::GetCursorScreenPos();
+                        float scale = 4.0f;
+                        float padding = 4.0f * scale;
+                        
+                        draw_list->AddRectFilled(p, ImVec2(p.x + size * scale + 2*padding, p.y + size * scale + 2*padding), IM_COL32(255,255,255,255));
+                        
+                        for (int y = 0; y < size; y++) {
+                            for (int x = 0; x < size; x++) {
+                                if (qrcodegen_getModule(qrcode, x, y)) {
+                                    ImVec2 p0 = ImVec2(p.x + padding + x * scale, p.y + padding + y * scale);
+                                    ImVec2 p1 = ImVec2(p0.x + scale, p0.y + scale);
+                                    draw_list->AddRectFilled(p0, p1, IM_COL32(0, 0, 0, 255));
+                                }
+                            }
+                        }
+                        ImGui::Dummy(ImVec2(size * scale + 2*padding, size * scale + 2*padding));
                     }
                 }
                 ImGui::EndTabItem();

@@ -201,6 +201,10 @@ ActionResult WinAPIExecutor::execute(const std::string& action, const json& para
     if (action == "list_dir") {
         return list_dir(params.value("path", ""));
     }
+    if (action == "clean_memory") {
+        auto res = run_cmd("cd /d \"C:\\Users\\utkarsh_kumar\\Desktop\\sara\\Mem Reduct\" && memreduct.exe -clean:3 -exit", 30);
+        return {res.success, res.success ? "🧹 Memory cleaned successfully (Working Set + Standby Lists)!" : "❌ Failed to clean memory.", {}};
+    }
     if (action == "lock_pc") {
         return lock_pc();
     }
@@ -274,12 +278,20 @@ ActionResult WinAPIExecutor::close_process(const std::string& target, const json
 
     PROCESSENTRY32W pe = { sizeof(pe) };
     std::wstring wtarget(target.begin(), target.end());
+    std::transform(wtarget.begin(), wtarget.end(), wtarget.begin(), ::towlower);
     bool found = false;
     int killed = 0;
 
     if (Process32FirstW(snapshot, &pe)) {
         do {
-            if (_wcsicmp(pe.szExeFile, wtarget.c_str()) == 0) {
+            std::wstring wexe = pe.szExeFile;
+            std::transform(wexe.begin(), wexe.end(), wexe.begin(), ::towlower);
+            
+            bool match = false;
+            if (wexe == wtarget || wexe == wtarget + L".exe") match = true;
+            else if (wtarget.length() >= 4 && wexe.find(wtarget) != std::wstring::npos) match = true;
+
+            if (match) {
                 HANDLE proc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
                 if (proc) {
                     if (TerminateProcess(proc, 0)) {

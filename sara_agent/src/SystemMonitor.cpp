@@ -14,6 +14,9 @@ double SystemMonitor::get_cpu_usage() {
     static PDH_HQUERY query = nullptr;
     static PDH_HCOUNTER counter = nullptr;
     static bool init = false;
+    static std::mutex cpu_mutex;
+
+    std::lock_guard<std::mutex> lock(cpu_mutex);
 
     if (!init) {
         if (PdhOpenQueryA(nullptr, 0, &query) == ERROR_SUCCESS) {

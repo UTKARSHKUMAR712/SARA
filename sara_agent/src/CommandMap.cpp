@@ -120,24 +120,14 @@ MatchResult CommandMap::match(const std::string& text) const {
 
     std::string key = normalize(cleaned);
     
-    // 1. Regex (Highest Priority)
-    for (auto& e : regex_entries_) {
-        try {
-            std::regex re(e.pattern, std::regex_constants::icase);
-            if (std::regex_match(cleaned, re)) {
-                return {&e, {}};
-            }
-        } catch (...) {} // Ignore invalid regex
-    }
-
-    // 2. Exact
+    // 1. Exact
     {
         auto it = exact_entries_.find(key);
         if (it != exact_entries_.end())
             return {&it->second, {}};
     }
     
-    // 3. Prefix
+    // 2. Prefix
     for (auto& e : prefix_entries_) {
         std::string pat = normalize(e.pattern);
         if (key.compare(0, pat.size(), pat) == 0) {
@@ -145,6 +135,23 @@ MatchResult CommandMap::match(const std::string& text) const {
             while (!captured.empty() && captured[0] == ' ') captured.erase(0, 1);
             return {&e, captured};
         }
+    }
+
+    // 3. Regex
+    for (auto& e : regex_entries_) {
+        try {
+            std::regex re(e.pattern, std::regex_constants::icase);
+            std::smatch m;
+            if (std::regex_match(cleaned, m, re)) {
+                std::string captured = "";
+                if (m.size() > 1) {
+                    captured = m[1].str();
+                    while (!captured.empty() && captured[0] == ' ') captured.erase(0, 1);
+                    while (!captured.empty() && captured.back() == ' ') captured.pop_back();
+                }
+                return {&e, captured};
+            }
+        } catch (...) {} // Ignore invalid regex
     }
     
     // 4. Contains

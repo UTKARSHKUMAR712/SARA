@@ -1,135 +1,111 @@
 {
   "commands": [
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "lock my pc", "lock pc", "lock computer",
-        "lock workstation", "lock screen", "lock this pc",
-        "secure my pc", "lock my computer",
-        "lock the screen", "secure computer",
-        "lock desktop", "lock my workstation",
-        "lock windows", "lock it"
+        ".*(lock|secure).*(pc|computer|system|workstation|screen|desktop|windows).*"
       ],
       "action": "lock_pc",
       "params": {}
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "sleep pc", "suspend pc", "put pc to sleep",
-        "sleep computer", "go to sleep", "sleep mode",
-        "put computer to sleep", "sleep now",
-        "standby", "put to sleep", "hibernate",
-        "put pc to hibernate", "hibernate pc"
+        ".*(sleep|suspend|standby|hibernate).*(pc|computer|system|laptop).*",
+        ".*(put).*(pc|computer|system).*(sleep|hibernate).*"
       ],
       "action": "run_cmd",
       "params": { "command": "rundll32.exe powrprof.dll,SetSuspendState 0,1,0" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "shutdown pc", "turn off pc", "shutdown computer",
-        "turn off computer", "power off", "shut down",
-        "turn off my pc", "power down", "shutdown system",
-        "switch off pc", "power off pc", "shutdown now",
-        "turn off", "kill power"
-      ],
-      "action": "run_cmd",
-      "params": { "command": "shutdown /s /t 10" }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "shutdown pc now", "shutdown immediately",
-        "turn off pc now", "shutdown now no wait",
-        "emergency shutdown"
-      ],
-      "action": "run_cmd",
-      "params": { "command": "shutdown /s /t 0" }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "restart pc", "reboot pc", "restart computer",
-        "reboot computer", "restart my pc", "reboot system",
-        "restart now", "reboot now", "restart system",
-        "reboot my pc", "force restart", "restart windows"
-      ],
-      "action": "run_cmd",
-      "params": { "command": "shutdown /r /t 10" }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "restart pc now", "restart immediately",
-        "reboot now no wait", "force reboot",
-        "emergency restart"
-      ],
-      "action": "run_cmd",
-      "params": { "command": "shutdown /r /t 0" }
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "abort shutdown", "cancel shutdown", "stop shutdown",
-        "cancel restart", "abort restart", "stop restart",
-        "cancel power off", "don't shutdown",
-        "nevermind shutdown", "abort"
+        ".*(abort|cancel|stop|dont|nevermind).*(shutdown|restart|power off|reboot).*"
       ],
       "action": "run_cmd",
       "params": { "command": "shutdown /a" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "sign out", "log off", "log out", "sign off",
-        "signout", "logoff", "switch user",
-        "log off current user"
+        ".*(shutdown|turn off|power off|power down|shut down|switch off).*(pc|computer|system|laptop).*(now|immediately|fast|quick).*"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "shutdown /s /t 0" }
+    },
+    {
+      "type": "regex",
+      "phrases": [
+        ".*(shutdown|turn off|power off|power down|shut down|switch off).*(pc|computer|system|laptop|it).*"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "shutdown /s /t 10" }
+    },
+    {
+      "type": "regex",
+      "phrases": [
+        ".*(restart|reboot).*(pc|computer|system|laptop).*(now|immediately|fast|quick|force).*"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "shutdown /r /t 0" }
+    },
+    {
+      "type": "regex",
+      "phrases": [
+        ".*(restart|reboot).*(pc|computer|system|laptop|it).*"
+      ],
+      "action": "run_cmd",
+      "params": { "command": "shutdown /r /t 10" }
+    },
+    {
+      "type": "regex",
+      "phrases": [
+        ".*(sign out|log off|log out|sign off|signout|logoff|switch user).*"
       ],
       "action": "run_cmd",
       "params": { "command": "shutdown /l" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "restart in safe mode", "boot safe mode",
-        "safe mode restart"
+        ".*(safe mode).*(restart|boot).*",
+        ".*(restart|boot).*(safe mode).*"
       ],
       "action": "run_cmd",
       "params": { "command": "shutdown /r /o /t 10" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "turn on wifi", "enable wifi", "wifi on",
-        "turn wifi on"
+        ".*(turn on|enable|start).*(wifi|wi-fi|wireless).*",
+        ".*(wifi|wi-fi).*(on).*"
       ],
       "action": "run_cmd",
       "params": { "command": "powershell -Command \"(Get-NetAdapter -Name '*Wi-Fi*','*Wireless*').Name | ForEach-Object { Enable-NetAdapter -Name $_ -Confirm:$false }\"" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "turn off wifi", "disable wifi", "wifi off",
-        "turn wifi off"
+        ".*(turn off|disable|stop).*(wifi|wi-fi|wireless).*",
+        ".*(wifi|wi-fi).*(off).*"
       ],
       "action": "run_cmd",
       "params": { "command": "powershell -Command \"(Get-NetAdapter -Name '*Wi-Fi*','*Wireless*').Name | ForEach-Object { Disable-NetAdapter -Name $_ -Confirm:$false }\"" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "turn on bluetooth", "enable bluetooth",
-        "bluetooth on", "turn bluetooth on"
+        ".*(turn on|enable|start).*(bluetooth|bt).*",
+        ".*(bluetooth|bt).*(on).*"
       ],
       "action": "run_cmd",
       "params": { "command": "powershell -Command \"(Get-PnpDevice -FriendlyName '*bluetooth*' -Class 'Bluetooth').FriendlyName | ForEach-Object { Enable-PnpDevice -InstanceId (Get-PnpDevice -FriendlyName $_).InstanceId -Confirm:$false }\"" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "turn off bluetooth", "disable bluetooth",
-        "bluetooth off", "turn bluetooth off"
+        ".*(turn off|disable|stop).*(bluetooth|bt).*",
+        ".*(bluetooth|bt).*(off).*"
       ],
       "action": "run_cmd",
       "params": { "command": "powershell -Command \"(Get-PnpDevice -FriendlyName '*bluetooth*' -Class 'Bluetooth').FriendlyName | ForEach-Object { Disable-PnpDevice -InstanceId (Get-PnpDevice -FriendlyName $_).InstanceId -Confirm:$false }\"" }

@@ -44,11 +44,6 @@ public:
 private:
     winrt::fire_and_forget refresh_all();
 
-    winrt::fire_and_forget extract_thumbnail(
-        winrt::Windows::Storage::Streams::IRandomAccessStreamReference thumbnail_ref,
-        std::string title,
-        std::string artist);
-
     winrt::Windows::Media::Control::GlobalSystemMediaTransportControlsSession m_session{nullptr};
 
     winrt::event_token m_properties_token;

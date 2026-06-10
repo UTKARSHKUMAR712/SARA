@@ -115,12 +115,15 @@ void MonitorDock::handle_action(const std::string& chat_id, const std::string& a
     }
     else if (action == "auto_refresh") {
         g_telegram.answer_callback_query(callback_query_id, "Auto-Refresh Started");
-        // Loop 4 times, every 15s (1 minute total)
-        for (int i = 0; i < 4; ++i) {
-            std::this_thread::sleep_for(std::chrono::seconds(15));
-            if (!g_telegram.is_running()) break;
-            g_telegram.edit_message_text(chat_id, message_id, generate_text(), get_monitor_keyboard());
-        }
+        // Spawn a thread to avoid blocking the message handler
+        std::thread([chat_id, message_id]() {
+            // Loop 4 times, every 15s (1 minute total)
+            for (int i = 0; i < 4; ++i) {
+                std::this_thread::sleep_for(std::chrono::seconds(15));
+                if (!g_telegram.is_running()) break;
+                g_telegram.edit_message_text(chat_id, message_id, generate_text(), get_monitor_keyboard());
+            }
+        }).detach();
     }
     else if (action == "kill_top") {
         if (g_top_pid > 0 && g_top_pid != GetCurrentProcessId()) {

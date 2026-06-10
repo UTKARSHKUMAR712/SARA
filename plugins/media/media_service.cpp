@@ -132,15 +132,6 @@ winrt::fire_and_forget MediaSessionWrapper::refresh_all() {
             self->m_info.genres.clear();
             for (auto const& g : props.Genres())
                 self->m_info.genres.push_back(to_utf8(g));
-
-            // Snapshot for thumbnail (must read outside lock)
-            std::string title  = self->m_info.title;
-            std::string artist = self->m_info.artist;
-            auto thumbnail_ref = props.Thumbnail();
-            lock.unlock();
-
-            // Extract thumbnail asynchronously
-            self->extract_thumbnail(thumbnail_ref, title, artist);
         }
         self->refresh_playback_and_timeline();
     } catch (...) {}
@@ -180,9 +171,8 @@ void MediaSessionWrapper::refresh_playback_and_timeline() {
                     timeline.Position()).count();
                 m_info.duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                     timeline.EndTime()).count();
-                auto now_unix_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::system_clock::now().time_since_epoch()).count();
-                m_info.last_updated_time_ms = now_unix_ms + 11644473600000LL;
+                m_info.last_updated_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    timeline.LastUpdatedTime().time_since_epoch()).count();
             }
 
             cb = m_callback;
@@ -191,51 +181,6 @@ void MediaSessionWrapper::refresh_playback_and_timeline() {
 
         // 3. Invoke callback outside lock
         if (cb) cb(info_copy);
-    } catch (...) {}
-}
-
-winrt::fire_and_forget MediaSessionWrapper::extract_thumbnail(
-    winrt::Windows::Storage::Streams::IRandomAccessStreamReference thumbnail_ref,
-    std::string title,
-    std::string artist)
-{
-    auto self = shared_from_this();
-    try {
-        if (!thumbnail_ref) co_return;
-
-        std::string key  = make_cache_key(title, artist);
-        std::string dir  = "cache/media_thumbnails";
-        std::string path = dir + "/" + key + ".jpg";
-
-        // Check cache first
-        if (std::filesystem::exists(path)) {
-            std::lock_guard<std::mutex> lock(self->m_mutex);
-            self->m_info.thumbnail_available = true;
-            self->m_info.thumbnail_id   = key;
-            self->m_info.thumbnail_path = path;
-            co_return;
-        }
-
-        // Open stream asynchronously
-        auto stream = co_await thumbnail_ref.OpenReadAsync();
-        uint64_t size = stream.Size();
-        if (size == 0) co_return;
-
-        auto reader = Windows::Storage::Streams::DataReader(stream);
-        co_await reader.LoadAsync((uint32_t)size);
-
-        std::vector<uint8_t> buf(size);
-        reader.ReadBytes(winrt::array_view<uint8_t>(buf.data(), buf.data() + size));
-
-        std::filesystem::create_directories(dir);
-        std::ofstream ofs(path, std::ios::binary);
-        if (ofs) {
-            ofs.write((char*)buf.data(), buf.size());
-            std::lock_guard<std::mutex> lock(self->m_mutex);
-            self->m_info.thumbnail_available = true;
-            self->m_info.thumbnail_id   = key;
-            self->m_info.thumbnail_path = path;
-        }
     } catch (...) {}
 }
 

@@ -1,5 +1,6 @@
 #include "../include/TelegramGateway.h"
 #include "../include/Logger.h"
+#include "../include/WebSocketServer.h"
 #include <windows.h>
 #include <winhttp.h>
 #include <sstream>
@@ -8,6 +9,9 @@
 
 #include <thread>
 #pragma comment(lib, "winhttp.lib")
+
+extern ::sara::WebSocketServer g_ws_server;
+extern std::string resolve_path(const std::string& path);
 
 namespace sara {
 
@@ -274,7 +278,13 @@ json TelegramGateway::get_recent_messages(int count) {
     return arr;
 }
 
+
+
 int TelegramGateway::send_message(const std::string& chat_id, const std::string& text, const std::string& parse_mode) {
+    if (chat_id == "LAN") {
+        ::g_ws_server.broadcast({{"type", "chat_reply"}, {"text", text}});
+        return 1;
+    }
     json payload = {{"chat_id", chat_id}, {"text", text}};
     if (!parse_mode.empty()) {
         payload["parse_mode"] = parse_mode;
@@ -292,6 +302,10 @@ int TelegramGateway::send_message(const std::string& chat_id, const std::string&
 }
 
 bool TelegramGateway::send_inline_keyboard(const std::string& chat_id, const std::string& text, const json& inline_keyboard) {
+    if (chat_id == "LAN") {
+        ::g_ws_server.broadcast({{"type", "chat_reply"}, {"text", text}, {"keyboard", inline_keyboard}});
+        return true;
+    }
     json payload = {
         {"chat_id", chat_id},
         {"text", text},
@@ -306,6 +320,12 @@ bool TelegramGateway::send_inline_keyboard(const std::string& chat_id, const std
 }
 
 int TelegramGateway::send_with_keyboard(const std::string& chat_id, const std::string& text, const json& inline_keyboard) {
+    if (chat_id == "LAN") {
+        static int lan_msg_id_counter = 1000;
+        int msg_id = ++lan_msg_id_counter;
+        ::g_ws_server.broadcast({{"type", "chat_reply"}, {"text", text}, {"keyboard", inline_keyboard}, {"message_id", msg_id}});
+        return msg_id;
+    }
     json payload = {
         {"chat_id", chat_id},
         {"text", text},
@@ -325,6 +345,14 @@ int TelegramGateway::send_with_keyboard(const std::string& chat_id, const std::s
 
 
 bool TelegramGateway::edit_message_text(const std::string& chat_id, int message_id, const std::string& text, const json& inline_keyboard) {
+    if (chat_id == "LAN") {
+        json payload = {{"type", "chat_edit"}, {"message_id", message_id}, {"text", text}};
+        if (!inline_keyboard.is_null()) {
+            payload["keyboard"] = inline_keyboard;
+        }
+        ::g_ws_server.broadcast(payload);
+        return true;
+    }
     json payload = {
         {"chat_id", chat_id},
         {"message_id", message_id},
@@ -342,6 +370,12 @@ bool TelegramGateway::edit_message_text(const std::string& chat_id, int message_
 }
 
 bool TelegramGateway::answer_callback_query(const std::string& callback_query_id, const std::string& text, bool show_alert) {
+    if (callback_query_id.rfind("lan_cb_", 0) == 0) {
+        if (!text.empty()) {
+            ::g_ws_server.broadcast({{"type", "toast"}, {"text", text}});
+        }
+        return true;
+    }
     json payload = {
         {"callback_query_id", callback_query_id}
     };
@@ -360,6 +394,18 @@ bool TelegramGateway::answer_callback_query(const std::string& callback_query_id
 bool TelegramGateway::send_photo(const std::string& chat_id,
     const std::string& file_path, const std::string& caption)
 {
+    if (chat_id == "LAN") {
+        std::string filename = file_path;
+        auto pos = filename.find_last_of("\\/");
+        if (pos != std::string::npos) filename = filename.substr(pos + 1);
+        std::string dest_dir = ::resolve_path("frontend\\lan_dashboard\\images");
+        CreateDirectoryA(dest_dir.c_str(), nullptr);
+        std::string dest_path = dest_dir + "\\" + filename;
+        CopyFileA(file_path.c_str(), dest_path.c_str(), FALSE);
+        ::g_ws_server.broadcast({{"type", "chat_reply"}, {"text", caption}, {"photo", "/images/" + filename}});
+        return true;
+    }
+
     HANDLE hfile = CreateFileA(file_path.c_str(), GENERIC_READ,
         FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hfile == INVALID_HANDLE_VALUE) {

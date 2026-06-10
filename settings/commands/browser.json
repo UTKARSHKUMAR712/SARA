@@ -17,162 +17,13 @@
       "type": "prefix",
       "phrases": [
         "search google for ", "search for ",
-        "google ", "look up ", "search the web for ",
+        "google ", "search the web for ",
         "google search ", "find on google ",
-        "search ", "find ", "what is ", "who is ",
-        "tell me about ", "explain ", "how to ",
-        "what are ", "where is ",
-        
-        "what was ", "what were ", "what will ", "what would ",
-        "what does ", "what did ", "what do ", "what can ", "what should ",
-        "what's ", "whats ",
-
-        "who are ", "who was ", "who were ", "who made ", "who created ",
-        "who invented ", "who founded ", "who built ", "who developed ", "who discovered ",
-        "who wrote ", "who directed ", "who owns ", "who runs ", "who leads ",
-        "who is the owner of ", "who is the ceo of ", "who is the founder of ",
-        "who is the president of ", "who is the prime minister of ", "who is the pm of ",
-        "who is the cm of ", "who is the minister of ", "who is the head of ",
-        "who is the captain of ", "who is the coach of ", "who played ",
-        "who sang ", "who composed ", "who painted ", "who designed ",
-        "who starred in ", "who acted in ",
-
-        "where are ", "where was ", "where were ", "where can i find ",
-        "where to find ", "where to get ", "where do i find ", "where do i get ",
-        "where is the ", "where can i buy ", "where to buy ", "where to download ",
-
-        "when is ", "when are ", "when was ", "when were ", "when did ", "when will ",
-        "when does ", "when do ", "when can ", "when is the ",
-
-        "how do i ", "how does ", "how did ", "how can i ", "how can ",
-        "how much ", "how many ", "how old ", "how big ", "how tall ", "how long ",
-        "how far ", "how fast ", "how deep ", "how high ", "how wide ",
-        "how much does ", "how much is ", "how much are ", "how much was ",
-        "how many people ", "how many countries ", "how many times ",
-        "how is ", "how are ", "how was ", "how were ",
-
-        "why is ", "why are ", "why was ", "why were ", "why does ", "why did ",
-        "why do ", "why can ", "why would ", "why should ",
-
-        "which is ", "which are ", "which was ", "which were ", "which one ",
-        "which is the best ", "which is better ", "which is the biggest ",
-        "which is the largest ", "which is the fastest ", "which is the cheapest ",
-        "which is the most ",
-
-        "tell me more about ", "tell me the ", "tell me what ",
-        "tell me how ", "tell me why ", "tell me who ", "tell me when ", "tell me where ",
-
-        "can you find ", "can you search ", "can you look up ", "can you tell me ",
-        "can you tell me about ", "can you explain ", "can you describe ",
-        "can you check ", "can you get me info on ",
-
-        "explain to me ", "explain what is ", "explain how ",
-        "explain why ", "please explain ",
-
-        "describe ", "describe what ", "describe how ",
-
-        "define ", "definition of ", "meaning of ", "meaning of the word ",
-        "what does it mean ", "what does it mean by ", "what does it mean when ",
-
-        "tell me the meaning of ", "give me the definition of ",
-
-        "find me ", "find out ", "find out about ", "find out what ",
-        "find out who ", "find out when ", "find out where ", "find out how ",
-        "find information on ", "find information about ", "find details on ",
-        "find details about ", "find facts about ", "find facts on ",
-        "find the answer to ",
-
-        "get ", "get me ", "get info on ", "get info about ", "get information on ",
-        "get information about ", "get details on ", "get details about ",
-        "get me info on ", "get me info about ", "get me details on ",
-        "get me the answer to ",
-
-        "show me ", "show me information about ", "show me info on ",
-        "show me details about ", "show me facts about ", "show me results for ",
-        "show me what ", "show me how ", "show me who ", "show me where ",
-
-        "give me ", "give me info on ", "give me info about ", "give me information on ",
-        "give me information about ", "give me details on ", "give me details about ",
-        "give me facts about ", "give me a summary of ", "give me an overview of ",
-
-        "look for ", "lookup ", "look into ",
-
-        "search about ", "search on ", "search regarding ",
-        "look up on google ", "search the internet for ",
-        "search online for ", "search web for ",
-
-        "information about ", "info on ", "info about ", "information on ",
-        "details about ", "details on ", "facts about ", "facts on ",
-
-        "latest news on ", "latest news about ", "latest on ", "latest about ",
-        "recent news on ", "recent news about ", "recent updates on ",
-        "what's the latest on ", "whats the latest on ",
-        "what's new about ", "whats new about ",
-        "news about ", "news on ", "news regarding ",
-        "current news on ", "today's news on ",
-        "breaking news on ", "breaking news about ",
-
-        "tell me the news about ", "what happened with ", "what happened to ",
-        "what is happening with ", "what is happening in ", "what is going on with ",
-
-        "history of ", "origin of ", "background of ", "overview of ",
-        "summary of ", "introduction to ", "basics of ", "what is the history of ",
-        "when was invented ", "when was discovered ", "when was created ",
-
-        "price of ", "cost of ", "how much does cost ",
-        "price for ", "cost for ", "rate of ",
-        "current price of ", "today's price of ", "market price of ",
-
-        "capital of ", "what is the capital of ", "currency of ", "flag of ",
-        "language of ", "population of ", "area of ", "size of ",
-        "gdp of ", "president of ", "prime minister of ", "government of ",
-
-        "age of ", "how old is ", "date of birth of ", "birthday of ",
-        "when was born ", "when did die ", "when did pass away ",
-
-        "lyrics of ", "lyrics for ", "song lyrics of ", "who wrote the song ",
-        "who composed ", "release date of ", "when was released ",
-        "cast of ", "director of ", "producer of ", "rating of ",
-        "plot of ", "story of ", "synopsis of ",
-
-        "recipe for ", "how to make ", "how to cook ", "how to prepare ",
-        "ingredients for ", "steps to make ", "method to prepare ",
-
-        "difference between ", "compare ", "versus ", "vs ",
-        "what is the difference between ", "what is better ",
-
-        "tutorial on ", "tutorial for ", "guide for ", "guide to ",
-        "beginner guide to ", "how to learn ", "steps to ",
-        "tips for ", "tips on ", "tricks for ", "best way to ",
-
-        "top ", "best ", "top 10 ", "best 10 ", "best places for ",
-        "best apps for ", "best tools for ", "best software for ",
-        "top movies of ", "best movies of ",
-
-        "review of ", "reviews of ", "review for ",
-        "is good ", "is worth it ", "should i buy ",
-
-        "download link for ", "where to download ",
-        "official website of ", "website of ",
-
-        "phone number of ", "contact of ", "address of ",
-        "headquarters of ", "office of ", "location of ",
-
-        "about ", "regarding ", "concerning ",
-
-        "i want to know about ", "i want to know more about ",
-        "i want to learn about ", "i want to find out about ",
-        "i need info on ", "i need information about ",
-        "i need help understanding ", "help me understand ",
-        "help me find ", "help me look up ", "help me search ",
-
-        "do you know about ", "do you know what ", "do you know who ",
-        "do you know where ", "do you know when ", "do you know how ",
-
-        "quick search for ", "quick look up ", "quick info on ",
-
-        "sara search ", "sara find ", "sara look up ", "sara tell me about ",
-        "sara what is ", "sara who is ", "sara explain "
+        "search ", "search online for ",
+        "search web for ", "search about ",
+        "search on ", "search regarding ",
+        "lookup ", "look for ", "quick search for ",
+        "sara search "
       ],
       "action": "search_plugin",
       "params": {}
@@ -264,12 +115,9 @@
       "params": { "url": "https://drive.google.com" }
     },
     {
-      "type": "prefix",
+      "type": "regex",
       "phrases": [
-        "open website ", "open url ", "go to ",
-        "navigate to ", "open the website ",
-        "take me to ", "visit ", "browse to ",
-        "open site "
+        ".*(?:open|launch|go to|take me to|visit|browse to) (?:website |site |the website |url )?(.*)"
       ],
       "action": "open_url",
       "params": {}

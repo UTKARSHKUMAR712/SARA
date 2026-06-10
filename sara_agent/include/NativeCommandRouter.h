@@ -8,6 +8,8 @@ class NativeCommandRouter {
 public:
     // Returns true if the command was natively handled, false otherwise.
     static bool handle(const std::string& chat_id, const std::string& text);
+    // Helpers
+    static void execute_and_reply(const std::string& chat_id, const std::string& action, const nlohmann::json& params = nlohmann::json::object(), bool send_reply = true);
 
 private:
     static bool handle_volume(const std::string& chat_id, const std::string& text);
@@ -26,9 +28,6 @@ private:
     static bool handle_hotkey(const std::string& chat_id, const std::string& text);
     static bool handle_search(const std::string& chat_id, const std::string& text);
     static bool handle_news(const std::string& chat_id, const std::string& text);
-
-    // Helpers
-    static void execute_and_reply(const std::string& chat_id, const std::string& action, const nlohmann::json& params = nlohmann::json::object(), bool send_reply = true);
 };
 
 }

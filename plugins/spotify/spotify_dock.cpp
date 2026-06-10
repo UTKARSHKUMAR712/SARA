@@ -87,7 +87,11 @@ std::string SpotifyDock::render_text() {
         }
     }
     
-    std::string artwork = s.image.empty() ? "" : "[​​](" + s.image + ")";
+    std::string img_url = s.image;
+    if (img_url.find("spotify:image:") == 0) {
+        img_url = "https://i.scdn.co/image/" + img_url.substr(14);
+    }
+    std::string artwork = img_url.empty() ? "" : "[​​](" + img_url + ")";
 
     return
         artwork + SP_NOTE " *NOW PLAYING*\n\n"
@@ -136,16 +140,7 @@ void SpotifyDock::send_dock(const std::string& chat_id) {
     std::string text = render_text();
     auto keyboard    = make_keyboard();
 
-    auto resp = g_telegram.api_call("sendMessage", {
-        {"chat_id",      chat_id},
-        {"text",         text},
-        {"parse_mode",   "Markdown"},
-        {"reply_markup", keyboard}
-    });
-
-    int msg_id = 0;
-    if (resp.contains("result") && resp["result"].contains("message_id"))
-        msg_id = resp["result"]["message_id"].get<int>();
+    int msg_id = g_telegram.send_with_keyboard(chat_id, text, keyboard["inline_keyboard"]);
 
     {
         std::lock_guard<std::mutex> lk(mtx_);
@@ -177,13 +172,7 @@ void SpotifyDock::update_loop() {
         }
 
         for (const auto& sess : active_sessions) {
-            g_telegram.api_call("editMessageText", {
-                {"chat_id",      sess.chat_id},
-                {"message_id",   sess.message_id},
-                {"text",         text},
-                {"parse_mode",   "Markdown"},
-                {"reply_markup", keyboard}
-            });
+            g_telegram.edit_message_text(sess.chat_id, sess.message_id, text, keyboard["inline_keyboard"]);
         }
     }
 }
@@ -225,10 +214,7 @@ bool SpotifyDock::handle_callback(const std::string& chat_id,
 
     SpotifyWS::instance().send_command(cmd);
 
-    g_telegram.api_call("answerCallbackQuery", {
-        {"callback_query_id", callback_query_id},
-        {"text", ""}
-    });
+    g_telegram.answer_callback_query(callback_query_id, "");
 
     return true;
 }

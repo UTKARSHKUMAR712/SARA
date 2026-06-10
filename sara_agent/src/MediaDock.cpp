@@ -6,9 +6,12 @@
 #include <thread>
 #include <chrono>
 #include <cstdio>
+#include <filesystem>
 
 using json = nlohmann::json;
 extern sara::TelegramGateway g_telegram;
+
+extern std::string resolve_path(const std::string& path);
 
 namespace sara {
 
@@ -68,7 +71,25 @@ static json build_keyboard(const media::MediaSessionInfo& info) {
 }
 
 static std::string build_text(const media::MediaSessionInfo& info) {
-    std::string text = E_MUSIC + " **SARA Media** " + E_DASH + " " + info.source_app + "\n\n";
+    std::string artwork = "";
+    if (info.thumbnail_available && !info.thumbnail_path.empty()) {
+        try {
+            std::string src = info.thumbnail_path;
+            std::string filename = src;
+            auto pos = filename.find_last_of("\\/");
+            if (pos != std::string::npos) filename = filename.substr(pos + 1);
+            
+            std::string dest_dir = resolve_path("frontend\\lan_dashboard\\images");
+            std::filesystem::create_directories(dest_dir);
+            std::string dest_path = dest_dir + "\\" + filename;
+            if (std::filesystem::exists(src)) {
+                std::filesystem::copy_file(src, dest_path, std::filesystem::copy_options::update_existing);
+                artwork = "[​​](/images/" + filename + ")";
+            }
+        } catch (...) {}
+    }
+
+    std::string text = artwork + E_MUSIC + " **SARA Media** " + E_DASH + " " + info.source_app + "\n\n";
 
     if (!info.title.empty())  text += E_LABEL  + " **" + info.title  + "**\n";
     if (!info.artist.empty()) text += E_PERSON + " " + info.artist + "\n";

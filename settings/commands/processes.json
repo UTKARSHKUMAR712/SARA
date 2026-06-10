@@ -1,73 +1,52 @@
 {
   "commands": [
     {
-      "type": "contains",
+      "type": "regex",
       "phrases": [
-        "list processes", "running processes",
-        "show processes", "what is running",
-        "process list", "running apps",
-        "active processes", "current processes",
-        "all processes", "show running apps",
-        "what apps are open"
+        ".*(list|show|what).*(processes|running|active|apps|open).*"
       ],
       "action": "run_cmd",
       "params": { "command": "tasklist /fi \"status eq running\"" }
     },
     {
-      "type": "contains",
+      "type": "regex",
       "phrases": [
-        "kill process", "stop process", "end task",
-        "terminate process", "kill app",
-        "force stop", "stop program",
-        "end process"
-      ],
-      "action": "run_cmd",
-      "params": { "command": "taskkill /f /im" }
-    },
-    {
-      "type": "prefix",
-      "phrases": [
-        "kill ", "end process ", "stop process ",
-        "terminate "
+        ".*(kill|end|stop|terminate|force close) (process|app|program|task )?(.*)"
       ],
       "action": "task_kill",
       "params": {}
     },
     {
-      "type": "contains",
+      "type": "regex",
       "phrases": [
-        "process count", "how many processes",
-        "number of processes", "processes running"
+        ".*(process count|how many processes|number of processes).*"
       ],
       "action": "run_cmd",
       "params": { "command": "tasklist | find /c /v \"\"" }
     },
     {
-      "type": "contains",
+      "type": "regex",
       "phrases": [
-        "top process", "highest memory",
-        "most cpu usage", "high cpu",
-        "high memory usage", "which process uses most"
+        ".*(top|highest|most).*(process|memory|cpu).*",
+        ".*(high).*(cpu|memory).*"
       ],
       "action": "run_cmd",
       "params": { "command": "powershell -Command \"Get-Process | Sort-Object WorkingSet64 -Descending | Select-Object -First 10 Name, WorkingSet64, CPU | Format-Table -AutoSize\"" }
     },
     {
-      "type": "contains",
+      "type": "regex",
       "phrases": [
-        "services status", "running services",
-        "list services", "windows services",
-        "service status"
+        ".*(services|service).*(status|running|list|windows).*"
       ],
       "action": "run_cmd",
       "params": { "command": "sc query" }
     },
     {
-      "type": "contains",
+      "type": "prefix",
       "phrases": [
-        "start service", "stop service",
-        "restart service", "enable service",
-        "disable service"
+        "start service ", "stop service ",
+        "restart service ", "enable service ",
+        "disable service "
       ],
       "action": "run_cmd",
       "params": { "command": "sc" }

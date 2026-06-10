@@ -25,7 +25,7 @@ static std::string get_mime_type(const std::string& ext) {
     return "application/octet-stream";
 }
 
-bool LiveServer::start(const std::string& directory, int port) {
+bool LiveServer::start(const std::string& directory, int port, bool bind_any) {
     if (running_) stop();
 
     directory_ = directory;
@@ -39,7 +39,7 @@ bool LiveServer::start(const std::string& directory, int port) {
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Localhost only
+    addr.sin_addr.s_addr = bind_any ? INADDR_ANY : inet_addr("127.0.0.1");
     addr.sin_port = htons(port_);
 
     if (::bind(server_sock_, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
@@ -121,6 +121,8 @@ void LiveServer::handle_client(int sock) {
 
             if (path.empty() || path.back() == '/') {
                 path += "index.html";
+            } else if (path == "/dashbord" || path == "/dashboard") {
+                path = "/dashboard.html";
             }
 
             fs::path full_path = fs::path(directory_) / fs::path(path.substr(1)).make_preferred();

@@ -156,7 +156,10 @@ add_executable(sara_gui
     shared/imgui/imgui_widgets.cpp
     shared/imgui/backends/imgui_impl_win32.cpp
     shared/imgui/backends/imgui_impl_dx11.cpp
+    shared/qrcodegen/qrcodegen.c
 )
+set_source_files_properties(shared/qrcodegen/qrcodegen.c PROPERTIES LANGUAGE C)
+
 
 target_include_directories(sara_gui PRIVATE
     sara_gui/include

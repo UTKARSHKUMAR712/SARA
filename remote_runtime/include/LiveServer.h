@@ -12,15 +12,14 @@ public:
         return s;
     }
 
-    bool start(const std::string& directory, int port = 5500);
+    bool start(const std::string& directory, int port = 5500, bool bind_any = false);
     void stop();
     bool is_running() const { return running_; }
     int port() const { return port_; }
 
-private:
     LiveServer() = default;
     ~LiveServer() { stop(); }
-
+private:
     void accept_loop();
     void handle_client(int sock);
 

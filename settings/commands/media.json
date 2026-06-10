@@ -12,262 +12,180 @@
       "params": {}
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "pause song", "pause music", "stop playing", "stop music",
-        "please pause", "pause the music", "pause the song",
-        "stop the music", "stop the song", "hold on",
-        "pause it", "stop it", "pause playback",
-        "pause the track", "stop the track"
+        ".*(pause|stop|hold on).*(song|music|playing|playback|track|it)?"
       ],
       "action": "media_command",
       "params": { "action": "spotify_pause" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "next song", "skip song", "next track", "skip track",
-        "next", "skip", "play next", "play next song",
-        "skip this", "skip this song", "next one",
-        "move to next", "next track please", "play next track",
-        "skip this track", "go next", "forward"
+        ".*(next|skip|forward).*(song|track|one|music)?"
       ],
       "action": "media_command",
       "params": { "action": "spotify_next" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "previous song", "previous track", "go back",
-        "previous", "play previous", "play previous song",
-        "go back one", "last song", "previous one",
-        "move to previous", "go to previous", "go back a track",
-        "play last track", "back", "go back a song"
+        ".*(previous|go back|last|back).*(song|track|one|music)?"
       ],
       "action": "media_command",
       "params": { "action": "spotify_prev" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "play last playlist", "play previous playlist",
-        "resume last playlist", "play last played playlist",
-        "play recent playlist", "play last playlist again",
-        "recent playlist", "go back to last playlist"
+        ".*(play|resume|go back to).*(last|recent|previous).*(playlist).*"
       ],
       "action": "play_last_playlist",
       "params": {}
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "resume playing", "resume music", "resume song",
-        "continue playing", "continue music", "resume spotify",
-        "play again", "start again", "resume playback",
-        "continue the music", "continue", "unpause",
-        "resume the song", "play from where i left"
+        ".*(resume|continue|unpause|play again|start again).*(playing|music|song|playback|spotify|track)?"
       ],
       "action": "media_command",
       "params": { "action": "spotify_resume" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "toggle play", "toggle pause", "play pause",
-        "play/pause", "toggle music", "toggle song",
-        "play or pause", "toggle playback"
+        ".*(toggle).*(play|pause|music|song|playback).*",
+        ".*(play/pause|play or pause).*"
       ],
       "action": "media_command",
       "params": { "action": "spotify_toggle" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "shuffle", "shuffle on", "enable shuffle",
-        "turn on shuffle", "shuffle songs", "shuffle mode on",
-        "shuffle music", "shuffle all", "shuffle playlist",
-        "randomize", "random", "play on shuffle",
-        "random mode", "shuffle the music"
+        ".*(shuffle|random|randomize).*(on|all|songs|music|playlist)?.*"
       ],
       "action": "media_command",
       "params": { "action": "spotify_shuffle_on" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "shuffle off", "disable shuffle", "turn off shuffle",
-        "shuffle mode off", "stop shuffle", "no shuffle",
-        "disable random", "turn off random", "stop random",
-        "no random", "play in order"
+        ".*(shuffle|random).*(off|disable|stop|no).*",
+        ".*(play in order).*"
       ],
       "action": "media_command",
       "params": { "action": "spotify_shuffle_off" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "repeat", "repeat on", "repeat all", "loop all",
-        "loop", "enable repeat", "turn on repeat",
-        "repeat mode on", "continuous play", "repeat playlist",
-        "loop playlist", "repeat the playlist"
+        ".*(repeat|loop|continuous).*(on|all|playlist).*"
       ],
       "action": "media_command",
       "params": { "action": "spotify_repeat_all" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "repeat one", "loop one", "repeat current song",
-        "single repeat", "repeat this song", "loop this song",
-        "repeat track", "loop track", "repeat single",
-        "loop single", "repeat current track"
+        ".*(repeat|loop).*(one|current|this|single|track|song).*"
       ],
       "action": "media_command",
       "params": { "action": "spotify_repeat_one" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "repeat off", "disable repeat", "no repeat",
-        "stop repeat", "repeat mode off", "turn off repeat",
-        "cancel repeat", "disable looping", "stop looping",
-        "no loop", "don't repeat"
+        ".*(repeat|loop).*(off|disable|stop|no|cancel).*"
       ],
       "action": "media_command",
       "params": { "action": "spotify_repeat_off" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "like", "love", "like this", "love this", "heart",
-        "heart this", "like this song", "love this song",
-        "add to favorites", "favorite", "like this track",
-        "love this track", "heart this song", "fav this",
-        "add to liked songs", "save to library"
+        ".*(like|love|heart|favorite|fav|save).*(this|song|track|music|library).*"
       ],
       "action": "media_command",
       "params": { "action": "spotify_heart" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "unlike", "unheart", "unlike this", "remove heart",
-        "unlike this song", "unheart this", "remove favorite",
-        "remove from favorites", "dislike",
-        "remove from liked songs", "unlike this track"
+        ".*(unlike|unheart|remove|dislike).*(heart|favorite|liked|song|track|music).*"
       ],
       "action": "media_command",
       "params": { "action": "spotify_unheart" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "what song is this", "what's playing", "current song",
-        "now playing", "what is playing", "current track",
-        "playing now", "what song", "tell me the current song",
-        "what music is on", "what's this song",
-        "what am i listening to", "identify this song"
+        ".*(what|which|tell me).*(song|track|playing|music).*"
       ],
       "action": "media_command",
       "params": { "action": "spotify_current_track" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "add to queue", "queue this", "add to playlist",
-        "queue this song", "queue next", "add to play queue",
-        "play next in queue"
+        ".*(add to|queue).*(queue|playlist|next).*"
       ],
       "action": "media_command",
       "params": { "action": "spotify_queue" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "volume up", "increase volume", "turn up", "louder",
-        "volume increase", "make it louder", "crank it up",
-        "turn it up", "raise volume", "increase sound",
-        "more volume", "up the volume", "boost volume"
+        ".*(volume up|increase volume|turn up|louder|raise volume|boost volume).*"
       ],
       "action": "volume_set",
       "params": { "level": 60 }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "volume down", "decrease volume", "turn down", "quieter",
-        "volume decrease", "make it quieter", "lower volume",
-        "turn it down", "reduce volume", "decrease sound",
-        "less volume", "down the volume", "lower it"
+        ".*(volume down|decrease volume|turn down|quieter|lower volume|reduce volume).*"
       ],
       "action": "volume_set",
       "params": { "level": 30 }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "max volume", "full volume", "maximum volume",
-        "set volume max", "set volume to max", "crank it to max",
-        "full blast", "maximum", "loudest", "set volume 100",
-        "volume 100", "set volume to 100"
+        ".*(max|full|maximum|100).*(volume|blast).*"
       ],
       "action": "volume_set",
       "params": { "level": 100 }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "mute", "mute volume", "mute audio", "silence",
-        "mute sound", "turn off sound", "silent mode",
-        "no sound", "sound off", "disable audio",
-        "mute everything", "mute speakers", "silence audio"
+        ".*(mute|silence|turn off sound|silent|no sound|disable audio).*"
       ],
       "action": "volume_mute",
       "params": { "mute": true }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "unmute", "unmute volume", "unmute audio",
-        "turn on sound", "enable audio", "unmute sound",
-        "sound on", "unmute speakers", "enable sound"
+        ".*(unmute|turn on sound|enable audio|sound on).*"
       ],
       "action": "volume_mute",
       "params": { "mute": false }
     },
     {
-      "type": "prefix",
+      "type": "regex",
       "phrases": [
-        "set volume to ", "set volume ", "volume set to ",
-        "volume set ", "volume ", "vol ", "vol set ",
-        "set vol ", "change volume to ", "adjust volume to "
+        ".*(set|change|adjust).*(volume|vol).*(to)? (\\d+).*",
+        ".*(volume|vol).*(to)? (\\d+).*"
       ],
       "action": "set_volume_level",
       "params": {}
     },
     {
-      "type": "prefix",
+      "type": "regex",
       "phrases": [
-        "increase volume to ", "increase volume ",
-        "turn up to ", "raise volume to "
-      ],
-      "action": "set_volume_level",
-      "params": {}
-    },
-    {
-      "type": "prefix",
-      "phrases": [
-        "decrease volume to ", "decrease volume ",
-        "turn down to ", "lower volume to "
-      ],
-      "action": "set_volume_level",
-      "params": {}
-    },
-    {
-      "type": "exact",
-      "phrases": [
-        "what volume", "what is the volume", "current volume",
-        "volume level", "check volume"
+        ".*(what|check).*(volume).*"
       ],
       "action": "volume_get",
       "params": {}

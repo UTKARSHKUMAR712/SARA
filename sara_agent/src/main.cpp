@@ -180,6 +180,55 @@ int main(int argc, char* argv[]) {
 
     // ── Start WebSocket Server (GUI/plugins, port 9080) ─────────────────────
     g_ws_server.start(9080);
+    g_ws_server.set_message_handler([](uint64_t client_id, const std::string& type, const nlohmann::json& payload) {
+        if (type == "chat" || type == "callback") {
+            std::string text = payload.value("text", "");
+            if (!text.empty()) {
+                std::string cb_data = payload.value("data", "");
+                std::thread([type, text, cb_data]() {
+                    long long lan_user_id = 7777777; // Fixed mock ID for LAN Dashboard
+                    nlohmann::json dummy;
+                    dummy["sara_user_id"] = lan_user_id; 
+                    dummy["from"]["first_name"] = "LAN User";
+                    if (type == "callback" && !cb_data.empty()) {
+                        dummy["callback_data"] = cb_data;
+                        dummy["callback_query_id"] = "lan_cb_" + std::to_string(lan_user_id);
+                    }
+                    sara::handle_telegram_message("LAN", text, dummy);
+                }).detach();
+            }
+        }
+    });
+
+    // ── Disconnect handler: free resources when all LAN clients drop ─────────
+    g_ws_server.set_disconnect_handler([](uint64_t client_id) {
+        int remaining = g_ws_server.client_count();
+        Logger::instance().info("LAN client disconnected (id=" + std::to_string(client_id) +
+                                "), remaining=" + std::to_string(remaining));
+        g_runtime.set_ws_clients(remaining);
+
+        if (remaining == 0) {
+            // No more LAN clients — cancel all auto-refresh scheduled tasks
+            // and stop the system-monitor/media polling to free resources.
+            Logger::instance().info("All LAN clients gone — stopping auto-refresh tasks");
+            auto tasks = g_scheduler.list_tasks();
+            for (auto& t : tasks) {
+                if (t.id.rfind("auto_refresh", 0) == 0 ||
+                    t.id.rfind("lan_", 0) == 0 ||
+                    t.action == "system_monitor" ||
+                    t.action == "media_monitor") {
+                    g_scheduler.cancel_task(t.id);
+                    Logger::instance().info("Cancelled task: " + t.id);
+                }
+            }
+        }
+    });
+
+    // ── Connect handler: log new LAN connections ─────────────────────────────
+    g_ws_server.set_connect_handler([](uint64_t client_id, const std::string& type) {
+        g_runtime.set_ws_clients(g_ws_server.client_count());
+        Logger::instance().info("LAN client connected (id=" + std::to_string(client_id) + " type=" + type + ")");
+    });
     g_runtime.set_websocket_ready(true);
     Logger::instance().info("WebSocket server started on port 9080");
 

@@ -13,7 +13,7 @@
 
 namespace sara {
 
-static const std::string WS_MAGIC = "258EAFA5-E914-47DA-95CA-5AB9A23F1B53";
+static const std::string WS_MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 static std::string base64_encode(const unsigned char* data, size_t len) {
     static const char* b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

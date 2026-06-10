@@ -20,6 +20,7 @@
 #include "../../remote_runtime/include/TerminalHttpServer.h"
 #include "../../remote_runtime/include/CloudflaredManager.h"
 #include "../../remote_runtime/include/FileBrowserManager.h"
+#include "../../remote_runtime/include/LiveServer.h"
 
 using namespace sara;
 extern TelegramGateway        g_telegram;
@@ -820,6 +821,13 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
                 g_telegram.send_message(chat_id, res.success ? "✅ Focused" : "❌ " + res.message);
                 return;
             }
+            if (e.action == "close_app") {
+                std::string target = mr.captured;
+                if (target.empty()) { g_telegram.send_message(chat_id, "❌ Send: close <name>"); return; }
+                auto res = g_executor.execute("close_process", {{"target", target}});
+                g_telegram.send_message(chat_id, res.success ? "✅ Closed" : "❌ " + res.message);
+                return;
+            }
             if (e.action == "clipboard_copy") {
                 std::string text_to = mr.captured;
                 if (text_to.empty()) { g_telegram.send_message(chat_id, "❌ Send: copy this <text>"); return; }
@@ -828,11 +836,10 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
                 return;
             }
             if (e.action == "set_volume_level") {
-                std::string cap = mr.captured;
                 int level = 50;
-                size_t start = cap.find_first_of("0123456789");
+                size_t start = text.find_first_of("0123456789");
                 if (start != std::string::npos) {
-                    level = std::stoi(cap.substr(start));
+                    level = std::stoi(text.substr(start));
                     if (level > 100) level = 100;
                 }
                 auto res = g_executor.execute("volume_set", {{"level", level}});
@@ -840,11 +847,10 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
                 return;
             }
             if (e.action == "set_brightness_level") {
-                std::string cap = mr.captured;
                 int level = 50;
-                size_t start = cap.find_first_of("0123456789");
+                size_t start = text.find_first_of("0123456789");
                 if (start != std::string::npos) {
-                    level = std::stoi(cap.substr(start));
+                    level = std::stoi(text.substr(start));
                     if (level > 100) level = 100;
                 }
                 auto res = g_executor.execute("change_brightness", {{"level", level}});
@@ -853,7 +859,8 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
             }
             if (e.action == "open_app") {
                 auto res = g_executor.execute("open_app", params);
-                g_telegram.send_message(chat_id, res.success ? "✅ Opening " + params.value("name","") + "..." : "❌ " + res.message);
+                std::string t = params.value("target", "");
+                g_telegram.send_message(chat_id, res.success ? "✅ Opened " + t + "!" : "❌ " + res.message);
                 return;
             }
             if (e.action == "run_cmd") {
@@ -893,8 +900,7 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
                 NativeCommandRouter::handle(chat_id, "/news " + cat);
                 return;
             }
-            dispatch_action(e.action, params);
-            g_telegram.send_message(chat_id, "✅ Done");
+            NativeCommandRouter::execute_and_reply(chat_id, e.action, params, true);
             return;
         }
     }
@@ -904,6 +910,9 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
         "🤖 Command not recognized. Try /help for available commands, "
         "/dock for dashboard, or /sp for Spotify.");
 }
+
+
+static ::sara::remote::LiveServer g_lan_server;
 
 nlohmann::json handle_ipc_message(const nlohmann::json& msg) {
     auto type    = msg.value("type", "");
@@ -915,6 +924,24 @@ nlohmann::json handle_ipc_message(const nlohmann::json& msg) {
         std::string target = payload.value("target", "");
         nlohmann::json params = payload.value("parameters", nlohmann::json::object());
         params["target"] = target;
+
+        if (action == "start_lan_dashboard") {
+            std::string ip = "127.0.0.1";
+            char name[255];
+            if (gethostname(name, sizeof(name)) == 0) {
+                struct hostent* hostinfo = gethostbyname(name);
+                if (hostinfo && hostinfo->h_addr_list[0]) {
+                    ip = inet_ntoa(*(struct in_addr*)hostinfo->h_addr_list[0]);
+                }
+            }
+            std::string url = "http://" + ip + ":3000";
+            g_lan_server.start(::resolve_path("frontend\\lan_dashboard"), 3000, true);
+            return {{"type","response"}, {"request_id",req_id},{"payload",{{"success",true},{"url",url}}}};
+        }
+        if (action == "stop_lan_dashboard") {
+            g_lan_server.stop();
+            return {{"type","response"}, {"request_id",req_id},{"payload",{{"success",true}}}};
+        }
 
         if (action == "reload_config") {
             auto& cfg = g_config.get();

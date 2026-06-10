@@ -1,0 +1,2 @@
+#include <windows.h>
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "C:/Users/utkarsh_kumar/Desktop/sara/sara_agent/sara_agent.manifest"

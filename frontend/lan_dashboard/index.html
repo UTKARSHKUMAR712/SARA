@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SARA Web Dashboard</title>
+    <link rel="stylesheet" href="chat.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-robot"></i>
+                    <span>SARA LAN</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-item active">
+                    <i class="fa-solid fa-message"></i>
+                    <span>Chat</span>
+                </a>
+                <a href="/dashboard" class="nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="dot" id="ws-status-dot"></span>
+                    <span id="ws-status-text">Disconnected</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <div class="mobile-menu-btn">
+                    <i class="fa-solid fa-bars"></i>
+                </div>
+                <div class="chat-title">
+                    <h2>SARA Local Agent</h2>
+                    <p>Connected to Host PC</p>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="clear-btn" title="Clear Chat"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </header>
+
+            <div class="chat-history" id="chat-history">
+                <div class="message system">
+                    <div class="bubble">System Online. Connected to SARA Local Engine.</div>
+                </div>
+                <!-- Messages go here -->
+            </div>
+
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <button class="icon-btn attach-btn"><i class="fa-solid fa-paperclip"></i></button>
+                    <input type="text" id="chat-input" placeholder="Message SARA..." autocomplete="off">
+                    <button class="icon-btn send-btn" id="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </main>
+
+        </main>
+    </div>
+
+    <!-- Modal for inline images -->
+    <div id="image-modal" class="modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modal-img">
+        <div id="modal-caption"></div>
+    </div>
+
+    <script src="chat.js?v=3"></script>
+</body>
+</html>

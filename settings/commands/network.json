@@ -51,59 +51,51 @@
       "params": { "command": "systeminfo | find \"System Boot Time\"" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "test internet", "test connection",
-        "ping google", "speed test",
-        "check internet", "is internet working",
-        "internet speed", "check connection"
+        ".*(test|check).*(internet|connection|speed).*",
+        ".*(ping).*(google).*",
+        ".*(is internet working).*"
       ],
       "action": "run_cmd",
       "params": { "command": "ping -n 4 8.8.8.8" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "my hostname", "computer name", "device name",
-        "hostname", "what is my computer name",
-        "my device name"
+        ".*(what is my|show my|tell me my)?.*(hostname|computer name|device name).*"
       ],
       "action": "run_cmd",
       "params": { "command": "hostname" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "my mac address", "mac address", "physical address",
-        "network mac"
+        ".*(what is my|show my|tell me my)?.*(mac address|physical address|network mac).*"
       ],
       "action": "run_cmd",
       "params": { "command": "getmac" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "dns cache", "flush dns", "clear dns cache",
-        "reset dns"
+        ".*(flush|clear|reset).*(dns|dns cache).*"
       ],
       "action": "run_cmd",
       "params": { "command": "ipconfig /flushdns" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "renew ip", "release ip", "renew dhcp",
-        "refresh ip address"
+        ".*(renew|release|refresh).*(ip|dhcp|ip address).*"
       ],
       "action": "run_cmd",
       "params": { "command": "ipconfig /renew" }
     },
     {
-      "type": "exact",
+      "type": "regex",
       "phrases": [
-        "list wifi networks", "available networks",
-        "wifi networks near me", "show wifi networks",
-        "scan wifi"
+        ".*(list|available|show|scan).*(wifi|networks|wifi networks).*"
       ],
       "action": "run_cmd",
       "params": { "command": "netsh wlan show networks" }
