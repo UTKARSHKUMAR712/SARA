@@ -97,12 +97,28 @@ function renderPorts(ports) {
         
         const actionTd = document.createElement('td');
         actionTd.style.padding = '8px';
+        actionTd.style.display = 'flex';
+        actionTd.style.gap = '6px';
+        actionTd.style.flexWrap = 'wrap';
+        actionTd.style.alignItems = 'center';
 
         const btnPreview = document.createElement('button');
         btnPreview.className = 'primary-btn';
         btnPreview.style.padding = '4px 8px';
-        btnPreview.style.marginRight = '8px';
-        btnPreview.textContent = 'Open Preview';
+        btnPreview.style.margin = '0';
+        btnPreview.textContent = 'Cloudflare';
+
+        const btnLocal = document.createElement('button');
+        btnLocal.className = 'primary-btn';
+        btnLocal.style.padding = '4px 8px';
+        btnLocal.style.margin = '0';
+        btnLocal.style.backgroundColor = '#4CAF50';
+        btnLocal.style.borderColor = '#4CAF50';
+        btnLocal.textContent = 'Local LAN';
+        btnLocal.onclick = () => {
+            const localUrl = window.location.protocol + '//' + window.location.hostname + ':' + port.port;
+            window.open(localUrl, '_blank');
+        };
         btnPreview.onclick = async () => {
             btnPreview.textContent = 'Starting Tunnel...';
             btnPreview.disabled = true;
@@ -132,13 +148,14 @@ function renderPorts(ports) {
                 if (newTab) newTab.close();
                 alert("Error starting tunnel: " + e);
             }
-            btnPreview.textContent = 'Open Preview';
+            btnPreview.textContent = 'Cloudflare';
             btnPreview.disabled = false;
         };
 
         const btnCopy = document.createElement('button');
         btnCopy.className = 'secondary-btn';
         btnCopy.style.padding = '4px 8px';
+        btnCopy.style.margin = '0';
         btnCopy.textContent = 'Copy URL';
         btnCopy.onclick = async () => {
             btnCopy.textContent = 'Getting URL...';
@@ -160,7 +177,7 @@ function renderPorts(ports) {
         const btnKill = document.createElement('button');
         btnKill.className = 'secondary-btn';
         btnKill.style.padding = '4px 8px';
-        btnKill.style.marginLeft = '8px';
+        btnKill.style.margin = '0';
         btnKill.style.color = '#ff6b6b';
         btnKill.style.borderColor = '#ff6b6b';
         btnKill.textContent = 'Close Port';
@@ -176,6 +193,7 @@ function renderPorts(ports) {
         };
         
         actionTd.appendChild(btnPreview);
+        actionTd.appendChild(btnLocal);
         actionTd.appendChild(btnCopy);
         actionTd.appendChild(btnKill);
 

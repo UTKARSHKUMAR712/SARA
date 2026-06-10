@@ -240,14 +240,38 @@ document.addEventListener('DOMContentLoaded', () => {
     // Navigation logic handled by standard links
     const dashVolSlider = document.getElementById('dash-vol-slider');
     const dashBrightSlider = document.getElementById('dash-bright-slider');
-    if (dashVolSlider) {
+    const dashVolVal = document.getElementById('dash-vol-val');
+    const dashBrightVal = document.getElementById('dash-bright-val');
+
+    if (dashVolSlider && dashVolVal) {
+        const savedVol = localStorage.getItem('sara_vol') || 50;
+        dashVolSlider.value = savedVol;
+        dashVolVal.textContent = savedVol + '%';
+
+        dashVolSlider.addEventListener('input', (e) => {
+            dashVolVal.textContent = e.target.value + '%';
+        });
+
         dashVolSlider.addEventListener('change', (e) => {
-            sendCommand(`/vol${e.target.value}`);
+            const val = e.target.value;
+            localStorage.setItem('sara_vol', val);
+            sendCommand(`/vol${val}`);
         });
     }
-    if (dashBrightSlider) {
+
+    if (dashBrightSlider && dashBrightVal) {
+        const savedBright = localStorage.getItem('sara_bright') || 50;
+        dashBrightSlider.value = savedBright;
+        dashBrightVal.textContent = savedBright + '%';
+
+        dashBrightSlider.addEventListener('input', (e) => {
+            dashBrightVal.textContent = e.target.value + '%';
+        });
+
         dashBrightSlider.addEventListener('change', (e) => {
-            sendCommand(`/bright${e.target.value}`);
+            const val = e.target.value;
+            localStorage.setItem('sara_bright', val);
+            sendCommand(`/bright${val}`);
         });
     }
 

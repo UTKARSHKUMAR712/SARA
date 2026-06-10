@@ -105,6 +105,18 @@ long long parse_delay_suffix(const std::string& original_text, std::string& clea
     return (long long)calculated;
 }
 
+static std::string get_lan_ip() {
+    std::string ip = "127.0.0.1";
+    char name[255];
+    if (gethostname(name, sizeof(name)) == 0) {
+        struct hostent* hostinfo = gethostbyname(name);
+        if (hostinfo && hostinfo->h_addr_list[0]) {
+            ip = inet_ntoa(*(struct in_addr*)hostinfo->h_addr_list[0]);
+        }
+    }
+    return ip;
+}
+
 void handle_telegram_message(const std::string& chat_id, std::string text, const nlohmann::json& raw_message) {
     long long user_id = raw_message.value("sara_user_id", 0LL);
     if (user_id == 0) {
@@ -344,6 +356,7 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
                     std::string base_url = url;
                     if (base_url.back() == '/') base_url.pop_back();
                     std::string final_url = base_url + "/t/" + result.session_id + "?token=" + result.token;
+                    std::string lan_url = "http://" + get_lan_ip() + ":" + std::to_string(g_actual_terminal_port) + "/t/" + result.session_id + "?token=" + result.token;
                     
                     std::string icon = is_admin_terminal ? "🛡" : "🖥";
                     std::string label = is_admin_terminal ? "Admin Terminal" : "Terminal";
@@ -352,9 +365,9 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
                         icon + " *" + label + " Ready*\n\n"
                         "Session: `" + result.session_id + "`\n"
                         "Shell: `" + shell + "`\n"
-                        "Expires: " + std::to_string(cfg.terminal_expiry_minutes) + " minutes\n"
-                        "🟢 Secure HTTPS via Cloudflare\n\n"
-                        "Open in browser:\n" + final_url);
+                        "Expires: " + std::to_string(cfg.terminal_expiry_minutes) + " minutes\n\n"
+                        "🌍 *Cloudflare:*\n" + final_url + "\n\n"
+                        "🏠 *Local (LAN):*\n" + lan_url);
                 }).detach();
             };
 
@@ -380,6 +393,7 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
         }
 
         std::string url = base_url + "/t/" + result.session_id + "?token=" + result.token;
+        std::string lan_url = "http://" + get_lan_ip() + ":" + std::to_string(g_actual_terminal_port) + "/t/" + result.session_id + "?token=" + result.token;
         std::string icon = is_admin_terminal ? "🛡" : "🖥";
         std::string label = is_admin_terminal ? "Admin Terminal" : "Terminal";
         std::string cf_note = cf_url.empty()
@@ -391,7 +405,8 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
             "Shell: `" + shell + "`\n"
             "Expires: " + std::to_string(cfg.terminal_expiry_minutes) + " minutes\n"
             + cf_note + "\n\n"
-            "Open in browser:\n" + url);
+            "🌍 *Cloudflare:*\n" + url + "\n\n"
+            "🏠 *Local (LAN):*\n" + lan_url);
         return;
     }
 
@@ -459,11 +474,12 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
                     std::string base = url;
                     if (!base.empty() && base.back() == '/') base.pop_back();
                     std::string file_url = base + "/files?token=" + result.token;
+                    std::string lan_url = "http://" + get_lan_ip() + ":" + std::to_string(g_actual_terminal_port) + "/files?token=" + result.token;
                     g_telegram.send_message(chat_id,
                         "📁 *File Browser Ready*\n\n"
-                        "Root: `" + cfg.filebrowser_root + "`\n"
-                        "🟢 Secure HTTPS via Cloudflare\n\n"
-                        "Open in browser:\n" + file_url);
+                        "Root: `" + cfg.filebrowser_root + "`\n\n"
+                        "🌍 *Cloudflare:*\n" + file_url + "\n\n"
+                        "🏠 *Local (LAN):*\n" + lan_url);
                 }).detach();
             };
 
@@ -488,6 +504,7 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
         }
 
         std::string file_url = base_url + "/files?token=" + result.token;
+        std::string lan_url = "http://" + get_lan_ip() + ":" + std::to_string(g_actual_terminal_port) + "/files?token=" + result.token;
         std::string cf_note = cf_url.empty()
             ? "🔴 Cloudflare not ready. URL is local-only."
             : "🟢 Secure HTTPS via Cloudflare";
@@ -496,7 +513,8 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
             "📁 *File Browser Ready*\n\n"
             "Root: `" + cfg.filebrowser_root + "`\n"
             + cf_note + "\n\n"
-            "Open in browser:\n" + file_url);
+            "🌍 *Cloudflare:*\n" + file_url + "\n\n"
+            "🏠 *Local (LAN):*\n" + lan_url);
         return;
     }
     
@@ -558,10 +576,11 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
                     std::string base = url;
                     if (!base.empty() && base.back() == '/') base.pop_back();
                     std::string file_url = base + "/workspace/?token=" + result.token;
+                    std::string lan_url = "http://" + get_lan_ip() + ":" + std::to_string(g_actual_terminal_port) + "/workspace/?token=" + result.token;
                     g_telegram.send_message(chat_id,
                         "💻 *SARA Workspace Ready*\n\n"
-                        "🟢 Secure HTTPS via Cloudflare\n\n"
-                        "Open in browser:\n" + file_url);
+                        "🌍 *Cloudflare:*\n" + file_url + "\n\n"
+                        "🏠 *Local (LAN):*\n" + lan_url);
                 }).detach();
             };
 
@@ -586,6 +605,7 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
         }
 
         std::string file_url = base_url + "/workspace/?token=" + result.token;
+        std::string lan_url = "http://" + get_lan_ip() + ":" + std::to_string(g_actual_terminal_port) + "/workspace/?token=" + result.token;
         std::string cf_note = cf_url.empty()
             ? "🔴 Cloudflare not ready. URL is local-only."
             : "🟢 Secure HTTPS via Cloudflare";
@@ -593,7 +613,8 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
         g_telegram.send_message(chat_id,
             "💻 *SARA Workspace Ready*\n\n"
             + cf_note + "\n\n"
-            "Open in browser:\n" + file_url);
+            "🌍 *Cloudflare:*\n" + file_url + "\n\n"
+            "🏠 *Local (LAN):*\n" + lan_url);
         return;
     }
     // ── End Workspace command ──────────────────────────────────────────────────
