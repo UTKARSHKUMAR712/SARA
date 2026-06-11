@@ -151,6 +151,149 @@ static void ShowImageWindow(const std::string& file_path, const std::string& cap
     }).detach();
 }
 
+static std::vector<HWND> g_pin_windows;
+static std::mutex g_pin_windows_mutex;
+
+struct PinData {
+    std::string text;
+    std::string mode;
+};
+
+static LRESULT CALLBACK TextWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    PinData* pdata = (PinData*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    switch (uMsg) {
+    case WM_NCCREATE: {
+        CREATESTRUCT* pcs = (CREATESTRUCT*)lParam;
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pcs->lpCreateParams);
+        return TRUE;
+    }
+    case WM_ERASEBKGND: {
+        return 1;
+    }
+    case WM_PAINT: {
+        if (pdata) {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            
+            HBRUSH hbr = CreateSolidBrush(RGB(255, 255, 255));
+            FillRect(hdc, &rect, hbr);
+            DeleteObject(hbr);
+
+            SetTextColor(hdc, RGB(0, 0, 0));
+            SetBkMode(hdc, TRANSPARENT);
+            
+            int height = (rect.bottom - rect.top) / 10; 
+            if (height < 24) height = 24;
+            
+            HFONT hFont = CreateFontA(height, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, 
+                ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 
+                DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Arial");
+            HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+
+            RECT textRect = rect;
+            textRect.left += 50;
+            textRect.top += 50;
+            textRect.right -= 50;
+            textRect.bottom -= 50;
+
+            DrawTextA(hdc, pdata->text.c_str(), -1, &textRect, DT_LEFT | DT_TOP | DT_WORDBREAK | DT_NOPREFIX);
+
+            SelectObject(hdc, hOldFont);
+            DeleteObject(hFont);
+            
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+        break;
+    }
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN: {
+        if (pdata && pdata->mode == "0") {
+            return 0;
+        }
+        break;
+    }
+    case WM_SYSCOMMAND: {
+        if (pdata && pdata->mode == "0") {
+            if ((wParam & 0xFFF0) == SC_CLOSE) {
+                return 0;
+            }
+        }
+        break;
+    }
+    case WM_DESTROY: {
+        PostQuitMessage(0);
+        return 0;
+    }
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+static void ShowTextWindow(const std::string& text, const std::string& mode) {
+    std::thread([text, mode]() {
+        PinData pdata;
+        pdata.text = text;
+        pdata.mode = mode;
+        
+        int screen_w = GetSystemMetrics(SM_CXSCREEN);
+        int screen_h = GetSystemMetrics(SM_CYSCREEN);
+
+        DWORD dwStyle = (mode == "1") ? (WS_OVERLAPPEDWINDOW | WS_VISIBLE) : (WS_POPUP | WS_VISIBLE);
+        DWORD dwExStyle = (mode == "0") ? (WS_EX_TOPMOST) : 0;
+        
+        int win_w = screen_w;
+        int win_h = screen_h;
+        int x = 0;
+        int y = 0;
+
+        if (mode == "1") {
+            win_w = screen_w / 2;
+            win_h = screen_h / 2;
+            x = (screen_w - win_w) / 2;
+            y = (screen_h - win_h) / 2;
+        }
+
+        HINSTANCE hInst = GetModuleHandle(nullptr);
+        WNDCLASSEXA wc = {0};
+        wc.cbSize = sizeof(WNDCLASSEX);
+        wc.style = CS_HREDRAW | CS_VREDRAW;
+        wc.lpfnWndProc = TextWindowProc;
+        wc.hInstance = hInst;
+        wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+        wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+        std::string cls = "SARA_Text_" + std::to_string(GetCurrentThreadId());
+        wc.lpszClassName = cls.c_str();
+
+        RegisterClassExA(&wc);
+        HWND hwnd = CreateWindowExA(dwExStyle, cls.c_str(), "SARA Pinned Text",
+            dwStyle, x, y, win_w, win_h, nullptr, nullptr, hInst, &pdata);
+
+        if (hwnd) {
+            {
+                std::lock_guard<std::mutex> lock(g_pin_windows_mutex);
+                g_pin_windows.push_back(hwnd);
+            }
+            ShowWindow(hwnd, SW_SHOW);
+            SetForegroundWindow(hwnd);
+            BringWindowToTop(hwnd);
+            SetFocus(hwnd);
+            UpdateWindow(hwnd);
+            MSG msg;
+            while (GetMessage(&msg, nullptr, 0, 0)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+            {
+                std::lock_guard<std::mutex> lock(g_pin_windows_mutex);
+                g_pin_windows.erase(std::remove(g_pin_windows.begin(), g_pin_windows.end(), hwnd), g_pin_windows.end());
+            }
+        }
+        UnregisterClassA(cls.c_str(), hInst);
+    }).detach();
+}
+
 static bool is_supported_image(const std::string& filename, const std::string& mime_type) {
     if (!mime_type.empty() && mime_type.rfind("image/", 0) == 0) return true;
     std::string ext = filename;
@@ -320,6 +463,29 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
             PostMessage(hwnd, WM_CLOSE, 0, 0);
         }
         g_telegram.send_message(chat_id, "✅ Closed all image windows.");
+        return;
+    }
+
+    if (text == "/closepin") {
+        std::lock_guard<std::mutex> lock(g_pin_windows_mutex);
+        for (HWND hwnd : g_pin_windows) {
+            PostMessage(hwnd, WM_CLOSE, 0, 0);
+        }
+        g_telegram.send_message(chat_id, "✅ Closed all pinned texts.");
+        return;
+    }
+
+    if (text.rfind("/pin0 ", 0) == 0) {
+        std::string payload = text.substr(6);
+        ShowTextWindow(payload, "0");
+        g_telegram.send_message(chat_id, "📌 Pinned text in full screen.");
+        return;
+    }
+
+    if (text.rfind("/pin1 ", 0) == 0) {
+        std::string payload = text.substr(6);
+        ShowTextWindow(payload, "1");
+        g_telegram.send_message(chat_id, "📌 Pinned text in normal window.");
         return;
     }
 
