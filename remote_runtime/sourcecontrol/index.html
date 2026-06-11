@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SARA - Source Control</title>
+    <link rel="stylesheet" href="/workspace/css/style.css">
+    <link rel="stylesheet" href="/workspace/css/git.css">
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: #1e1e1e; color: #d4d4d4;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+        #git-standalone-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            border-left: 1px solid #333;
+            border-right: 1px solid #333;
+            background-color: #252526;
+        }
+        .header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e1e1e;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hidden mock element so the auto-refresh loop in git.js runs -->
+    <div id="git-view" style="display: flex; position: absolute; visibility: hidden;"></div>
+
+    <div id="git-standalone-container">
+        <div class="header">
+            <span style="font-size: 12px; font-weight: 600; color: #cccccc; letter-spacing: 0.5px;">SOURCE CONTROL</span>
+            <button id="btn-git-refresh" title="Refresh" style="background:none; border:none; color:#bbb; cursor:pointer; padding:2px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+        </div>
+        <div class="sidebar-content" id="git-content" style="flex: 1; overflow-y: auto;">
+            <div style="padding: 20px; text-align: center; color: #888;">Loading Git Status...</div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { state } from '/workspace/js/state.js';
+        import { apiFetch } from '/workspace/js/api.js';
+        import { initGit, refreshGit } from '/workspace/js/git.js';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const ws = params.get('workspace');
+            
+            if (ws) {
+                state.currentWorkspace = ws;
+            } else {
+                try {
+                    const res = await apiFetch('/settings');
+                    if (res.ok) {
+                        const settings = await res.json();
+                        if (settings.currentWorkspace) state.currentWorkspace = settings.currentWorkspace;
+                    }
+                } catch (e) {}
+            }
+
+            if (!state.currentWorkspace) {
+                document.getElementById('git-content').innerHTML = '<div style="padding: 20px; color: #e51400;">No workspace path detected.</div>';
+                return;
+            }
+
+            document.getElementById('btn-git-refresh').addEventListener('click', refreshGit);
+
+            initGit();
+            refreshGit();
+        });
+    </script>
+</body>
+</html>

@@ -105,6 +105,43 @@ export async function openFile(path) {
     switchToTab(tab);
 }
 
+export async function reloadFile(path) {
+    const normPath = path.replace(/\\/g, '/');
+    const tab = state.openTabs.find(t => t.path.replace(/\\/g, '/') === normPath);
+    if (!tab || tab.isSettings) return;
+    try {
+        const res = await apiFetch(`/read${tab.path}?t=${Date.now()}`);
+        if (res.ok) {
+            const content = await res.text();
+            if (tab.model.getValue() !== content) {
+                tab.model.setValue(content);
+                tab.dirty = false;
+                renderTabs();
+            }
+        }
+    } catch (e) {}
+}
+
+export async function reloadAllFiles(force = false) {
+    let changed = false;
+    for (const tab of state.openTabs) {
+        if (tab.isSettings) continue;
+        if (tab.dirty && !force) continue;
+        try {
+            const res = await apiFetch(`/read${tab.path}?t=${Date.now()}`);
+            if (res.ok) {
+                const content = await res.text();
+                if (tab.model.getValue() !== content) {
+                    tab.model.setValue(content);
+                    tab.dirty = false;
+                    changed = true;
+                }
+            }
+        } catch (e) {}
+    }
+    if (changed) renderTabs();
+}
+
 export function switchToTab(tab) {
     state.currentFile = tab.path;
     
@@ -185,6 +222,7 @@ export async function saveCurrentFile() {
         });
         tab.dirty = false;
         renderTabs();
+        window.dispatchEvent(new CustomEvent('file-saved', { detail: { path: state.currentFile } }));
     } catch (e) {
         console.error("Failed to save", e);
         alert("Failed to save: " + e.message);

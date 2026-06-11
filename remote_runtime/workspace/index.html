@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="./css/components.css">
     <link rel="stylesheet" href="./css/settings.css">
     <link rel="stylesheet" href="./css/search.css">
+    <link rel="stylesheet" href="./css/git.css">
 </head>
 <body>
     <div id="workspace">
@@ -41,6 +42,9 @@
             </div>
             <div class="activity-item" id="btn-search" title="Search (Coming Soon)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+            </div>
+            <div class="activity-item" id="btn-git" title="Source Control (Ctrl+Shift+G)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><path d="M6 9v6"/><path d="M6 18c0-3 3-6 6-6h6"/></svg>
             </div>
 
             <div class="spacer"></div>
@@ -69,6 +73,11 @@
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
                     </button>
                 </div>
+                <div class="sidebar-actions" style="display: none; gap: 4px;" id="git-actions">
+                    <button id="btn-git-refresh" title="Refresh" style="background:none; border:none; color:#bbb; cursor:pointer; padding:2px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    </button>
+                </div>
             </div>
             
             <!-- Explorer View -->
@@ -89,6 +98,13 @@
                 </div>
                 <div class="sidebar-content" id="search-results">
                     <!-- Search results populated by JS -->
+                </div>
+            </div>
+
+            <!-- Git View -->
+            <div id="git-view" style="display: none; flex-direction: column; height: 100%;">
+                <div class="sidebar-content" id="git-content" style="flex: 1; overflow-y: auto;">
+                    <!-- Git UI injected by JS -->
                 </div>
             </div>
         </div>
@@ -458,17 +474,58 @@
             <div class="modal-body" style="color: #ccc; line-height: 1.6; max-height: 70vh; overflow-y: auto;">
                 <h4 style="color: white; margin-bottom: 10px;">Accessing Local Servers over LAN (WiFi)</h4>
                 <p>If you start a web server in the terminal and want to access it from your phone or another device on the same WiFi network, you need to expose it to your network by binding it to <code>0.0.0.0</code> (or using a specific flag).</p>
-                <ul style="margin-top: 10px; margin-bottom: 20px; padding-left: 20px;">
-                    <li style="margin-bottom: 8px;"><strong>Vite / React / Vue:</strong> Run <code>npm run dev -- --host</code> or <code>vite --host</code></li>
-                    <li style="margin-bottom: 8px;"><strong>Next.js:</strong> Run <code>npm run dev -H 0.0.0.0</code></li>
-                    <li style="margin-bottom: 8px;"><strong>Python:</strong> Run <code>python -m http.server 8000 --bind 0.0.0.0</code></li>
-                    <li style="margin-bottom: 8px;"><strong>Flask:</strong> Run <code>flask run --host=0.0.0.0</code></li>
-                    <li style="margin-bottom: 8px;"><strong>Django:</strong> Run <code>python manage.py runserver 0.0.0.0:8000</code></li>
+                <ul style="margin-top: 10px; margin-bottom: 20px; padding-left: 20px; list-style-type: none; padding: 0;">
+                    <li style="margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;">
+                        <strong style="display: block; margin-bottom: 4px;">Vite / React / Vue:</strong> 
+                        <code style="background: #252526; padding: 2px 6px; border-radius: 2px; font-family: monospace;">npm run dev -- --host</code>
+                        <button onclick="navigator.clipboard.writeText('npm run dev -- --host'); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy', 1500);" style="background: #007acc; border: none; color: white; padding: 2px 8px; border-radius: 2px; font-size: 11px; cursor: pointer; margin-left: 8px;">📋</button>
+                    </li>
+                    <li style="margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;">
+                        <strong style="display: block; margin-bottom: 4px;">Next.js:</strong> 
+                        <code style="background: #252526; padding: 2px 6px; border-radius: 2px; font-family: monospace;">npm run dev -H 0.0.0.0</code>
+                        <button onclick="navigator.clipboard.writeText('npm run dev -H 0.0.0.0'); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy', 1500);" style="background: #007acc; border: none; color: white; padding: 2px 8px; border-radius: 2px; font-size: 11px; cursor: pointer; margin-left: 8px;">📋</button>
+                    </li>
+                    <li style="margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;">
+                        <strong style="display: block; margin-bottom: 4px;">Python HTTP Server:</strong> 
+                        <code style="background: #252526; padding: 2px 6px; border-radius: 2px; font-family: monospace;">python -m http.server 8000 --bind 0.0.0.0</code>
+                        <button onclick="navigator.clipboard.writeText('python -m http.server 8000 --bind 0.0.0.0'); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy', 1500);" style="background: #007acc; border: none; color: white; padding: 2px 8px; border-radius: 2px; font-size: 11px; cursor: pointer; margin-left: 8px;">📋</button>
+                    </li>
+                    <li style="margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;">
+                        <strong style="display: block; margin-bottom: 4px;">Flask:</strong> 
+                        <code style="background: #252526; padding: 2px 6px; border-radius: 2px; font-family: monospace;">flask run --host=0.0.0.0</code>
+                        <button onclick="navigator.clipboard.writeText('flask run --host=0.0.0.0'); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy', 1500);" style="background: #007acc; border: none; color: white; padding: 2px 8px; border-radius: 2px; font-size: 11px; cursor: pointer; margin-left: 8px;">📋</button>
+                    </li>
+                    <li style="margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;">
+                        <strong style="display: block; margin-bottom: 4px;">Django:</strong> 
+                        <code style="background: #252526; padding: 2px 6px; border-radius: 2px; font-family: monospace;">python manage.py runserver 0.0.0.0:8000</code>
+                        <button onclick="navigator.clipboard.writeText('python manage.py runserver 0.0.0.0:8000'); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy', 1500);" style="background: #007acc; border: none; color: white; padding: 2px 8px; border-radius: 2px; font-size: 11px; cursor: pointer; margin-left: 8px;">📋</button>
+                    </li>
                 </ul>
                 <p>Once started, open the Ports tab at the bottom and click the <strong style="color: #4CAF50;">Local LAN</strong> button to open it instantly on any device.</p>
                 
                 <h4 style="color: white; margin-top: 20px; margin-bottom: 10px;">Cloudflare Tunnels</h4>
                 <p>Clicking <strong style="color: #2196F3;">Cloudflare</strong> creates a secure, public HTTPS URL. Anyone on the internet can access this URL, bypassing network restrictions completely.</p>
+                
+                <h4 style="color: white; margin-top: 20px; margin-bottom: 10px;">Keyboard Shortcuts</h4>
+                <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 15px; margin-bottom: 20px; font-size: 13px;">
+                    <div style="text-align: right; color: #8f8f8f;">Save File</div>
+                    <div><kbd style="background: #333; padding: 2px 6px; border-radius: 3px; font-size: 11px; border: 1px solid #444; border-bottom-width: 2px;">Ctrl + S</kbd></div>
+                    
+                    <div style="text-align: right; color: #8f8f8f;">Terminal Panel</div>
+                    <div><kbd style="background: #333; padding: 2px 6px; border-radius: 3px; font-size: 11px; border: 1px solid #444; border-bottom-width: 2px;">Ctrl + ,</kbd></div>
+                    
+                    <div style="text-align: right; color: #8f8f8f;">Source Control</div>
+                    <div><kbd style="background: #333; padding: 2px 6px; border-radius: 3px; font-size: 11px; border: 1px solid #444; border-bottom-width: 2px;">Ctrl + Shift + G</kbd></div>
+                    
+                    <div style="text-align: right; color: #8f8f8f;">Explorer</div>
+                    <div><kbd style="background: #333; padding: 2px 6px; border-radius: 3px; font-size: 11px; border: 1px solid #444; border-bottom-width: 2px;">Ctrl + Shift + E</kbd></div>
+                    
+                    <div style="text-align: right; color: #8f8f8f;">Search</div>
+                    <div><kbd style="background: #333; padding: 2px 6px; border-radius: 3px; font-size: 11px; border: 1px solid #444; border-bottom-width: 2px;">Ctrl + Shift + F</kbd></div>
+                    
+                    <div style="text-align: right; color: #8f8f8f;">Close Tab</div>
+                    <div><kbd style="background: #333; padding: 2px 6px; border-radius: 3px; font-size: 11px; border: 1px solid #444; border-bottom-width: 2px;">Ctrl + W</kbd> / Middle Click</div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button id="btn-close-help" class="primary-btn">Got it</button>

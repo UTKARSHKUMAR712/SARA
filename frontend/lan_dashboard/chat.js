@@ -149,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let pingInterval = null;
+    let pongTimeout = null;
 
     function connectWebSocket() {
         const host = window.location.hostname || "127.0.0.1";
@@ -164,6 +165,12 @@ document.addEventListener('DOMContentLoaded', () => {
             pingInterval = setInterval(() => {
                 if (ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ type: "ping" }));
+                    
+                    if (pongTimeout) clearTimeout(pongTimeout);
+                    pongTimeout = setTimeout(() => {
+                        console.warn("Pong timeout, closing connection...");
+                        ws.close();
+                    }, 5000);
                 }
             }, 10000);
         };
@@ -172,6 +179,10 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("WS Recv:", event.data);
             try {
                 const data = JSON.parse(event.data);
+                if (data.type === "pong") {
+                    if (pongTimeout) clearTimeout(pongTimeout);
+                    return;
+                }
                 if (data.type === "toast") {
                     const toast = document.createElement('div');
                     toast.textContent = "💡 " + data.text;

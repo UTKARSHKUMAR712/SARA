@@ -7,6 +7,7 @@ import { initPortsPanel, startLiveServer } from './ports.js';
 import { initSettingsUI, applyAllSettings, saveSettings } from './settings.js';
 import { initSidebarResizer } from './resizer.js';
 import { initSearch } from './search.js';
+import { initGit, refreshGit } from './git.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initial State
@@ -34,11 +35,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     initSettingsUI();
     initSidebarResizer();
     initSearch();
+    initGit();
+    
+    window.addEventListener('workspace-files-changed', () => {
+        refreshExplorer();
+    });
+    
+    window.addEventListener('focus', () => {
+        const gitView = document.getElementById('git-view');
+        if (gitView && gitView.style.display === 'flex') {
+            refreshGit();
+        }
+    });
+
+    window.addEventListener('file-saved', () => {
+        refreshGit();
+    });
+
+    window.addEventListener('git-restored', async (e) => {
+        const { reloadFile, reloadAllFiles } = await import('./editor.js');
+        if (e.detail.path === '.') {
+            await reloadAllFiles(true);
+        } else {
+            const sep = state.currentWorkspace.endsWith('/') || state.currentWorkspace.endsWith('\\') ? '' : '/';
+            const absPath = state.currentWorkspace + sep + e.detail.path;
+            await reloadFile(absPath);
+        }
+    });
     
     document.getElementById('autosave-check').textContent = state.autoSaveEnabled ? '✓' : '';
     
     if (state.currentWorkspace) {
         refreshExplorer();
+        refreshGit();
     } else {
         document.getElementById('sidebar-empty').style.display = 'block';
     }
@@ -72,13 +101,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sb = document.getElementById('sidebar');
         const searchView = document.getElementById('search-view');
         const explorerView = document.getElementById('explorer-view');
+        const gitView = document.getElementById('git-view');
         
-        if (searchView.style.display === 'block') {
+        if (searchView.style.display === 'block' || gitView.style.display === 'flex') {
             searchView.style.display = 'none';
+            gitView.style.display = 'none';
             explorerView.style.display = 'block';
             document.getElementById('sidebar-title').textContent = 'EXPLORER';
             document.getElementById('explorer-actions').style.display = 'flex';
+            document.getElementById('git-actions').style.display = 'none';
             document.getElementById('btn-search').classList.remove('active');
+            document.getElementById('btn-git').classList.remove('active');
             e.currentTarget.classList.add('active');
         } else {
             sb.classList.toggle('hide-sidebar');
@@ -93,6 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sb = document.getElementById('sidebar');
         const searchView = document.getElementById('search-view');
         const explorerView = document.getElementById('explorer-view');
+        const gitView = document.getElementById('git-view');
         
         if (sb.classList.contains('hide-sidebar')) {
             sb.classList.remove('hide-sidebar');
@@ -102,17 +136,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         explorerView.style.display = 'none';
+        gitView.style.display = 'none';
         searchView.style.display = 'block';
         document.getElementById('sidebar-title').textContent = 'SEARCH';
         document.getElementById('explorer-actions').style.display = 'none';
+        document.getElementById('git-actions').style.display = 'none';
         
         document.getElementById('btn-explorer').classList.remove('active');
+        document.getElementById('btn-git').classList.remove('active');
         e.currentTarget.classList.add('active');
         
         document.getElementById('search-input').focus();
     });
 
-
+    document.getElementById('btn-git').addEventListener('click', (e) => {
+        const sb = document.getElementById('sidebar');
+        const searchView = document.getElementById('search-view');
+        const explorerView = document.getElementById('explorer-view');
+        const gitView = document.getElementById('git-view');
+        
+        if (sb.classList.contains('hide-sidebar')) {
+            sb.classList.remove('hide-sidebar');
+        }
+        if (window.innerWidth <= 768) {
+            sb.classList.add('show');
+        }
+        
+        explorerView.style.display = 'none';
+        searchView.style.display = 'none';
+        gitView.style.display = 'flex';
+        document.getElementById('sidebar-title').textContent = 'SOURCE CONTROL';
+        document.getElementById('explorer-actions').style.display = 'none';
+        document.getElementById('git-actions').style.display = 'flex';
+        
+        document.getElementById('btn-explorer').classList.remove('active');
+        document.getElementById('btn-search').classList.remove('active');
+        e.currentTarget.classList.add('active');
+        
+        refreshGit();
+    });
 
     document.getElementById('menu-new-file').addEventListener('click', createNewFile);
     document.getElementById('menu-new-folder').addEventListener('click', createNewFolder);
@@ -156,6 +218,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if ((e.ctrlKey || e.metaKey) && e.key === ',') {
             e.preventDefault();
             toggleTerminal();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'g' || e.key === 'G')) {
+            e.preventDefault();
+            document.getElementById('btn-git').click();
         }
     });
 

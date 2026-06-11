@@ -57,8 +57,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/main.cpp.obj: CXX_COMPILER__sara_
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/AgentInitializer.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/AgentInitializer.cpp || cmake_object_order_depends_target_sara_agent
@@ -69,8 +67,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/AgentInitializer.cpp.obj: CXX_COM
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/Logger.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/Logger.cpp || cmake_object_order_depends_target_sara_agent
@@ -81,8 +77,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/Logger.cpp.obj: CXX_COMPILER__sar
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/ConfigManager.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/ConfigManager.cpp || cmake_object_order_depends_target_sara_agent
@@ -93,8 +87,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/ConfigManager.cpp.obj: CXX_COMPIL
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/ActionDispatcher.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/ActionDispatcher.cpp || cmake_object_order_depends_target_sara_agent
@@ -105,8 +97,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/ActionDispatcher.cpp.obj: CXX_COM
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/MessageHandlers.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/MessageHandlers.cpp || cmake_object_order_depends_target_sara_agent
@@ -117,8 +107,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/MessageHandlers.cpp.obj: CXX_COMP
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/Scheduler.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/Scheduler.cpp || cmake_object_order_depends_target_sara_agent
@@ -129,8 +117,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/Scheduler.cpp.obj: CXX_COMPILER__
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/SQLiteStore.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/SQLiteStore.cpp || cmake_object_order_depends_target_sara_agent
@@ -141,8 +127,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/SQLiteStore.cpp.obj: CXX_COMPILER
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/WinAPIExecutor.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/WinAPIExecutor.cpp || cmake_object_order_depends_target_sara_agent
@@ -153,8 +137,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/WinAPIExecutor.cpp.obj: CXX_COMPI
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/TelegramGateway.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/TelegramGateway.cpp || cmake_object_order_depends_target_sara_agent
@@ -165,8 +147,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/TelegramGateway.cpp.obj: CXX_COMP
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/IPCServer.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/IPCServer.cpp || cmake_object_order_depends_target_sara_agent
@@ -177,8 +157,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/IPCServer.cpp.obj: CXX_COMPILER__
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/ActionValidator.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/ActionValidator.cpp || cmake_object_order_depends_target_sara_agent
@@ -189,8 +167,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/ActionValidator.cpp.obj: CXX_COMP
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/PermissionManager.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/PermissionManager.cpp || cmake_object_order_depends_target_sara_agent
@@ -201,8 +177,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/PermissionManager.cpp.obj: CXX_CO
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/SystemMonitor.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/SystemMonitor.cpp || cmake_object_order_depends_target_sara_agent
@@ -213,8 +187,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/SystemMonitor.cpp.obj: CXX_COMPIL
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/ScreenshotCapture.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/ScreenshotCapture.cpp || cmake_object_order_depends_target_sara_agent
@@ -225,8 +197,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/ScreenshotCapture.cpp.obj: CXX_CO
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/CameraCapture.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/CameraCapture.cpp || cmake_object_order_depends_target_sara_agent
@@ -237,8 +207,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/CameraCapture.cpp.obj: CXX_COMPIL
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/ProcessMonitor.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/ProcessMonitor.cpp || cmake_object_order_depends_target_sara_agent
@@ -249,8 +217,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/ProcessMonitor.cpp.obj: CXX_COMPI
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/EventAutomation.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/EventAutomation.cpp || cmake_object_order_depends_target_sara_agent
@@ -261,8 +227,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/EventAutomation.cpp.obj: CXX_COMP
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/HotkeyManager.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/HotkeyManager.cpp || cmake_object_order_depends_target_sara_agent
@@ -273,8 +237,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/HotkeyManager.cpp.obj: CXX_COMPIL
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/NetworkMonitor.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/NetworkMonitor.cpp || cmake_object_order_depends_target_sara_agent
@@ -285,8 +247,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/NetworkMonitor.cpp.obj: CXX_COMPI
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/ToolRegistry.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/ToolRegistry.cpp || cmake_object_order_depends_target_sara_agent
@@ -297,8 +257,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/ToolRegistry.cpp.obj: CXX_COMPILE
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/CommandMap.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/CommandMap.cpp || cmake_object_order_depends_target_sara_agent
@@ -309,8 +267,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/CommandMap.cpp.obj: CXX_COMPILER_
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/WebSocketServer.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/WebSocketServer.cpp || cmake_object_order_depends_target_sara_agent
@@ -321,8 +277,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/WebSocketServer.cpp.obj: CXX_COMP
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/RuntimeState.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/RuntimeState.cpp || cmake_object_order_depends_target_sara_agent
@@ -333,8 +287,16 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/RuntimeState.cpp.obj: CXX_COMPILE
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
+
+build CMakeFiles/sara_agent.dir/sara_agent/src/MeshCentralManager.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/MeshCentralManager.cpp || cmake_object_order_depends_target_sara_agent
+  CONFIG = Release
+  DEFINES = -DUNICODE -D_UNICODE
+  DEP_FILE = CMakeFiles\sara_agent.dir\sara_agent\src\MeshCentralManager.cpp.obj.d
+  FLAGS = -O3 -std=gnu++20 -flto -s -std=gnu++20 -fcoroutines -DWINRT_LEAN_AND_MEAN
+  INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
+  OBJECT_DIR = CMakeFiles\sara_agent.dir
+  OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/DockRouter.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/DockRouter.cpp || cmake_object_order_depends_target_sara_agent
@@ -345,8 +307,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/DockRouter.cpp.obj: CXX_COMPILER_
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/MediaDock.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/MediaDock.cpp || cmake_object_order_depends_target_sara_agent
@@ -357,8 +317,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/MediaDock.cpp.obj: CXX_COMPILER__
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/plugins/media/media_service.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/plugins/media/media_service.cpp || cmake_object_order_depends_target_sara_agent
@@ -369,8 +327,6 @@ build CMakeFiles/sara_agent.dir/plugins/media/media_service.cpp.obj: CXX_COMPILE
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\plugins\media
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/SystemDock.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/SystemDock.cpp || cmake_object_order_depends_target_sara_agent
@@ -381,8 +337,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/SystemDock.cpp.obj: CXX_COMPILER_
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/MonitorDock.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/MonitorDock.cpp || cmake_object_order_depends_target_sara_agent
@@ -393,8 +347,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/MonitorDock.cpp.obj: CXX_COMPILER
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/AutomationDock.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/AutomationDock.cpp || cmake_object_order_depends_target_sara_agent
@@ -405,8 +357,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/AutomationDock.cpp.obj: CXX_COMPI
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/NativeCommandRouter.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/NativeCommandRouter.cpp || cmake_object_order_depends_target_sara_agent
@@ -417,8 +367,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/NativeCommandRouter.cpp.obj: CXX_
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/SecurityManager.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/SecurityManager.cpp || cmake_object_order_depends_target_sara_agent
@@ -429,8 +377,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/SecurityManager.cpp.obj: CXX_COMP
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_state.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify/spotify_state.cpp || cmake_object_order_depends_target_sara_agent
@@ -441,8 +387,6 @@ build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_state.cpp.obj: CXX_COMPI
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\plugins\spotify
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_events.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify/spotify_events.cpp || cmake_object_order_depends_target_sara_agent
@@ -453,8 +397,6 @@ build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_events.cpp.obj: CXX_COMP
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\plugins\spotify
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_ws.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify/spotify_ws.cpp || cmake_object_order_depends_target_sara_agent
@@ -465,8 +407,6 @@ build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_ws.cpp.obj: CXX_COMPILER
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\plugins\spotify
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_commands.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify/spotify_commands.cpp || cmake_object_order_depends_target_sara_agent
@@ -477,8 +417,6 @@ build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_commands.cpp.obj: CXX_CO
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\plugins\spotify
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_dock.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify/spotify_dock.cpp || cmake_object_order_depends_target_sara_agent
@@ -489,8 +427,6 @@ build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_dock.cpp.obj: CXX_COMPIL
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\plugins\spotify
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_plugin.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify/spotify_plugin.cpp || cmake_object_order_depends_target_sara_agent
@@ -501,8 +437,6 @@ build CMakeFiles/sara_agent.dir/plugins/spotify/spotify_plugin.cpp.obj: CXX_COMP
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\plugins\spotify
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/PluginManager.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/PluginManager.cpp || cmake_object_order_depends_target_sara_agent
@@ -513,8 +447,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/PluginManager.cpp.obj: CXX_COMPIL
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPClient.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/plugins/mcp/MCPClient.cpp || cmake_object_order_depends_target_sara_agent
@@ -525,8 +457,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPClient.cpp.obj: CX
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src\plugins\mcp
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPRegistry.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/plugins/mcp/MCPRegistry.cpp || cmake_object_order_depends_target_sara_agent
@@ -537,8 +467,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPRegistry.cpp.obj: 
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src\plugins\mcp
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPTransport.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent/src/plugins/mcp/MCPTransport.cpp || cmake_object_order_depends_target_sara_agent
@@ -549,8 +477,6 @@ build CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPTransport.cpp.obj:
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\sara_agent\src\plugins\mcp
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalToken.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/src/TerminalToken.cpp || cmake_object_order_depends_target_sara_agent
@@ -561,8 +487,6 @@ build CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalToken.cpp.obj: CXX_CO
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\remote_runtime\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/remote_runtime/src/ConPTYSession.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/src/ConPTYSession.cpp || cmake_object_order_depends_target_sara_agent
@@ -573,8 +497,6 @@ build CMakeFiles/sara_agent.dir/remote_runtime/src/ConPTYSession.cpp.obj: CXX_CO
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\remote_runtime\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalSessionManager.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/src/TerminalSessionManager.cpp || cmake_object_order_depends_target_sara_agent
@@ -585,8 +507,6 @@ build CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalSessionManager.cpp.ob
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\remote_runtime\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalHttpServer.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/src/TerminalHttpServer.cpp || cmake_object_order_depends_target_sara_agent
@@ -597,8 +517,6 @@ build CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalHttpServer.cpp.obj: C
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\remote_runtime\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/remote_runtime/src/CloudflaredManager.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/src/CloudflaredManager.cpp || cmake_object_order_depends_target_sara_agent
@@ -609,8 +527,6 @@ build CMakeFiles/sara_agent.dir/remote_runtime/src/CloudflaredManager.cpp.obj: C
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\remote_runtime\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/remote_runtime/src/FileBrowserManager.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/src/FileBrowserManager.cpp || cmake_object_order_depends_target_sara_agent
@@ -621,8 +537,6 @@ build CMakeFiles/sara_agent.dir/remote_runtime/src/FileBrowserManager.cpp.obj: C
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\remote_runtime\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/remote_runtime/src/PortDetector.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/src/PortDetector.cpp || cmake_object_order_depends_target_sara_agent
@@ -633,8 +547,6 @@ build CMakeFiles/sara_agent.dir/remote_runtime/src/PortDetector.cpp.obj: CXX_COM
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\remote_runtime\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/remote_runtime/src/LiveServer.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/src/LiveServer.cpp || cmake_object_order_depends_target_sara_agent
@@ -645,8 +557,16 @@ build CMakeFiles/sara_agent.dir/remote_runtime/src/LiveServer.cpp.obj: CXX_COMPI
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\remote_runtime\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
+
+build CMakeFiles/sara_agent.dir/remote_runtime/src/GitService.cpp.obj: CXX_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/src/GitService.cpp || cmake_object_order_depends_target_sara_agent
+  CONFIG = Release
+  DEFINES = -DUNICODE -D_UNICODE
+  DEP_FILE = CMakeFiles\sara_agent.dir\remote_runtime\src\GitService.cpp.obj.d
+  FLAGS = -O3 -std=gnu++20 -flto -s -std=gnu++20 -fcoroutines -DWINRT_LEAN_AND_MEAN
+  INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
+  OBJECT_DIR = CMakeFiles\sara_agent.dir
+  OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\remote_runtime\src
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/sara_agent_manifest.rc.obj: RC_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_agent_manifest.rc || cmake_object_order_depends_target_sara_agent
@@ -657,8 +577,6 @@ build CMakeFiles/sara_agent.dir/sara_agent_manifest.rc.obj: RC_COMPILER__sara_ag
   INCLUDES = -I C:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -I C:/Users/utkarsh_kumar/Desktop/sara/shared -I C:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -I C:/Users/utkarsh_kumar/Desktop/sara/plugins/media -I C:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -I C:/msys64/ucrt64/include/winrt -I C:/msys64/ucrt64/include
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 build CMakeFiles/sara_agent.dir/shared/sqlite3.c.obj: C_COMPILER__sara_agent_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/shared/sqlite3.c || cmake_object_order_depends_target_sara_agent
@@ -669,8 +587,6 @@ build CMakeFiles/sara_agent.dir/shared/sqlite3.c.obj: C_COMPILER__sara_agent_uns
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_agent/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/spotify -IC:/Users/utkarsh_kumar/Desktop/sara/plugins/media -IC:/Users/utkarsh_kumar/Desktop/sara/remote_runtime/include -IC:/msys64/ucrt64/include/winrt
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_agent.dir\shared
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
-  TARGET_PDB = sara_agent.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 
@@ -681,19 +597,18 @@ build CMakeFiles/sara_agent.dir/shared/sqlite3.c.obj: C_COMPILER__sara_agent_uns
 #############################################
 # Link the executable sara_agent.exe
 
-build sara_agent.exe: CXX_EXECUTABLE_LINKER__sara_agent_Release CMakeFiles/sara_agent.dir/sara_agent/src/main.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/AgentInitializer.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/Logger.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ConfigManager.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ActionDispatcher.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/MessageHandlers.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/Scheduler.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/SQLiteStore.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/WinAPIExecutor.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/TelegramGateway.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/IPCServer.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ActionValidator.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/PermissionManager.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/SystemMonitor.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ScreenshotCapture.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/CameraCapture.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ProcessMonitor.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/EventAutomation.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/HotkeyManager.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/NetworkMonitor.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ToolRegistry.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/CommandMap.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/WebSocketServer.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/RuntimeState.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/DockRouter.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/MediaDock.cpp.obj CMakeFiles/sara_agent.dir/plugins/media/media_service.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/SystemDock.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/MonitorDock.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/AutomationDock.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/NativeCommandRouter.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/SecurityManager.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_state.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_events.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_ws.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_commands.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_dock.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_plugin.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/PluginManager.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPClient.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPRegistry.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPTransport.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalToken.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/ConPTYSession.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalSessionManager.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalHttpServer.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/CloudflaredManager.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/FileBrowserManager.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/PortDetector.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/LiveServer.cpp.obj CMakeFiles/sara_agent.dir/sara_agent_manifest.rc.obj CMakeFiles/sara_agent.dir/shared/sqlite3.c.obj | sara_agent/sara_agent.manifest
+build sara_agent.exe: CXX_EXECUTABLE_LINKER__sara_agent_Release CMakeFiles/sara_agent.dir/sara_agent/src/main.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/AgentInitializer.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/Logger.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ConfigManager.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ActionDispatcher.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/MessageHandlers.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/Scheduler.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/SQLiteStore.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/WinAPIExecutor.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/TelegramGateway.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/IPCServer.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ActionValidator.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/PermissionManager.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/SystemMonitor.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ScreenshotCapture.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/CameraCapture.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ProcessMonitor.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/EventAutomation.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/HotkeyManager.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/NetworkMonitor.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/ToolRegistry.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/CommandMap.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/WebSocketServer.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/RuntimeState.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/MeshCentralManager.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/DockRouter.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/MediaDock.cpp.obj CMakeFiles/sara_agent.dir/plugins/media/media_service.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/SystemDock.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/MonitorDock.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/AutomationDock.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/NativeCommandRouter.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/SecurityManager.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_state.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_events.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_ws.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_commands.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_dock.cpp.obj CMakeFiles/sara_agent.dir/plugins/spotify/spotify_plugin.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/PluginManager.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPClient.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPRegistry.cpp.obj CMakeFiles/sara_agent.dir/sara_agent/src/plugins/mcp/MCPTransport.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalToken.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/ConPTYSession.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalSessionManager.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/TerminalHttpServer.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/CloudflaredManager.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/FileBrowserManager.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/PortDetector.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/LiveServer.cpp.obj CMakeFiles/sara_agent.dir/remote_runtime/src/GitService.cpp.obj CMakeFiles/sara_agent.dir/sara_agent_manifest.rc.obj CMakeFiles/sara_agent.dir/shared/sqlite3.c.obj | sara_agent/sara_agent.manifest
   CONFIG = Release
   FLAGS = -O3
-  LINK_FLAGS = -flto -s -static-libstdc++ -static-libgcc -mwindows
+  LINK_FLAGS = -s -static-libstdc++ -static-libgcc -mwindows
   LINK_LIBRARIES = -lwinhttp  -lws2_32  -luser32  -lgdi32  -lshell32  -ladvapi32  -lole32  -lrpcrt4  -lwinmm  -lcrypt32  -lpdh  -liphlpapi  -lmfplat  -lmf  -lmfreadwrite  -lmfuuid  -lshlwapi  -lbcrypt  -lwindowsapp  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   MANIFESTS = sara_agent\sara_agent.manifest
   OBJECT_DIR = CMakeFiles\sara_agent.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
-  TARGET_COMPILE_PDB = CMakeFiles\sara_agent.dir\
   TARGET_FILE = sara_agent.exe
   TARGET_IMPLIB = libsara_agent.dll.a
-  TARGET_PDB = sara_agent.pdb
+  TARGET_PDB = sara_agent.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\sara_agent.dir
 
 # =============================================================================
@@ -713,8 +628,6 @@ build CMakeFiles/sara_gui.dir/sara_gui/src/main.cpp.obj: CXX_COMPILER__sara_gui_
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_gui/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/backends
   OBJECT_DIR = CMakeFiles\sara_gui.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_gui.dir\sara_gui\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_gui.dir\
-  TARGET_PDB = sara_gui.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_gui.dir
 
 build CMakeFiles/sara_gui.dir/sara_gui/src/IPCClient.cpp.obj: CXX_COMPILER__sara_gui_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/sara_gui/src/IPCClient.cpp || cmake_object_order_depends_target_sara_gui
@@ -725,8 +638,6 @@ build CMakeFiles/sara_gui.dir/sara_gui/src/IPCClient.cpp.obj: CXX_COMPILER__sara
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_gui/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/backends
   OBJECT_DIR = CMakeFiles\sara_gui.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_gui.dir\sara_gui\src
-  TARGET_COMPILE_PDB = CMakeFiles\sara_gui.dir\
-  TARGET_PDB = sara_gui.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_gui.dir
 
 build CMakeFiles/sara_gui.dir/shared/imgui/imgui.cpp.obj: CXX_COMPILER__sara_gui_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/imgui.cpp || cmake_object_order_depends_target_sara_gui
@@ -737,8 +648,6 @@ build CMakeFiles/sara_gui.dir/shared/imgui/imgui.cpp.obj: CXX_COMPILER__sara_gui
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_gui/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/backends
   OBJECT_DIR = CMakeFiles\sara_gui.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_gui.dir\shared\imgui
-  TARGET_COMPILE_PDB = CMakeFiles\sara_gui.dir\
-  TARGET_PDB = sara_gui.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_gui.dir
 
 build CMakeFiles/sara_gui.dir/shared/imgui/imgui_draw.cpp.obj: CXX_COMPILER__sara_gui_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/imgui_draw.cpp || cmake_object_order_depends_target_sara_gui
@@ -749,8 +658,6 @@ build CMakeFiles/sara_gui.dir/shared/imgui/imgui_draw.cpp.obj: CXX_COMPILER__sar
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_gui/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/backends
   OBJECT_DIR = CMakeFiles\sara_gui.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_gui.dir\shared\imgui
-  TARGET_COMPILE_PDB = CMakeFiles\sara_gui.dir\
-  TARGET_PDB = sara_gui.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_gui.dir
 
 build CMakeFiles/sara_gui.dir/shared/imgui/imgui_tables.cpp.obj: CXX_COMPILER__sara_gui_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/imgui_tables.cpp || cmake_object_order_depends_target_sara_gui
@@ -761,8 +668,6 @@ build CMakeFiles/sara_gui.dir/shared/imgui/imgui_tables.cpp.obj: CXX_COMPILER__s
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_gui/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/backends
   OBJECT_DIR = CMakeFiles\sara_gui.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_gui.dir\shared\imgui
-  TARGET_COMPILE_PDB = CMakeFiles\sara_gui.dir\
-  TARGET_PDB = sara_gui.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_gui.dir
 
 build CMakeFiles/sara_gui.dir/shared/imgui/imgui_widgets.cpp.obj: CXX_COMPILER__sara_gui_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/imgui_widgets.cpp || cmake_object_order_depends_target_sara_gui
@@ -773,8 +678,6 @@ build CMakeFiles/sara_gui.dir/shared/imgui/imgui_widgets.cpp.obj: CXX_COMPILER__
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_gui/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/backends
   OBJECT_DIR = CMakeFiles\sara_gui.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_gui.dir\shared\imgui
-  TARGET_COMPILE_PDB = CMakeFiles\sara_gui.dir\
-  TARGET_PDB = sara_gui.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_gui.dir
 
 build CMakeFiles/sara_gui.dir/shared/imgui/backends/imgui_impl_win32.cpp.obj: CXX_COMPILER__sara_gui_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/backends/imgui_impl_win32.cpp || cmake_object_order_depends_target_sara_gui
@@ -785,8 +688,6 @@ build CMakeFiles/sara_gui.dir/shared/imgui/backends/imgui_impl_win32.cpp.obj: CX
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_gui/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/backends
   OBJECT_DIR = CMakeFiles\sara_gui.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_gui.dir\shared\imgui\backends
-  TARGET_COMPILE_PDB = CMakeFiles\sara_gui.dir\
-  TARGET_PDB = sara_gui.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_gui.dir
 
 build CMakeFiles/sara_gui.dir/shared/imgui/backends/imgui_impl_dx11.cpp.obj: CXX_COMPILER__sara_gui_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/backends/imgui_impl_dx11.cpp || cmake_object_order_depends_target_sara_gui
@@ -797,8 +698,6 @@ build CMakeFiles/sara_gui.dir/shared/imgui/backends/imgui_impl_dx11.cpp.obj: CXX
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_gui/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/backends
   OBJECT_DIR = CMakeFiles\sara_gui.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_gui.dir\shared\imgui\backends
-  TARGET_COMPILE_PDB = CMakeFiles\sara_gui.dir\
-  TARGET_PDB = sara_gui.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_gui.dir
 
 build CMakeFiles/sara_gui.dir/shared/qrcodegen/qrcodegen.c.obj: C_COMPILER__sara_gui_unscanned_Release C$:/Users/utkarsh_kumar/Desktop/sara/shared/qrcodegen/qrcodegen.c || cmake_object_order_depends_target_sara_gui
@@ -809,8 +708,6 @@ build CMakeFiles/sara_gui.dir/shared/qrcodegen/qrcodegen.c.obj: C_COMPILER__sara
   INCLUDES = -IC:/Users/utkarsh_kumar/Desktop/sara/sara_gui/include -IC:/Users/utkarsh_kumar/Desktop/sara/shared -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui -IC:/Users/utkarsh_kumar/Desktop/sara/shared/imgui/backends
   OBJECT_DIR = CMakeFiles\sara_gui.dir
   OBJECT_FILE_DIR = CMakeFiles\sara_gui.dir\shared\qrcodegen
-  TARGET_COMPILE_PDB = CMakeFiles\sara_gui.dir\
-  TARGET_PDB = sara_gui.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\sara_gui.dir
 
 
@@ -829,10 +726,9 @@ build sara_gui.exe: CXX_EXECUTABLE_LINKER__sara_gui_Release CMakeFiles/sara_gui.
   OBJECT_DIR = CMakeFiles\sara_gui.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
-  TARGET_COMPILE_PDB = CMakeFiles\sara_gui.dir\
   TARGET_FILE = sara_gui.exe
   TARGET_IMPLIB = libsara_gui.dll.a
-  TARGET_PDB = sara_gui.pdb
+  TARGET_PDB = sara_gui.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\sara_gui.dir
 
 
@@ -882,14 +778,14 @@ build all: phony sara_agent.exe sara_gui.exe
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja C$:/Users/utkarsh_kumar/Desktop/sara/cmake_install.cmake: RERUN_CMAKE | C$:/msys64/ucrt64/share/cmake/Modules/CMakeCCompiler.cmake.in C$:/msys64/ucrt64/share/cmake/Modules/CMakeCCompilerABI.c C$:/msys64/ucrt64/share/cmake/Modules/CMakeCInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeCXXCompiler.cmake.in C$:/msys64/ucrt64/share/cmake/Modules/CMakeCXXCompilerABI.cpp C$:/msys64/ucrt64/share/cmake/Modules/CMakeCXXInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeCommonLanguageInclude.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeCompilerIdDetection.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCompilerABI.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCompilerId.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCompilerSupport.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineRCCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineSystem.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeFindBinUtils.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeGenericSystem.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeInitializeConfigs.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeLanguageInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeNinjaFindMake.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeParseImplicitIncludeInfo.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeParseImplicitLinkInfo.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeParseLibraryArchitecture.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeRCCompiler.cmake.in C$:/msys64/ucrt64/share/cmake/Modules/CMakeRCInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeSystem.cmake.in C$:/msys64/ucrt64/share/cmake/Modules/CMakeSystemSpecificInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeTestCCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeTestCXXCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeTestCompilerCommon.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeTestRCCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/ADSP-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/ARMCC-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/ARMClang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/AppleClang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Borland-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Bruce-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Clang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Clang-DetermineCompilerInternal.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Compaq-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Compaq-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Cray-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/CrayClang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Diab-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Embarcadero-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Fujitsu-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/FujitsuClang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GHS-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-CXX-CXXImportStd.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-FindBinUtils.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/HP-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/HP-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IAR-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IBMCPP-C-DetermineVersionInternal.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IBMClang-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IBMClang-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Intel-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IntelLLVM-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/LCC-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/LCC-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/MSVC-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/NVHPC-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/NVIDIA-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/OrangeC-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/PGI-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/PathScale-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Renesas-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/SCO-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/SDCC-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/SunPro-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/SunPro-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/TI-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/TIClang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Tasking-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/TinyCC-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/VisualAge-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/VisualAge-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Watcom-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/XL-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/XL-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/XLClang-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/XLClang-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/zOS-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/zOS-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeDetermineLinkerId.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeInspectCLinker.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeInspectCXXLinker.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/FeatureTesting.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-Determine-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-C-ABI.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-Initialize.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-windres.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/WindowsPaths.cmake CMakeCache.txt CMakeFiles/4.3.2/CMakeCCompiler.cmake CMakeFiles/4.3.2/CMakeCXXCompiler.cmake CMakeFiles/4.3.2/CMakeRCCompiler.cmake CMakeFiles/4.3.2/CMakeSystem.cmake CMakeLists.txt
+build build.ninja C$:/Users/utkarsh_kumar/Desktop/sara/cmake_install.cmake: RERUN_CMAKE | C$:/msys64/ucrt64/share/cmake/Modules/CMakeCInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeCXXInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeCommonLanguageInclude.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeGenericSystem.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeInitializeConfigs.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeLanguageInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeRCInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeSystemSpecificInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-C-ABI.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-Initialize.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-windres.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/WindowsPaths.cmake CMakeCache.txt CMakeFiles/4.3.2/CMakeCCompiler.cmake CMakeFiles/4.3.2/CMakeCXXCompiler.cmake CMakeFiles/4.3.2/CMakeRCCompiler.cmake CMakeFiles/4.3.2/CMakeSystem.cmake CMakeLists.txt
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build C$:/msys64/ucrt64/share/cmake/Modules/CMakeCCompiler.cmake.in C$:/msys64/ucrt64/share/cmake/Modules/CMakeCCompilerABI.c C$:/msys64/ucrt64/share/cmake/Modules/CMakeCInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeCXXCompiler.cmake.in C$:/msys64/ucrt64/share/cmake/Modules/CMakeCXXCompilerABI.cpp C$:/msys64/ucrt64/share/cmake/Modules/CMakeCXXInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeCommonLanguageInclude.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeCompilerIdDetection.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCompilerABI.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCompilerId.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineCompilerSupport.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineRCCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeDetermineSystem.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeFindBinUtils.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeGenericSystem.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeInitializeConfigs.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeLanguageInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeNinjaFindMake.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeParseImplicitIncludeInfo.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeParseImplicitLinkInfo.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeParseLibraryArchitecture.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeRCCompiler.cmake.in C$:/msys64/ucrt64/share/cmake/Modules/CMakeRCInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeSystem.cmake.in C$:/msys64/ucrt64/share/cmake/Modules/CMakeSystemSpecificInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeTestCCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeTestCXXCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeTestCompilerCommon.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeTestRCCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/ADSP-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/ARMCC-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/ARMClang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/AppleClang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Borland-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Bruce-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Clang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Clang-DetermineCompilerInternal.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Compaq-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Compaq-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Cray-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/CrayClang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Diab-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Embarcadero-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Fujitsu-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/FujitsuClang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GHS-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-CXX-CXXImportStd.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-FindBinUtils.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/HP-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/HP-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IAR-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IBMCPP-C-DetermineVersionInternal.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IBMClang-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IBMClang-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Intel-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/IntelLLVM-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/LCC-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/LCC-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/MSVC-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/NVHPC-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/NVIDIA-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/OrangeC-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/PGI-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/PathScale-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Renesas-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/SCO-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/SDCC-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/SunPro-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/SunPro-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/TI-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/TIClang-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Tasking-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/TinyCC-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/VisualAge-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/VisualAge-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/Watcom-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/XL-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/XL-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/XLClang-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/XLClang-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/zOS-C-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/zOS-CXX-DetermineCompiler.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeDetermineLinkerId.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeInspectCLinker.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeInspectCXXLinker.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/FeatureTesting.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-Determine-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-C-ABI.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-Initialize.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-windres.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/WindowsPaths.cmake CMakeCache.txt CMakeFiles/4.3.2/CMakeCCompiler.cmake CMakeFiles/4.3.2/CMakeCXXCompiler.cmake CMakeFiles/4.3.2/CMakeRCCompiler.cmake CMakeFiles/4.3.2/CMakeSystem.cmake CMakeLists.txt: phony
+build C$:/msys64/ucrt64/share/cmake/Modules/CMakeCInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeCXXInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeCommonLanguageInclude.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeGenericSystem.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeInitializeConfigs.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeLanguageInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeRCInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeSystemSpecificInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Compiler/GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Linker/Windows-GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-C-ABI.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-C.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU-CXX.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-GNU.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-Initialize.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows-windres.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/Windows.cmake C$:/msys64/ucrt64/share/cmake/Modules/Platform/WindowsPaths.cmake CMakeCache.txt CMakeFiles/4.3.2/CMakeCCompiler.cmake CMakeFiles/4.3.2/CMakeCXXCompiler.cmake CMakeFiles/4.3.2/CMakeRCCompiler.cmake CMakeFiles/4.3.2/CMakeSystem.cmake CMakeLists.txt: phony
 
 
 #############################################

@@ -33,6 +33,9 @@ export async function loadTree(path, container) {
 }
 
 export function renderTreeNodes(container, items) {
+    // Filter out .git directory
+    items = items.filter(item => item.name !== '.git');
+    
     // Sort directories first, then files alphabetically
     items.sort((a, b) => {
         if (a.isDir && !b.isDir) return -1;

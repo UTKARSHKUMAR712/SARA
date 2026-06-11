@@ -77,17 +77,23 @@ add_executable(sara_agent
     remote_runtime/src/ConPTYSession.cpp
     remote_runtime/src/TerminalSessionManager.cpp
     remote_runtime/src/TerminalHttpServer.cpp
+    remote_runtime/src/HttpUtils.cpp
+    remote_runtime/src/ApiFsController.cpp
+    remote_runtime/src/ApiGitController.cpp
+    remote_runtime/src/ApiSearchController.cpp
+    remote_runtime/src/ApiWorkspaceController.cpp
     remote_runtime/src/CloudflaredManager.cpp
     remote_runtime/src/FileBrowserManager.cpp
     remote_runtime/src/PortDetector.cpp
     remote_runtime/src/LiveServer.cpp
+    remote_runtime/src/GitService.cpp
 )
 
 # Compile sqlite3.c as C, not C++
 set_source_files_properties(shared/sqlite3.c PROPERTIES LANGUAGE C)
 
-target_compile_options(sara_agent PRIVATE -flto -s)
-target_link_options(sara_agent PRIVATE -flto -s)
+target_compile_options(sara_agent PRIVATE -s)
+target_link_options(sara_agent PRIVATE -s)
 
 target_include_directories(sara_agent PRIVATE
     sara_agent/include

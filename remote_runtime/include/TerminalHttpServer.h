@@ -47,20 +47,6 @@ private:
     void accept_loop();
     void handle_client(SOCKET sock);
 
-    // HTTP helpers
-    static std::string parse_path(const std::string& request);
-    static std::string parse_query_param(const std::string& request,
-                                          const std::string& param);
-    static std::string parse_method(const std::string& request);
-    static bool is_websocket_upgrade(const std::string& request);
-    static bool do_ws_handshake(SOCKET sock, const std::string& request);
-
-    // Response helpers
-    static void send_http(SOCKET sock, int code, const std::string& content_type,
-                          const std::string& body, const std::string& extra_headers = "");
-    static void send_404(SOCKET sock);
-    static void send_403(SOCKET sock);
-
     // Static file loading (loaded once at startup, kept in memory)
     static std::string load_file(const std::string& path);
     static std::string embedded_index_html();  // fallback if no file
@@ -85,9 +71,6 @@ private:
     std::string static_dir_;
     std::atomic<bool> running_{false};
     std::thread accept_thread_;
-
-    std::mutex port_tunnels_mutex_;
-    std::map<int, std::unique_ptr<CloudflaredManager>> port_tunnels_;
 
     int proxy_header_timeout_ = 300;
     int proxy_idle_timeout_   = 300;
