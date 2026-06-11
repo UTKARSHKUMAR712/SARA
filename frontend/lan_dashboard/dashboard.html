@@ -122,6 +122,26 @@
                                 <div class="progress-bar"><div class="progress-fill" id="dash-ram-fill" style="width:0%"></div></div>
                                 <span class="stat-val" id="dash-ram-val">0%</span>
                             </div>
+                            <div class="stat-row">
+                                <span class="stat-label">GPU</span>
+                                <div class="progress-bar"><div class="progress-fill" id="dash-gpu-fill" style="width:0%"></div></div>
+                                <span class="stat-val" id="dash-gpu-val">0%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Disk</span>
+                                <div class="progress-bar"><div class="progress-fill" id="dash-disk-fill" style="width:0%"></div></div>
+                                <span class="stat-val" id="dash-disk-val">-</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Net ↓</span>
+                                <div class="progress-bar" style="background: transparent;"></div>
+                                <span class="stat-val" id="dash-net-down">0.0 MB/s</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Net ↑</span>
+                                <div class="progress-bar" style="background: transparent;"></div>
+                                <span class="stat-val" id="dash-net-up">0.0 MB/s</span>
+                            </div>
                         </div>
                         <div class="top-process" id="dash-top-process">⚠️ Top Process: -</div>
                         <button class="clean-ram-btn" onclick="sendCommand('/cleanram')">

@@ -103,13 +103,41 @@ NetworkStatus NetworkMonitor::query_current() const {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+#include <netioapi.h>
+
 void NetworkMonitor::poll_loop() {
+    unsigned long long last_in = 0, last_out = 0;
+    auto last_time = std::chrono::steady_clock::now();
+    bool first_run = true;
+
     while (running_) {
         std::this_thread::sleep_for(std::chrono::milliseconds(poll_interval_ms_));
         if (!running_) break;
 
         NetworkStatus current = query_current();
         bool was_conn = false, now_conn = false;
+
+        unsigned long long in_bytes = 0, out_bytes = 0;
+        PMIB_IF_TABLE2 pIfTable = nullptr;
+        if (GetIfTable2(&pIfTable) == NO_ERROR) {
+            for (ULONG i = 0; i < pIfTable->NumEntries; i++) {
+                if (pIfTable->Table[i].Type == IF_TYPE_SOFTWARE_LOOPBACK) continue;
+                in_bytes += pIfTable->Table[i].InOctets;
+                out_bytes += pIfTable->Table[i].OutOctets;
+            }
+            FreeMibTable(pIfTable);
+        }
+
+        auto now = std::chrono::steady_clock::now();
+        double dt = std::chrono::duration<double>(now - last_time).count();
+        if (!first_run && dt > 0) {
+            current.bytes_received_per_sec = (in_bytes >= last_in) ? (in_bytes - last_in) / dt : 0;
+            current.bytes_sent_per_sec = (out_bytes >= last_out) ? (out_bytes - last_out) / dt : 0;
+        }
+        first_run = false;
+        last_in = in_bytes;
+        last_out = out_bytes;
+        last_time = now;
 
         {
             std::lock_guard<std::mutex> lock(mutex_);

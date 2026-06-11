@@ -2,6 +2,11 @@
 #include "../include/SystemMonitor.h"
 #include <sstream>
 
+#include "../include/NetworkMonitor.h"
+#include <iomanip>
+
+extern sara::NetworkMonitor g_net_monitor;
+
 namespace sara {
 
 RuntimeState& RuntimeState::instance() {
@@ -61,17 +66,36 @@ json RuntimeState::get_summary() const {
 
 std::string RuntimeState::format_status() const {
     auto s = get_stats();
+    SystemMonitor mon;
     std::ostringstream oss;
     oss << "🟢 SARA Runtime — Online\n"
-        << "CPU: " << (int)s.cpu_percent << "%  "
+        << "CPU: " << (int)s.cpu_percent << "%\n"
         << "RAM: " << (int)s.ram_percent << "% ("
         << (int)s.ram_used_mb << "/" << (int)s.ram_total_mb << " MB)\n";
+    
     if (s.gpu_percent >= 0)
         oss << "GPU: " << (int)s.gpu_percent << "%\n";
+
+    auto disks = mon.get_disk_info();
+    for (const auto& disk : disks) {
+        if (disk["drive"] == "C") {
+            unsigned long long free_gb = disk["free_gb"];
+            unsigned long long total_gb = disk["total_gb"];
+            oss << "\nDisk C:  " << (total_gb - free_gb) << "/" << total_gb << " GB\n";
+            break;
+        }
+    }
+
+    auto net = g_net_monitor.get_status();
+    oss << "\nNetwork\n";
+    oss << "↓ " << std::fixed << std::setprecision(1) << (net.bytes_received_per_sec / (1024.0 * 1024.0)) << " MB/s\n";
+    oss << "↑ " << std::fixed << std::setprecision(1) << (net.bytes_sent_per_sec / (1024.0 * 1024.0)) << " MB/s\n";
+
     if (s.battery_percent >= 0)
-        oss << "Battery: " << s.battery_percent << "% "
+        oss << "\nBattery: " << s.battery_percent << "% "
             << (s.on_ac_power ? "(AC)" : "(BAT)") << "\n";
-    oss << "Uptime: " << (s.uptime_seconds / 3600) << "h "
+            
+    oss << "\nUptime: " << (s.uptime_seconds / 3600) << "h "
         << ((s.uptime_seconds % 3600) / 60) << "m\n"
         << "Tasks: " << s.active_tasks
         << "  WS: " << s.ws_clients << " clients\n"

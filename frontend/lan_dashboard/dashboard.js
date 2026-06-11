@@ -34,6 +34,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('dash-ram-val').textContent = ramMatch[1] + '% (' + ramMatch[2] + ')';
                 document.getElementById('dash-ram-fill').style.width = ramMatch[1] + '%';
             }
+            const gpuMatch = text.match(/GPU: \[.*?\] (\d+)%/);
+            if (gpuMatch) {
+                const el = document.getElementById('dash-gpu-val');
+                if (el) el.textContent = gpuMatch[1] + '%';
+                const fEl = document.getElementById('dash-gpu-fill');
+                if (fEl) fEl.style.width = gpuMatch[1] + '%';
+            }
+            const diskMatch = text.match(/Disk C:\s*(.*?) GB/);
+            if (diskMatch) {
+                const el = document.getElementById('dash-disk-val');
+                if (el) el.textContent = diskMatch[1] + ' GB';
+                const parts = diskMatch[1].split('/');
+                if (parts.length === 2) {
+                    const used = parseFloat(parts[0]);
+                    const total = parseFloat(parts[1]);
+                    const p = Math.round((used/total)*100);
+                    const fEl = document.getElementById('dash-disk-fill');
+                    if (fEl) fEl.style.width = p + '%';
+                }
+            }
+            const netDownMatch = text.match(/↓\s*([\d.]+)\s*MB\/s/);
+            if (netDownMatch) {
+                const el = document.getElementById('dash-net-down');
+                if (el) el.textContent = netDownMatch[1] + ' MB/s';
+            }
+            const netUpMatch = text.match(/↑\s*([\d.]+)\s*MB\/s/);
+            if (netUpMatch) {
+                const el = document.getElementById('dash-net-up');
+                if (el) el.textContent = netUpMatch[1] + ' MB/s';
+            }
             const topMatch = text.match(/⚠️ \*\*TOP PROCESS\*\*\n(.*?) \((.*?)\)/);
             if (topMatch) {
                 document.getElementById('dash-top-process').textContent = `⚠️ Top Process: ${topMatch[1]} (${topMatch[2]})`;
@@ -44,7 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Media parser (SARA Media or Spotify Dock)
         if (text.includes("SARA Media") || text.includes("*NOW PLAYING*")) {
-            const containerId = messageId ? `dash-media-${messageId}` : 'dash-media-default';
+            const isSpotify = text.includes("*NOW PLAYING*");
+            const containerId = isSpotify ? 'dash-media-spotify' : 'dash-media-local';
             let mediaContainer = document.getElementById(containerId);
             
             if (!mediaContainer) {
@@ -58,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const header = document.createElement('div');
                 header.className = 'widget-header';
-                const isSpotify = text.includes("*NOW PLAYING*");
                 header.innerHTML = `<i class="${isSpotify ? 'fa-brands fa-spotify' : 'fa-solid fa-music'}"></i> ${isSpotify ? 'Spotify' : 'Media'}`;
                 
                 const controls = document.createElement('div');
