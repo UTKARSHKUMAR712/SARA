@@ -132,6 +132,9 @@ static void ShowImageWindow(const std::string& file_path, const std::string& cap
                     g_image_windows.push_back(hwnd);
                 }
                 ShowWindow(hwnd, SW_SHOW);
+                SetForegroundWindow(hwnd);
+                BringWindowToTop(hwnd);
+                SetFocus(hwnd);
                 UpdateWindow(hwnd);
                 MSG msg;
                 while (GetMessage(&msg, nullptr, 0, 0)) {
