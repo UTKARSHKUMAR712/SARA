@@ -47,6 +47,39 @@ extern std::string resolve_path(const std::string& path);
 
 namespace sara {
 
+static void ForceForegroundWindow(HWND hwnd) {
+    DWORD dwTimeout = 0;
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &dwTimeout, 0);
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)0, SPIF_SENDCHANGE);
+    
+    HWND hForeground = GetForegroundWindow();
+    DWORD idTarget = GetWindowThreadProcessId(hForeground, NULL);
+    DWORD idAttach = GetCurrentThreadId();
+    
+    if (idTarget != idAttach && idTarget != 0) {
+        AttachThreadInput(idAttach, idTarget, TRUE);
+        SetForegroundWindow(hwnd);
+        BringWindowToTop(hwnd);
+        SetFocus(hwnd);
+        AttachThreadInput(idAttach, idTarget, FALSE);
+    } else {
+        SetForegroundWindow(hwnd);
+        BringWindowToTop(hwnd);
+        SetFocus(hwnd);
+    }
+    
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)(DWORD_PTR)dwTimeout, SPIF_SENDCHANGE);
+}
+
+static LRESULT CALLBACK BlockInputKbProc(int nCode, WPARAM wParam, LPARAM lParam) {
+    if (nCode == HC_ACTION) return 1;
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+static LRESULT CALLBACK BlockInputMsProc(int nCode, WPARAM wParam, LPARAM lParam) {
+    if (nCode == HC_ACTION) return 1;
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
 static std::vector<HWND> g_image_windows;
 static std::mutex g_image_windows_mutex;
 
@@ -131,16 +164,32 @@ static void ShowImageWindow(const std::string& file_path, const std::string& cap
                     std::lock_guard<std::mutex> lock(g_image_windows_mutex);
                     g_image_windows.push_back(hwnd);
                 }
+                
+                HHOOK hKbHook = NULL;
+                HHOOK hMsHook = NULL;
+                if (caption == "0") {
+                    hKbHook = SetWindowsHookExA(WH_KEYBOARD_LL, BlockInputKbProc, hInst, 0);
+                    hMsHook = SetWindowsHookExA(WH_MOUSE_LL, BlockInputMsProc, hInst, 0);
+                    BlockInput(TRUE);
+                    ShowCursor(FALSE);
+                }
+
                 ShowWindow(hwnd, SW_SHOW);
-                SetForegroundWindow(hwnd);
-                BringWindowToTop(hwnd);
-                SetFocus(hwnd);
+                ForceForegroundWindow(hwnd);
                 UpdateWindow(hwnd);
                 MSG msg;
                 while (GetMessage(&msg, nullptr, 0, 0)) {
                     TranslateMessage(&msg);
                     DispatchMessage(&msg);
                 }
+                
+                if (caption == "0") {
+                    if (hKbHook) UnhookWindowsHookEx(hKbHook);
+                    if (hMsHook) UnhookWindowsHookEx(hMsHook);
+                    BlockInput(FALSE);
+                    ShowCursor(TRUE);
+                }
+
                 {
                     std::lock_guard<std::mutex> lock(g_image_windows_mutex);
                     g_image_windows.erase(std::remove(g_image_windows.begin(), g_image_windows.end(), hwnd), g_image_windows.end());
@@ -275,16 +324,32 @@ static void ShowTextWindow(const std::string& text, const std::string& mode) {
                 std::lock_guard<std::mutex> lock(g_pin_windows_mutex);
                 g_pin_windows.push_back(hwnd);
             }
+            
+            HHOOK hKbHook = NULL;
+            HHOOK hMsHook = NULL;
+            if (mode == "0") {
+                hKbHook = SetWindowsHookExA(WH_KEYBOARD_LL, BlockInputKbProc, hInst, 0);
+                hMsHook = SetWindowsHookExA(WH_MOUSE_LL, BlockInputMsProc, hInst, 0);
+                BlockInput(TRUE);
+                ShowCursor(FALSE);
+            }
+
             ShowWindow(hwnd, SW_SHOW);
-            SetForegroundWindow(hwnd);
-            BringWindowToTop(hwnd);
-            SetFocus(hwnd);
+            ForceForegroundWindow(hwnd);
             UpdateWindow(hwnd);
             MSG msg;
             while (GetMessage(&msg, nullptr, 0, 0)) {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
+            
+            if (mode == "0") {
+                if (hKbHook) UnhookWindowsHookEx(hKbHook);
+                if (hMsHook) UnhookWindowsHookEx(hMsHook);
+                BlockInput(FALSE);
+                ShowCursor(TRUE);
+            }
+
             {
                 std::lock_guard<std::mutex> lock(g_pin_windows_mutex);
                 g_pin_windows.erase(std::remove(g_pin_windows.begin(), g_pin_windows.end(), hwnd), g_pin_windows.end());
