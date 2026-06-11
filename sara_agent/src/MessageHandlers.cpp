@@ -15,6 +15,13 @@
 #include <unordered_map>
 #include <fstream>
 #include <chrono>
+#include <vector>
+#include <winsock2.h>
+#include <windows.h>
+#include <objidl.h>
+#include <gdiplus.h>
+#include <shlobj.h>
+#include <algorithm>
 // Remote terminal runtime
 #include "../../remote_runtime/include/TerminalSessionManager.h"
 #include "../../remote_runtime/include/TerminalHttpServer.h"
@@ -40,6 +47,131 @@ extern std::string resolve_path(const std::string& path);
 
 namespace sara {
 
+static std::vector<HWND> g_image_windows;
+static std::mutex g_image_windows_mutex;
+
+static LRESULT CALLBACK ImageWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    Gdiplus::Image* img = (Gdiplus::Image*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    switch (uMsg) {
+    case WM_NCCREATE: {
+        CREATESTRUCT* pcs = (CREATESTRUCT*)lParam;
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pcs->lpCreateParams);
+        return TRUE;
+    }
+    case WM_PAINT: {
+        if (img) {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            Gdiplus::Graphics graphics(hdc);
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            graphics.DrawImage(img, 0, 0, rect.right - rect.left, rect.bottom - rect.top);
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+        break;
+    }
+    case WM_KEYDOWN: {
+        if (wParam == VK_ESCAPE) {
+            if ((GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) == 0) {
+                DestroyWindow(hwnd);
+            }
+            return 0;
+        }
+        break;
+    }
+    case WM_DESTROY: {
+        PostQuitMessage(0);
+        return 0;
+    }
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+static void ShowImageWindow(const std::string& file_path, const std::string& caption) {
+    std::thread([file_path, caption]() {
+        std::wstring wpath(file_path.begin(), file_path.end());
+        std::unique_ptr<Gdiplus::Image> img(Gdiplus::Image::FromFile(wpath.c_str()));
+        if (img && img->GetLastStatus() == Gdiplus::Ok) {
+            int w = img->GetWidth(), h = img->GetHeight();
+            int screen_w = GetSystemMetrics(SM_CXSCREEN), screen_h = GetSystemMetrics(SM_CYSCREEN);
+
+            double scale_w = (screen_w * 0.8) / w;
+            double scale_h = (screen_h * 0.8) / h;
+            double scale = (scale_w < scale_h) ? scale_w : scale_h;
+            if (scale < 1.0) { w = (int)(w * scale); h = (int)(h * scale); }
+
+            DWORD dwStyle = (caption == "1") ? (WS_OVERLAPPEDWINDOW | WS_VISIBLE) : (WS_POPUP | WS_VISIBLE);
+            DWORD dwExStyle = (caption == "0") ? (WS_EX_TOPMOST | WS_EX_TOOLWINDOW) : 0;
+
+            RECT rc = { 0, 0, w, h };
+            AdjustWindowRectEx(&rc, dwStyle, FALSE, dwExStyle);
+            int win_w = rc.right - rc.left;
+            int win_h = rc.bottom - rc.top;
+            int x = (screen_w - win_w) / 2;
+            int y = (screen_h - win_h) / 2;
+
+            HINSTANCE hInst = GetModuleHandle(nullptr);
+            WNDCLASSEXA wc = {0};
+            wc.cbSize = sizeof(WNDCLASSEX);
+            wc.style = CS_HREDRAW | CS_VREDRAW;
+            wc.lpfnWndProc = ImageWindowProc;
+            wc.hInstance = hInst;
+            wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+            wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+            std::string cls = "SARA_Img_" + std::to_string(GetCurrentThreadId());
+            wc.lpszClassName = cls.c_str();
+
+            RegisterClassExA(&wc);
+            HWND hwnd = CreateWindowExA(dwExStyle, cls.c_str(), "SARA Image Viewer",
+                dwStyle, x, y, win_w, win_h, nullptr, nullptr, hInst, img.get());
+
+            if (hwnd) {
+                {
+                    std::lock_guard<std::mutex> lock(g_image_windows_mutex);
+                    g_image_windows.push_back(hwnd);
+                }
+                ShowWindow(hwnd, SW_SHOW);
+                UpdateWindow(hwnd);
+                MSG msg;
+                while (GetMessage(&msg, nullptr, 0, 0)) {
+                    TranslateMessage(&msg);
+                    DispatchMessage(&msg);
+                }
+                {
+                    std::lock_guard<std::mutex> lock(g_image_windows_mutex);
+                    g_image_windows.erase(std::remove(g_image_windows.begin(), g_image_windows.end(), hwnd), g_image_windows.end());
+                }
+            }
+            UnregisterClassA(cls.c_str(), hInst);
+        }
+    }).detach();
+}
+
+static bool is_supported_image(const std::string& filename, const std::string& mime_type) {
+    if (!mime_type.empty() && mime_type.rfind("image/", 0) == 0) return true;
+    std::string ext = filename;
+    auto pos = ext.find_last_of('.');
+    if (pos != std::string::npos) {
+        ext = ext.substr(pos + 1);
+        for (auto& c : ext) c = std::tolower(c);
+        if (ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "gif" || 
+            ext == "heic" || ext == "heif" || ext == "bmp" || ext == "webp") return true;
+    }
+    return false;
+}
+
+static std::string get_downloads_folder() {
+    PWSTR path = NULL;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Downloads, 0, NULL, &path))) {
+        std::wstring ws(path);
+        CoTaskMemFree(path);
+        return std::string(ws.begin(), ws.end());
+    }
+    char buf[MAX_PATH];
+    ExpandEnvironmentStringsA("%USERPROFILE%\\Downloads", buf, MAX_PATH);
+    return buf;
+}
 
 long long parse_delay_suffix(const std::string& original_text, std::string& clean_text) {
     clean_text = original_text;
@@ -175,6 +307,68 @@ void handle_telegram_message(const std::string& chat_id, std::string text, const
             g_telegram.send_message(chat_id, "🔓 Session authenticated. Welcome to SARA v3.0.");
         } else {
             g_telegram.send_message(chat_id, "🔒 Session locked. Enter Session Password.");
+        }
+        return;
+    }
+
+    if (text == "/closeimg") {
+        std::lock_guard<std::mutex> lock(g_image_windows_mutex);
+        for (HWND hwnd : g_image_windows) {
+            PostMessage(hwnd, WM_CLOSE, 0, 0);
+        }
+        g_telegram.send_message(chat_id, "✅ Closed all image windows.");
+        return;
+    }
+
+    std::string file_id = "";
+    std::string file_name = "";
+    std::string mime_type = "";
+    
+    if (raw_message.contains("photo") && raw_message["photo"].is_array() && !raw_message["photo"].empty()) {
+        file_id = raw_message["photo"].back().value("file_id", "");
+        file_name = "photo_" + std::to_string(std::chrono::system_clock::now().time_since_epoch().count()) + ".jpg";
+        mime_type = "image/jpeg";
+    } else if (raw_message.contains("document") && raw_message["document"].is_object()) {
+        file_id = raw_message["document"].value("file_id", "");
+        file_name = raw_message["document"].value("file_name", "document_" + std::to_string(std::chrono::system_clock::now().time_since_epoch().count()));
+        mime_type = raw_message["document"].value("mime_type", "");
+    }
+
+    if (!file_id.empty()) {
+        std::string caption = text; 
+        bool is_image = is_supported_image(file_name, mime_type);
+        
+        std::string action = (is_image && (caption == "0" || caption == "1")) ? "display" : "download";
+        
+        json file_info = g_telegram.api_call("getFile", {{"file_id", file_id}});
+        if (file_info.value("ok", false) && file_info.contains("result") && file_info["result"].contains("file_path")) {
+            std::string tg_path = file_info["result"]["file_path"].get<std::string>();
+            
+            auto tg_pos = tg_path.find_last_of('.');
+            if (tg_pos != std::string::npos && file_name.find('.') == std::string::npos) {
+                file_name += tg_path.substr(tg_pos);
+            }
+
+            if (action == "display") {
+                CreateDirectoryA(resolve_path("cache").c_str(), nullptr);
+                std::string local_path = resolve_path("cache\\" + file_name);
+                if (g_telegram.download_file(tg_path, local_path)) {
+                    ShowImageWindow(local_path, caption);
+                    g_telegram.send_message(chat_id, "🖼️ Displaying image on screen.");
+                } else {
+                    g_telegram.send_message(chat_id, "❌ Failed to download image from Telegram.");
+                }
+            } else {
+                std::string dl_dir = get_downloads_folder();
+                std::string local_path = dl_dir + "\\" + file_name;
+                if (g_telegram.download_file(tg_path, local_path)) {
+                    g_telegram.send_message(chat_id, "✅ Downloaded to: " + local_path);
+                } else {
+                    g_telegram.send_message(chat_id, "❌ Failed to download file.");
+                }
+            }
+        } else {
+            g_telegram.send_message(chat_id, "❌ Failed to get file details from Telegram.");
         }
         return;
     }

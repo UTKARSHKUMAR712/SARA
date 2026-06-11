@@ -49,9 +49,13 @@ namespace sara { extern void register_default_tools(WinAPIExecutor& ex); }
 #include <unordered_map>
 #include <mutex>
 
+#include <objidl.h>
+#include <gdiplus.h>
+
 using namespace sara;
 
 static std::atomic<bool> g_running{true};
+ULONG_PTR g_gdiplusToken = 0;
 std::string g_exe_dir;
 
 std::string resolve_path(const std::string& path) {
@@ -89,6 +93,10 @@ extern std::mutex g_pending_mutex;
 int main(int argc, char* argv[]) {
     signal(SIGINT,  signal_handler);
     signal(SIGTERM, signal_handler);
+
+    // Initialize GDI+
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    Gdiplus::GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, nullptr);
 
     // --- Use AgentInitializer for lifecycle and path resolution ---
     auto& init = AgentInitializer::instance();
@@ -389,5 +397,10 @@ int main(int argc, char* argv[]) {
     g_runtime.mark_shutdown();
     init.shutdown();
     Logger::instance().shutdown();
+
+    // Shutdown GDI+
+    if (g_gdiplusToken) {
+        Gdiplus::GdiplusShutdown(g_gdiplusToken);
+    }
     return 0;
 }

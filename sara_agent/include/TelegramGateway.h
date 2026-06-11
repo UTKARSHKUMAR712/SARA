@@ -47,6 +47,7 @@ public:
         const std::string& caption = "");
     bool send_document(const std::string& chat_id, const std::string& file_path,
         const std::string& caption = "");
+    bool download_file(const std::string& file_path, const std::string& local_dest_path);
     bool send_action(const std::string& chat_id, const std::string& action);
 
     // Live streaming / progress methods

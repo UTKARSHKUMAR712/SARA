@@ -155,8 +155,12 @@ void TelegramGateway::handle_update(const json& update) {
     } 
     else if (update.contains("message")) {
         msg = update["message"];
-        if (!msg.contains("text") || !msg.contains("chat")) return;
-        text = msg["text"].get<std::string>();
+        if (!msg.contains("chat")) return;
+        if (msg.contains("text")) {
+            text = msg["text"].get<std::string>();
+        } else if (msg.contains("caption")) {
+            text = msg["caption"].get<std::string>();
+        }
         chat_id = std::to_string(msg["chat"]["id"].get<long long>());
         from_name = msg["from"].value("first_name", "");
         user_id = msg["from"].value("id", 0LL);
@@ -609,6 +613,67 @@ bool TelegramGateway::send_document(const std::string& chat_id,
     WinHttpCloseHandle(session);
     Logger::instance().info("Document sent: " + fname);
     return true;
+}
+
+bool TelegramGateway::download_file(const std::string& file_path, const std::string& local_dest_path) {
+    std::string url = "https://api.telegram.org/file/bot" + token_ + "/" + file_path;
+    auto host_start = url.find("://") + 3;
+    auto path_start = url.find('/', host_start);
+    std::string host = url.substr(host_start, path_start - host_start);
+    std::string path = url.substr(path_start);
+
+    HINTERNET session = WinHttpOpen(L"SARA/1.0",
+        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, nullptr, nullptr, 0);
+    if (!session) return false;
+
+    WinHttpSetTimeouts(session, 10000, 10000, 10000, 60000);
+
+    std::wstring whost(host.begin(), host.end());
+    HINTERNET connect = WinHttpConnect(session, whost.c_str(),
+        INTERNET_DEFAULT_HTTPS_PORT, 0);
+    if (!connect) { WinHttpCloseHandle(session); return false; }
+
+    std::wstring wpath(path.begin(), path.end());
+    HINTERNET request = WinHttpOpenRequest(connect, L"GET", wpath.c_str(),
+        nullptr, nullptr, nullptr, WINHTTP_FLAG_SECURE);
+    if (!request) { WinHttpCloseHandle(connect); WinHttpCloseHandle(session); return false; }
+
+    if (!WinHttpSendRequest(request, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+        WinHttpCloseHandle(request); WinHttpCloseHandle(connect); WinHttpCloseHandle(session);
+        return false;
+    }
+
+    if (!WinHttpReceiveResponse(request, nullptr)) {
+        WinHttpCloseHandle(request); WinHttpCloseHandle(connect); WinHttpCloseHandle(session);
+        return false;
+    }
+
+    HANDLE hFile = CreateFileA(local_dest_path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        WinHttpCloseHandle(request); WinHttpCloseHandle(connect); WinHttpCloseHandle(session);
+        return false;
+    }
+
+    DWORD bytes_avail = 0;
+    std::vector<char> buffer;
+    bool success = true;
+    while (WinHttpQueryDataAvailable(request, &bytes_avail) && bytes_avail > 0) {
+        buffer.resize(bytes_avail);
+        DWORD bytes_read = 0;
+        if (WinHttpReadData(request, buffer.data(), bytes_avail, &bytes_read)) {
+            DWORD bytes_written = 0;
+            WriteFile(hFile, buffer.data(), bytes_read, &bytes_written, nullptr);
+        } else {
+            success = false;
+            break;
+        }
+    }
+
+    CloseHandle(hFile);
+    WinHttpCloseHandle(request);
+    WinHttpCloseHandle(connect);
+    WinHttpCloseHandle(session);
+    return success;
 }
 
 json TelegramGateway::api_call(const std::string& method, const json& payload) {

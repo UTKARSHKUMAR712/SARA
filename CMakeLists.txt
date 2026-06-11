@@ -117,6 +117,7 @@ target_link_libraries(sara_agent PRIVATE
     ws2_32
     user32
     gdi32
+    gdiplus
     shell32
     advapi32
     ole32
