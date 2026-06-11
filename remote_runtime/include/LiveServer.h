@@ -1,4 +1,5 @@
 #pragma once
+#include <winsock2.h>
 #include <string>
 #include <thread>
 #include <atomic>
@@ -21,13 +22,13 @@ public:
     ~LiveServer() { stop(); }
 private:
     void accept_loop();
-    void handle_client(int sock);
+    void handle_client(SOCKET sock);
 
     std::string directory_;
     int port_ = 0;
     std::atomic<bool> running_{false};
     std::thread accept_thread_;
-    int server_sock_ = -1;
+    SOCKET server_sock_ = INVALID_SOCKET;
 };
 
 } // namespace sara::remote

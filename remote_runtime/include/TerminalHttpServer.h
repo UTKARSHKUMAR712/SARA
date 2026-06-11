@@ -1,4 +1,6 @@
 #pragma once
+#include <winsock2.h>
+#include <windows.h>
 #include <string>
 #include <atomic>
 #include <thread>
@@ -43,7 +45,7 @@ private:
     ~TerminalHttpServer() { stop(); }
 
     void accept_loop();
-    void handle_client(int sock);
+    void handle_client(SOCKET sock);
 
     // HTTP helpers
     static std::string parse_path(const std::string& request);
@@ -51,13 +53,13 @@ private:
                                           const std::string& param);
     static std::string parse_method(const std::string& request);
     static bool is_websocket_upgrade(const std::string& request);
-    static bool do_ws_handshake(int sock, const std::string& request);
+    static bool do_ws_handshake(SOCKET sock, const std::string& request);
 
     // Response helpers
-    static void send_http(int sock, int code, const std::string& content_type,
+    static void send_http(SOCKET sock, int code, const std::string& content_type,
                           const std::string& body, const std::string& extra_headers = "");
-    static void send_404(int sock);
-    static void send_403(int sock);
+    static void send_404(SOCKET sock);
+    static void send_403(SOCKET sock);
 
     // Static file loading (loaded once at startup, kept in memory)
     static std::string load_file(const std::string& path);
@@ -66,16 +68,16 @@ private:
     static std::string embedded_terminal_css();
 
     // WebSocket terminal loop (runs for lifetime of WS connection)
-    void handle_terminal_ws(int sock,
+    void handle_terminal_ws(SOCKET sock,
                              const std::string& session_id,
                              const std::string& token);
 
     // File Browser reverse proxy
-    void proxy_to_filebrowser(int client_sock, const std::string& raw_request,
+    void proxy_to_filebrowser(SOCKET client_sock, const std::string& raw_request,
                                const std::string& path);
 
     // Dynamic port reverse proxy (for Preview System)
-    void proxy_to_port(int client_sock, const std::string& raw_request, 
+    void proxy_to_port(SOCKET client_sock, const std::string& raw_request, 
                        int target_port, const std::string& prefix_to_strip);
 
     int port_ = 9081;

@@ -28,7 +28,8 @@ public:
     // Returns true if cloudflared process was started.
     bool start_quick_tunnel(int local_port,
                             std::function<void(const std::string& url)> on_url_ready,
-                            bool kill_zombies = true);
+                            bool kill_zombies = true,
+                            bool is_https = false);
 
     // Start named tunnel (requires cloudflare account + tunnel configured).
     bool start_named_tunnel(const std::string& tunnel_name,

@@ -184,7 +184,8 @@ static void kill_zombie_cloudflared() {
 // ── Public API ────────────────────────────────────────────────────────────────
 bool CloudflaredManager::start_quick_tunnel(int local_port,
                                             std::function<void(const std::string&)> on_url_ready,
-                                            bool kill_zombies) {
+                                            bool kill_zombies,
+                                            bool is_https) {
     // Always stop any existing tunnel first
     stop();
     
@@ -197,14 +198,18 @@ bool CloudflaredManager::start_quick_tunnel(int local_port,
     // (ensure_cloudflared should have been called before this)
     std::string cf_path;
     {
-        char buf[MAX_PATH];
+        char buf[MAX_PATH] = {0};
         if (SearchPathA(nullptr, "cloudflared", ".exe", MAX_PATH, buf, nullptr))
             cf_path = buf;
     }
     if (cf_path.empty()) return false;
 
-    std::string cmd = "\"" + cf_path + "\" tunnel --url http://localhost:" +
+    std::string scheme = is_https ? "https://" : "http://";
+    std::string cmd = "\"" + cf_path + "\" tunnel --url " + scheme + "localhost:" +
                       std::to_string(local_port) + " --http-host-header localhost --no-autoupdate";
+    if (is_https) {
+        cmd += " --no-tls-verify";
+    }
 
     if (!launch_process(cmd, proc_handle_, stderr_read_)) return false;
 
@@ -226,7 +231,7 @@ bool CloudflaredManager::start_named_tunnel(const std::string& tunnel_name,
 
     std::string cf_path;
     {
-        char buf[MAX_PATH];
+        char buf[MAX_PATH] = {0};
         if (SearchPathA(nullptr, "cloudflared", ".exe", MAX_PATH, buf, nullptr))
             cf_path = buf;
     }

@@ -3,6 +3,7 @@
 #include "../include/WinAPIExecutor.h"
 #include "../include/Logger.h"
 #include "../include/ConfigManager.h"
+#include "../include/MeshCentralManager.h"
 #include "../include/plugins/mcp/MCPRegistry.h"
 #include "../../plugins/spotify/spotify_plugin.hpp"
 #include <sstream>
@@ -76,6 +77,7 @@ bool NativeCommandRouter::handle(const std::string& chat_id, const std::string& 
 
     if (handle_volume(chat_id, text)) return true;
     if (handle_brightness(chat_id, text)) return true;
+    if (handle_desktop(chat_id, text)) return true;
     // Spotify plugin — /sp prefix, always before media so it intercepts first
     if (text.size() >= 3 && text.substr(0,3) == "/sp") {
         return SpotifyPlugin::instance().handle_command(chat_id, text);
@@ -209,6 +211,71 @@ bool NativeCommandRouter::handle_brightness(const std::string& chat_id, const st
     return false;
 }
 
+bool NativeCommandRouter::handle_desktop(const std::string& chat_id, const std::string& text) {
+    std::string lower_text = text;
+    std::transform(lower_text.begin(), lower_text.end(), lower_text.begin(), ::tolower);
+    if (lower_text == "/desktop") {
+        g_telegram.send_message(chat_id, "🖥️ Preparing Remote Desktop...\nPlease wait, this may take a moment to start and generate URLs.");
+        
+        std::thread([chat_id]() {
+            auto& mcm = MeshCentralManager::instance();
+            mcm.start();
+            if (!mcm.start()) {
+                g_telegram.send_message(chat_id, "❌ Failed to start MeshCentral.\nReason: " + mcm.get_last_error());
+                return;
+            }
+            
+            // Start MeshAgent Service
+            system("C:\\Users\\utkarsh_kumar\\Desktop\\MeshAgent.exe start");
+            
+            mcm.request_cloudflare_tunnel();
+            
+            // Wait for cloudflare URL up to 30s
+            int wait_count = 0;
+            std::string cf_url;
+            while (wait_count < 60) {
+                cf_url = mcm.get_cf_url();
+                if (!cf_url.empty()) break;
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                wait_count++;
+            }
+            
+            if (!cf_url.empty()) {
+                // Give Cloudflare Edge 2 seconds to stabilize the tunnel route
+                std::this_thread::sleep_for(std::chrono::seconds(2));
+            }
+            
+            std::string msg = "🖥️ **Remote Desktop Ready**\n\n";
+            msg += "**LAN URL:**\n" + mcm.get_lan_url() + "\n\n";
+            
+            if (cf_url.empty()) {
+                msg += "⚠️ **Public URL:** Could not generate Cloudflare tunnel in time. Check logs.";
+            } else {
+                msg += "**Public URL:**\n" + cf_url;
+            }
+            
+            g_telegram.send_message(chat_id, msg);
+        }).detach();
+        
+        return true;
+    }
+    return false;
+}
+
+void NativeCommandRouter::handle_desktopshutdown(const std::string& chat_id) {
+    g_telegram.send_message(chat_id, "🛑 Shutting down Desktop Remote Access...");
+    
+    // Stop MeshCentral Node process
+    MeshCentralManager::instance().stop();
+
+    // Try to aggressively kill stray mesh nodes and cloudflared if stop() failed
+    system("taskkill /F /IM cloudflared.exe /T >nul 2>nul");
+    system("taskkill /F /IM node.exe /T >nul 2>nul"); // Kill Node (MeshCentral)
+    system("C:\\Users\\utkarsh_kumar\\Desktop\\MeshAgent.exe stop"); // Stop MeshAgent Service
+    
+    g_telegram.send_message(chat_id, "✅ Remote Access services have been completely terminated and resources freed.");
+}
+
 bool NativeCommandRouter::handle_media(const std::string& chat_id, const std::string& text) {
     if (text == "/play" || text == "/pause") { execute_and_reply(chat_id, "media_play_pause", {}, true); return true; }
     if (text == "/next") { execute_and_reply(chat_id, "media_next", {}, true); return true; }
@@ -238,6 +305,7 @@ bool NativeCommandRouter::handle_system(const std::string& chat_id, const std::s
     if (text == "/monitoroff") { execute_and_reply(chat_id, "monitor_off", {}, true); return true; }
     if (text == "/screensaver") { execute_and_reply(chat_id, "start_screensaver", {}, true); return true; }
     if (text == "/cleanram" || text == "/cleanpc") { execute_and_reply(chat_id, "clean_memory", {}, true); return true; }
+    if (text == "/desktopshutdown") { handle_desktopshutdown(chat_id); return true; }
     return false;
 }
 

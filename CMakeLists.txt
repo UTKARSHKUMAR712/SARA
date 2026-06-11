@@ -40,6 +40,7 @@ add_executable(sara_agent
     # v3.0 — Core Runtime
     sara_agent/src/WebSocketServer.cpp
     sara_agent/src/RuntimeState.cpp
+    sara_agent/src/MeshCentralManager.cpp
     
     # Telegram Dock System
     sara_agent/src/DockRouter.cpp

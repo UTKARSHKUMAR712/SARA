@@ -18,6 +18,14 @@ struct PluginConfig {
     std::string entry;
 };
 
+struct MeshCentralConfig {
+    bool enabled = true;
+    int port = 4430;
+    bool autostart = true;
+    bool auto_install = true;
+    bool cloudflare_tunnel = true;
+};
+
 struct AppConfig {
     TelegramConfig telegram;
     std::unordered_map<std::string, PluginConfig> plugins;
@@ -47,6 +55,9 @@ struct AppConfig {
     std::string filebrowser_root        = "C:\\";         // root directory to expose
     int         proxy_header_timeout_seconds = 300;
     int         proxy_idle_timeout_seconds   = 300;
+
+    // ── MeshCentral ──────────────────────────────────────────────────────
+    MeshCentralConfig meshcentral;
 };
 
 class ConfigManager {

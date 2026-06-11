@@ -273,8 +273,104 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listeners
     sendBtn.addEventListener('click', sendMessage);
     
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
+    // Autocomplete Logic
+    const suggestionsContainer = document.getElementById('suggestions-container');
+    const COMMANDS = [
+        { cmd: "/dock", desc: "Open Media Dock" },
+        { cmd: "/system", desc: "Open System Dock" },
+        { cmd: "/status", desc: "Runtime status" },
+        { cmd: "/help", desc: "Show all commands" },
+        { cmd: "/media", desc: "Open Media controls" },
+        { cmd: "/desktop", desc: "Start Remote Desktop" },
+        { cmd: "/desktopshutdown", desc: "Stop Remote Desktop" },
+        { cmd: "/terminal", desc: "Start browser terminal" },
+        { cmd: "/terminal_admin", desc: "Start admin browser terminal" },
+        { cmd: "/sararestart", desc: "Restart SARA and Cloudflare completely" },
+        { cmd: "/sarashutdown", desc: "Kill SARA completely (no restart)" },
+        { cmd: "/screenshot", desc: "Take screenshot" },
+        { cmd: "/photo", desc: "Webcam photo" },
+        { cmd: "/monitor", desc: "Live system stats" },
+        { cmd: "/tasks", desc: "Scheduled tasks" },
+        { cmd: "/rules", desc: "Event automation rules" },
+        { cmd: "/files", desc: "Manage files via File Browser" },
+        { cmd: "/filesshutdown", desc: "Shutdown File Browser completely" },
+        { cmd: "/workspace", desc: "Open SARA IDE workspace" },
+        { cmd: "/workspaceshutdown", desc: "Shutdown SARA IDE workspace" },
+        { cmd: "/sp_help", desc: "Spotify commands list" }
+    ];
+    let selectedSuggestionIndex = -1;
+
+    function renderSuggestions(matches) {
+        suggestionsContainer.innerHTML = '';
+        if (matches.length === 0) {
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
+        
+        matches.forEach((match, index) => {
+            const div = document.createElement('div');
+            div.className = 'suggestion-item' + (index === selectedSuggestionIndex ? ' selected' : '');
+            div.innerHTML = `<span class="suggestion-cmd">${match.cmd}</span><span class="suggestion-desc">${match.desc}</span>`;
+            
+            div.onmousedown = (e) => {
+                e.preventDefault();
+                chatInput.value = match.cmd;
+                suggestionsContainer.style.display = 'none';
+                chatInput.focus();
+            };
+            
+            suggestionsContainer.appendChild(div);
+        });
+        suggestionsContainer.style.display = 'flex';
+    }
+
+    chatInput.addEventListener('input', () => {
+        const val = chatInput.value;
+        if (val.startsWith('/')) {
+            const query = val.toLowerCase();
+            const matches = COMMANDS.filter(c => c.cmd.toLowerCase().startsWith(query));
+            selectedSuggestionIndex = -1;
+            renderSuggestions(matches);
+        } else {
+            suggestionsContainer.style.display = 'none';
+        }
+    });
+
+    chatInput.addEventListener('keydown', (e) => {
+        const isSuggestionsVisible = suggestionsContainer.style.display === 'flex';
+        const items = suggestionsContainer.querySelectorAll('.suggestion-item');
+        
+        if (isSuggestionsVisible && items.length > 0) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedSuggestionIndex = (selectedSuggestionIndex + 1) % items.length;
+                renderSuggestions(COMMANDS.filter(c => c.cmd.toLowerCase().startsWith(chatInput.value.toLowerCase())));
+                return;
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedSuggestionIndex = (selectedSuggestionIndex - 1 + items.length) % items.length;
+                renderSuggestions(COMMANDS.filter(c => c.cmd.toLowerCase().startsWith(chatInput.value.toLowerCase())));
+                return;
+            } else if (e.key === 'Enter') {
+                if (selectedSuggestionIndex >= 0) {
+                    e.preventDefault();
+                    chatInput.value = items[selectedSuggestionIndex].querySelector('.suggestion-cmd').textContent;
+                    suggestionsContainer.style.display = 'none';
+                    return;
+                }
+            } else if (e.key === 'Escape') {
+                suggestionsContainer.style.display = 'none';
+            }
+        }
+
+        if (e.key === 'Enter' && (!isSuggestionsVisible || selectedSuggestionIndex === -1)) {
+            sendMessage();
+            suggestionsContainer.style.display = 'none';
+        }
+    });
+
+    chatInput.addEventListener('blur', () => {
+        suggestionsContainer.style.display = 'none';
     });
 
     clearBtn.addEventListener('click', () => {

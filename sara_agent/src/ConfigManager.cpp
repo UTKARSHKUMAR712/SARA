@@ -70,6 +70,13 @@ bool ConfigManager::load(const std::string& path) {
         cfg.proxy_header_timeout_seconds = j.value("proxy_header_timeout_seconds", 300);
         cfg.proxy_idle_timeout_seconds   = j.value("proxy_idle_timeout_seconds", 300);
 
+        // MeshCentral config
+        cfg.meshcentral.enabled = j.value("meshcentral_enabled", true);
+        cfg.meshcentral.port = j.value("meshcentral_port", 4430);
+        cfg.meshcentral.autostart = j.value("meshcentral_autostart", true);
+        cfg.meshcentral.auto_install = j.value("meshcentral_auto_install", true);
+        cfg.meshcentral.cloudflare_tunnel = j.value("meshcentral_cloudflare_tunnel", true);
+
     } catch (const std::exception& e) {
         last_error_ = "Config parse error: ";
         last_error_ += e.what();
@@ -114,6 +121,12 @@ bool ConfigManager::save(const std::string& path) const {
     
     j["proxy_header_timeout_seconds"] = config_.proxy_header_timeout_seconds;
     j["proxy_idle_timeout_seconds"]   = config_.proxy_idle_timeout_seconds;
+
+    j["meshcentral_enabled"] = config_.meshcentral.enabled;
+    j["meshcentral_port"] = config_.meshcentral.port;
+    j["meshcentral_autostart"] = config_.meshcentral.autostart;
+    j["meshcentral_auto_install"] = config_.meshcentral.auto_install;
+    j["meshcentral_cloudflare_tunnel"] = config_.meshcentral.cloudflare_tunnel;
 
     std::ofstream file(path);
     if (!file.is_open()) return false;

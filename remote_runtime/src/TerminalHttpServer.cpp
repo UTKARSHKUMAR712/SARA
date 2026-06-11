@@ -105,7 +105,7 @@ bool TerminalHttpServer::start(int port, const std::string& static_dir) {
 
     WSADATA wsa; WSAStartup(MAKEWORD(2,2), &wsa);
 
-    int server_sock = socket(AF_INET, SOCK_STREAM, 0);
+    SOCKET server_sock = socket(AF_INET, SOCK_STREAM, 0);
     int opt = 1; setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt));
 
     sockaddr_in addr{}; addr.sin_family = AF_INET; addr.sin_addr.s_addr = INADDR_ANY;
@@ -122,7 +122,7 @@ bool TerminalHttpServer::start(int port, const std::string& static_dir) {
             timeval tv{0, 500000};
             if (select(0, &fds, nullptr, nullptr, &tv) <= 0) continue;
             sockaddr_in ca{}; int cl = sizeof(ca);
-            int cs = accept(server_sock, (sockaddr*)&ca, &cl);
+            SOCKET cs = accept(server_sock, (sockaddr*)&ca, &cl);
             if (cs == INVALID_SOCKET) continue;
             std::thread([this, cs]() { handle_client(cs); }).detach();
         }
@@ -136,7 +136,7 @@ void TerminalHttpServer::stop() {
     running_ = false;
 }
 
-void TerminalHttpServer::handle_client(int sock) {
+void TerminalHttpServer::handle_client(SOCKET sock) {
     // Read HTTP request
     char buf[8192]; std::string req;
     
@@ -763,7 +763,7 @@ void TerminalHttpServer::handle_client(int sock) {
     send_404(sock); closesocket(sock);
 }
 
-void TerminalHttpServer::handle_terminal_ws(int sock,
+void TerminalHttpServer::handle_terminal_ws(SOCKET sock,
                                              const std::string& session_id,
                                              const std::string& token) {
     // Validate and attach WebSocket to session
@@ -876,7 +876,7 @@ bool TerminalHttpServer::is_websocket_upgrade(const std::string& req) {
     return lower_req.find("upgrade: websocket") != std::string::npos;
 }
 
-bool TerminalHttpServer::do_ws_handshake(int sock, const std::string& req) {
+bool TerminalHttpServer::do_ws_handshake(SOCKET sock, const std::string& req) {
     std::string lower_req = req;
     for (char& c : lower_req) c = std::tolower(c);
 
@@ -911,7 +911,7 @@ bool TerminalHttpServer::do_ws_handshake(int sock, const std::string& req) {
     return ::send(sock, resp.c_str(), (int)resp.size(), 0) != SOCKET_ERROR;
 }
 
-void TerminalHttpServer::send_http(int sock, int code, const std::string& ct,
+void TerminalHttpServer::send_http(SOCKET sock, int code, const std::string& ct,
                                     const std::string& body, const std::string& extra_headers) {
     std::string status;
     if (code == 200) status = "200 OK";
@@ -929,20 +929,20 @@ void TerminalHttpServer::send_http(int sock, int code, const std::string& ct,
         "Connection: close\r\n\r\n" + body;
     ::send(sock, resp.data(), (int)resp.size(), 0);
 }
-void TerminalHttpServer::send_404(int sock) {
+void TerminalHttpServer::send_404(SOCKET sock) {
     send_http(sock, 404, "text/plain", "404 Not Found");
 }
-void TerminalHttpServer::send_403(int sock) {
+void TerminalHttpServer::send_403(SOCKET sock) {
     send_http(sock, 403, "text/plain", "403 Forbidden — Invalid or expired session token");
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
 // FILE BROWSER REVERSE PROXY
 // ───────────────────────────────────────────────────────────────────────────────
-void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
+void TerminalHttpServer::proxy_to_filebrowser(SOCKET client_sock,
                                                const std::string& raw_request,
                                                const std::string& path) {
-    int fb_sock = socket(AF_INET, SOCK_STREAM, 0);
+    SOCKET fb_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (fb_sock == INVALID_SOCKET) {
         std::string body502 = "502 Bad Gateway — File Browser not reachable";
         std::string resp502 =
@@ -1028,7 +1028,7 @@ void TerminalHttpServer::proxy_to_filebrowser(int client_sock,
         sent += n;
     }
 
-    auto pipe_thread = [](int from, int to, std::atomic<bool>& done_flag) {
+    auto pipe_thread = [](SOCKET from, SOCKET to, std::atomic<bool>& done_flag) {
         char buf[8192];
         while (!done_flag) {
             fd_set fds; FD_ZERO(&fds); FD_SET(from, &fds);
@@ -1552,11 +1552,11 @@ html,body{width:100%;height:100%;background:#0d1117;overflow:hidden;font-family:
 // ───────────────────────────────────────────────────────────────────────────────
 // DYNAMIC PORT REVERSE PROXY
 // ───────────────────────────────────────────────────────────────────────────────
-void TerminalHttpServer::proxy_to_port(int client_sock,
+void TerminalHttpServer::proxy_to_port(SOCKET client_sock,
                                        const std::string& raw_request,
                                        int target_port,
                                        const std::string& prefix_to_strip) {
-    int target_sock = socket(AF_INET, SOCK_STREAM, 0);
+    SOCKET target_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (target_sock == INVALID_SOCKET) {
         send_http(client_sock, 502, "text/plain", "502 Bad Gateway");
         closesocket(client_sock); return;
@@ -1652,7 +1652,7 @@ void TerminalHttpServer::proxy_to_port(int client_sock,
 
     std::shared_ptr<std::atomic<bool>> done = std::make_shared<std::atomic<bool>>(false);
     
-    auto pipe_thread = [](int from, int to, std::shared_ptr<std::atomic<bool>> done_flag) {
+    auto pipe_thread = [](SOCKET from, SOCKET to, std::shared_ptr<std::atomic<bool>> done_flag) {
         char buf[16384];
         while (!(*done_flag)) {
             fd_set fds; FD_ZERO(&fds); FD_SET(from, &fds);

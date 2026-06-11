@@ -24,6 +24,7 @@
 #include "../include/CommandMap.h"
 #include "../include/ActionDispatcher.h"
 #include "../include/MessageHandlers.h"
+#include "../include/MeshCentralManager.h"
 // Remote Terminal Runtime
 #include "../../remote_runtime/include/TerminalHttpServer.h"
 #include "../../remote_runtime/include/TerminalSessionManager.h"
@@ -51,7 +52,7 @@ namespace sara { extern void register_default_tools(WinAPIExecutor& ex); }
 using namespace sara;
 
 static std::atomic<bool> g_running{true};
-static std::string       g_exe_dir;
+std::string g_exe_dir;
 
 std::string resolve_path(const std::string& path) {
     if (path.empty() || path[0] == '/' || path[0] == '\\'
@@ -351,6 +352,11 @@ int main(int argc, char* argv[]) {
     g_runtime.set_telegram_ready(g_telegram.is_running());
     g_runtime.set_ws_clients(g_ws_server.client_count());
 
+    if (cfg.meshcentral.enabled && cfg.meshcentral.autostart) {
+        // User requested: do NOT auto start MeshCentral, only start this complete setup after getting /desktop
+        // MeshCentralManager::instance().start();
+    }
+
     Logger::instance().info("=== SARA ready. All systems online. ===");
 
     // ── Main loop ─────────────────────────────────────────────────────────
@@ -369,6 +375,7 @@ int main(int argc, char* argv[]) {
     sara::remote::TerminalSessionManager::instance().stop_cleanup_thread();
     sara::remote::TerminalHttpServer::instance().stop();
     sara::remote::CloudflaredManager::instance().stop();
+    MeshCentralManager::instance().stop();
     g_ws_server.stop();
     SpotifyPlugin::instance().stop();
     g_event_engine.stop();

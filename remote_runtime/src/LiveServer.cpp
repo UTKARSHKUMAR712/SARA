@@ -6,6 +6,7 @@
 #include <sstream>
 #include <filesystem>
 #include <vector>
+#include <algorithm>
 
 namespace sara::remote {
 
@@ -60,9 +61,9 @@ bool LiveServer::start(const std::string& directory, int port, bool bind_any) {
 void LiveServer::stop() {
     if (!running_) return;
     running_ = false;
-    if (server_sock_ != -1) {
+    if (server_sock_ != INVALID_SOCKET) {
         ::closesocket(server_sock_);
-        server_sock_ = -1;
+        server_sock_ = INVALID_SOCKET;
     }
     if (accept_thread_.joinable()) {
         accept_thread_.join();
@@ -71,7 +72,7 @@ void LiveServer::stop() {
 
 void LiveServer::accept_loop() {
     while (running_) {
-        int client_sock = ::accept(server_sock_, nullptr, nullptr);
+        SOCKET client_sock = ::accept(server_sock_, nullptr, nullptr);
         if (client_sock == INVALID_SOCKET) {
             continue;
         }
@@ -82,7 +83,7 @@ void LiveServer::accept_loop() {
     }
 }
 
-void LiveServer::handle_client(int sock) {
+void LiveServer::handle_client(SOCKET sock) {
     char buffer[4096];
     int bytes = ::recv(sock, buffer, sizeof(buffer) - 1, 0);
     if (bytes <= 0) {
@@ -129,45 +130,70 @@ void LiveServer::handle_client(int sock) {
             
             // Basic security check to prevent directory traversal
             std::error_code ec;
-            std::string canon_dir = fs::canonical(directory_, ec).string();
+            std::string canon_dir = fs::weakly_canonical(directory_, ec).string();
             std::string canon_target = fs::weakly_canonical(full_path, ec).string();
 
-            if (canon_target.find(canon_dir) != 0) {
+            // Convert to lowercase for case-insensitive comparison on Windows
+            std::string lower_dir = canon_dir;
+            std::string lower_target = canon_target;
+            std::transform(lower_dir.begin(), lower_dir.end(), lower_dir.begin(), ::tolower);
+            std::transform(lower_target.begin(), lower_target.end(), lower_target.begin(), ::tolower);
+
+            if (lower_target.find(lower_dir) != 0) {
                 std::string header = "HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n";
-                ::send(sock, header.c_str(), header.size(), 0);
+                ::send(sock, header.c_str(), (int)header.size(), 0);
             } else if (fs::exists(canon_target) && fs::is_regular_file(canon_target)) {
                 std::ifstream file(canon_target, std::ios::binary | std::ios::ate);
                 if (file) {
                     auto size = file.tellg();
                     file.seekg(0, std::ios::beg);
-                    std::vector<char> content(size);
-                    if (file.read(content.data(), size)) {
-                        std::string ext = fs::path(canon_target).extension().string();
-                        // to lowercase
-                        for(auto& c : ext) c = tolower(c);
+                    
+                    if (size > 0) {
+                        std::vector<char> content(static_cast<size_t>(size));
+                        if (file.read(content.data(), size)) {
+                            std::string ext = fs::path(canon_target).extension().string();
+                            for(auto& c : ext) c = tolower(c);
 
+                            std::string mime = get_mime_type(ext);
+                            std::ostringstream oss;
+                            oss << "HTTP/1.1 200 OK\r\n"
+                                << "Content-Type: " << mime << "\r\n"
+                                << "Content-Length: " << size << "\r\n"
+                                << "Access-Control-Allow-Origin: *\r\n"
+                                << "Connection: close\r\n\r\n";
+                            std::string header = oss.str();
+                            ::send(sock, header.c_str(), (int)header.size(), 0);
+                            ::send(sock, content.data(), static_cast<int>(size), 0);
+                        } else {
+                            std::string header = "HTTP/1.1 500 Internal Error\r\nConnection: close\r\n\r\n";
+                            ::send(sock, header.c_str(), (int)header.size(), 0);
+                        }
+                    } else {
+                        // Empty file
+                        std::string ext = fs::path(canon_target).extension().string();
+                        for(auto& c : ext) c = tolower(c);
                         std::string mime = get_mime_type(ext);
                         std::ostringstream oss;
                         oss << "HTTP/1.1 200 OK\r\n"
                             << "Content-Type: " << mime << "\r\n"
-                            << "Content-Length: " << size << "\r\n"
+                            << "Content-Length: 0\r\n"
                             << "Access-Control-Allow-Origin: *\r\n"
                             << "Connection: close\r\n\r\n";
                         std::string header = oss.str();
-                        ::send(sock, header.c_str(), header.size(), 0);
-                        ::send(sock, content.data(), size, 0);
+                        ::send(sock, header.c_str(), (int)header.size(), 0);
                     }
                 } else {
                     std::string header = "HTTP/1.1 500 Internal Error\r\nConnection: close\r\n\r\n";
-                    ::send(sock, header.c_str(), header.size(), 0);
+                    ::send(sock, header.c_str(), (int)header.size(), 0);
                 }
             } else {
                 std::string header = "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n";
-                ::send(sock, header.c_str(), header.size(), 0);
+                ::send(sock, header.c_str(), (int)header.size(), 0);
             }
         }
     }
 
+    ::shutdown(sock, SD_SEND);
     ::closesocket(sock);
 }
 

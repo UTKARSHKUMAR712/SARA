@@ -14,6 +14,8 @@ public:
 private:
     static bool handle_volume(const std::string& chat_id, const std::string& text);
     static bool handle_brightness(const std::string& chat_id, const std::string& text);
+    static bool handle_desktop(const std::string& chat_id, const std::string& text);
+    static void handle_desktopshutdown(const std::string& chat_id);
     static bool handle_media(const std::string& chat_id, const std::string& text);
     static bool handle_system(const std::string& chat_id, const std::string& text);
     static bool handle_screenshot(const std::string& chat_id, const std::string& text);
