@@ -4,58 +4,72 @@
 
 ## Architecture Overview
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                        sara_agent.exe                            │
-│                                                                  │
-│  ┌──────────┐  ┌──────────────┐  ┌──────────────────────────┐   │
-│  │ Telegram  │  │  IPC Server  │  │  WebSocket Server         │   │
-│  │ Gateway   │  │  (Named Pipe)│  │  (Port 9080)              │   │
-│  └─────┬─────┘  └──────┬───────┘  └──────────┬───────────────┘   │
-│        │               │                      │                  │
-│  ┌─────▼───────────────▼──────────────────────▼───────────────┐  │
-│  │                   MessageHandlers                          │  │
-│  │  (Telegram + IPC + WebSocket message dispatch)             │  │
-│  └─────┬───────────────┬──────────────────────┬───────────────┘  │
-│        │               │                      │                  │
-│  ┌─────▼──────┐  ┌─────▼──────┐  ┌────────────▼──────────────┐  │
-│  │ Action      │  │ CommandMap │  │ NativeCommandRouter        │  │
-│  │ Dispatcher  │  │ (NLP)      │  │ (/cmd, /system, etc.)     │  │
-│  └─────┬──────┘  └────────────┘  └────────────────────────────┘  │
-│        │                                                         │
-│  ┌─────▼──────────────────────────────────────────────────────┐  │
-│  │                   WinAPIExecutor                           │  │
-│  │  Process launch, keystrokes, clipboard, volume, etc.       │  │
-│  └────────────────────────────────────────────────────────────┘  │
-│                                                                  │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────────┐    │
-│  │ Process   │ │ Event    │ │ Network  │ │ Hotkey            │    │
-│  │ Monitor   │ │ Automatn │ │ Monitor  │ │ Manager           │    │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────────────┘    │
-│                                                                  │
-│  ┌────────────────┐   ┌────────────────────────────────────┐     │
-│  │ Spotify Plugin │   │ MCP Adapter (JSON-RPC over stdio)  │     │
-│  └────────────────┘   └────────────────────────────────────┘     │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │              Remote Terminal Runtime                       │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │  │
-│  │  │TerminalHttp  │  │TerminalSessn │  │Cloudflared   │  │  │
-│  │  │Server (9081) │  │Manager       │  │Manager       │  │  │
-│  │  └──────┬───────┘  └──────┬───────┘  └──────────────┘  │  │
-│  │         │                 │                             │  │
-│  │  ┌──────▼─────────────────▼───────┐                    │  │
-│  │  │       ConPTYSession           │                    │  │
-│  │  │  (Windows Pseudo Console)     │                    │  │
-│  │  └──────────────────────────────┘                    │  │
-│  └────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────┘
-          │                    │
-  ┌───────▼────┐     ┌────────▼────────┐
-  │ Browser    │     │ sara_gui.exe    │
-  │ (xterm.js) │     │ (ImGui + D3D11) │
-  │ HTTPS/WSS  │     │ Named Pipe IPC  │
-  └────────────┘     └─────────────────┘
+```mermaid
+flowchart TB
+    %% External Entities
+    Telegram((Telegram API))
+    Browser((Web Browser\nxterm.js))
+    GUI(sara_gui.exe\nImGui/DirectX 11)
+    Subprocess((MCP/Plugin\nSubprocesses))
+
+    %% Core Agent Boundaries
+    subgraph Core[sara_agent.exe]
+        direction TB
+
+        %% Subsystems
+        TG[Telegram Gateway\nWinHTTP Long-Polling]
+        CM[CommandMap\nNLP Pattern Matching]
+        AE[Action Dispatcher]
+        WE[WinAPI Executor\nNative Calls & CLI]
+        
+        PM[Process Monitor\nToolHelp32]
+        SM[System Monitor\nHW Stats]
+        EA[Event Automation\nSQLite Rules]
+
+        IPC[IPC Server\nNamed Pipes]
+        PluginMgr[Plugin Manager\nDLL LoadLibraryA]
+        MCP[MCP Adapter\nJSON-RPC over Stdio]
+
+        %% Terminal Subsystem
+        subgraph Terminal[Remote Terminal Runtime]
+            TH[TerminalHttpServer\nPort 9081 & WS]
+            TM[TerminalSessionManager\nLifecycle & Token Auth]
+            CP[ConPTYSession\nPseudo Console]
+            CF[CloudflaredManager\nTunneling]
+        end
+    end
+
+    %% Routing
+    Telegram <-->|JSON Updates| TG
+    TG -->|Raw Text| CM
+    CM -->|Matched Action| AE
+    AE --> WE
+    
+    %% Monitoring & Automation
+    PM --> EA
+    SM --> EA
+    EA -->|Triggered Actions| AE
+
+    %% Terminal Routing
+    AE -.->|Start Terminal| TM
+    TM --> CP
+    TH <-->|WebSockets| TM
+    CF -->|Expose 9081| TH
+    Browser <-->|HTTPS/WSS| CF
+
+    %% Extensibility Routing
+    IPC <-->|JSON RPC| AE
+    GUI <-->|Named Pipe| IPC
+    AE <--> PluginMgr
+    AE <--> MCP
+    PluginMgr <--> Subprocess
+    MCP <--> Subprocess
+
+    classDef core fill:#1e1e1e,stroke:#333,stroke-width:2px,color:#fff;
+    classDef sub fill:#2a2a2a,stroke:#555,stroke-width:1px,color:#ddd;
+    
+    class Core core;
+    class Terminal sub;
 ```
 
 ## Components
@@ -63,34 +77,38 @@
 ### sara_agent.exe (Core Agent)
 The main executable that runs as Administrator. Connects to Telegram, executes commands, manages the terminal server, and coordinates all subsystems.
 
-- **Telegram Gateway** — Polls Telegram Bot API for messages, sends replies with inline keyboards, docks, and media
-- **Action Dispatcher** — Routes validated actions to appropriate handlers
-- **CommandMap** — Natural language processing for commands like "play music", "open calculator"
-- **WinAPI Executor** — Executes Windows API calls: launch processes, send keystrokes, control volume, clipboard ops, etc.
-- **System Monitor** — CPU, RAM, GPU, battery, network stats
-- **Process Monitor** — Tracks process start/stop events
-- **Event Automation** — Rule-based automation engine
-- **Scheduler** — Delayed and recurring task execution
-- **Security Manager** — Rate limiting, trusted users, two-factor auth flow
-- **Plugin Manager** — Dynamic DLL plugin system
+- **Telegram Gateway** — Operates a non-blocking `poll_loop` using `WinHTTP` to fetch updates from the Telegram Bot API. It dispatches JSON payloads to `MessageHandler` callbacks and bridges interactions seamlessly to a Local Area Network WebSocket broadcaster.
+- **Action Dispatcher & CommandMap** — Provides multi-tiered NLP processing. The `CommandMap` singleton routes natural language phrases via Exact, Prefix, Regex, and Contains matchers, normalizing text and capturing parameters to return standard `MatchResult` objects.
+- **WinAPI Executor** — The core execution engine directly interfacing with the Windows Subsystem. Handles application launching via `ShellExecuteA`, keystroke synthesis via `SendInput`, audio control via `IMMDeviceEnumerator`, and pipes CLI execution outputs from `cmd.exe`.
+- **System & Process Monitor** — `ProcessMonitor` captures `ToolHelp32` snapshots every 500ms to diff PIDs against known states, while `SystemMonitor` synchronously measures CPU, RAM, and GPU usage without maintaining state.
+- **Event Automation** — A SQLite-backed rule engine evaluating triggers (like `cpu_high` or `process_start`) and executing arrays of WinAPI actions sequentially upon state transitions.
+- **IPC Server** — Runs a `listen_loop` thread for Inter-Process Communication via Windows Named Pipes (`\\.\pipe\sara_agent`). Parses incoming `IPCMessage` JSON payloads and dispatches them safely.
 
 ### Remote Terminal Runtime
-A full Windows terminal accessible via any browser through Cloudflare tunnel:
+A full Windows terminal accessible via any browser securely over the internet:
 
-- **ConPTYSession** — Windows Pseudo Console (`CreatePseudoConsole`) wrapping real shell processes
-- **TerminalHttpServer** — Embedded HTTP+WebSocket server serving an xterm.js frontend
-- **TerminalSessionManager** — Session lifecycle (create, attach, detach, expiry, cleanup)
-- **CloudflaredManager** — Manages `cloudflared tunnel --url` process for HTTPS access
-- **Token Auth** — 64-char hex tokens from `BCryptGenRandom`
+- **ConPTYSession** — C++ wrapper mapping browser I/O to the native Windows Pseudo Console (`CreatePseudoConsole`). It spawns elevated `cmd.exe` or `powershell.exe` instances and loops a background thread to read raw stdout bytes.
+- **TerminalHttpServer** — A custom multi-threaded Winsock TCP server on port 9081. It serves the `xterm.js` frontend and upgrades validated clients to WebSockets to stream raw shell bytes. It also acts as a reverse proxy for the file browser subsystem.
+- **TerminalSessionManager** — Thread-safe lifecycle singleton. Manages session expiry, PTY resizing, and safely buffers up to 1MB of ConPTY stdout in `pending_output` before a browser WebSocket attaches.
+- **CloudflaredManager** — Automatically provisions a `cloudflared tunnel` child process, dynamically reading `stderr` to extract the live `trycloudflare.com` URL and broadcasting it via Telegram.
+- **Token Auth** — Generates cryptographically secure 64-char hex tokens using `BCryptGenRandom`, intercepting requests globally to enforce a zero-trust model for the web interface.
 
-### sara_gui.exe (Desktop GUI)
-A lightweight ImGui + DirectX 11 control panel for configuration and monitoring when remote access isn't needed.
+### Extensibility & UI Integrations
+SARA supports extensive out-of-process scaling and external modules.
 
-### Spotify Plugin
-Compiled-in plugin that connects to the Spotify Desktop app via its local WebSocket API for playback control, playlist management, and interactive Telegram docks.
+- **sara_gui.exe** — An ImGui + DirectX 11 IPC client that connects to the core agent's named pipe. Serializes interface commands and parses 16KB JSON chunks to render system telemetry and controls.
+- **PluginManager (DLLs)** — Dynamically loads external C++ plugins using `LoadLibraryA`. Plugins expose a `create_plugin()` export for the `IPlugin` interface, allowing hot-swappable tools via the agent's mapping system.
+- **MCP Adapter (Model Context Protocol)** — Loads JSON-RPC 2.0 servers. It uses `CreateProcess` to launch AI or tool sub-processes, redirecting `stdin` and `stdout` to dispatch `tools/call` requests asynchronously using C++ `std::promise`.
 
-### MCP Adapter
-Model Context Protocol support — connects AI tool servers via JSON-RPC over stdio (e.g., DuckDuckGo search via `uvx`).
+### Deep-Dive Documentation
+For more detailed information, please explore the deep-dive architectural documents in the `docs/` directory:
+- [Core Agent Architecture](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/core_agent.md)
+- [Remote Terminal Subsystem](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/terminal.md)
+- [Workspace IDE Vision](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/workspace.md)
+- [MeshCentral Remote Desktop](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/remotedesktop.md)
+- [Plugins & MCP Architecture](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/plugins_and_mcp.md)
+- [Desktop GUI Panel](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/sara_gui.md)
+- [Search Plugin](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/search_plugin.md)
 
 ## Directory Structure
 
@@ -99,7 +117,7 @@ sara/
 ├── bot/                    # Start/restart/kill batch scripts
 ├── build/                  # CMake+Ninja build output
 ├── data/                   # Runtime data (SQLite DB, trusted users, screenshots)
-├── docs/                   # Documentation (empty)
+├── docs/                   # Deep-dive architectural documentation
 ├── logs/                   # Runtime log files
 ├── plugins/
 │   ├── plugin_api.h        # DLL plugin interface
