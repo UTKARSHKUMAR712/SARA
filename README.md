@@ -109,6 +109,8 @@ For more detailed information, please explore the deep-dive architectural docume
 - [Plugins & MCP Architecture](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/plugins_and_mcp.md)
 - [Desktop GUI Panel](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/sara_gui.md)
 - [Search Plugin](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/search_plugin.md)
+- [Command Reference (cmnd.md)](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/cmnd.md)
+- [Q&A Examples (qa_examples.md)](file:///C:/Users/utkarsh_kumar/Desktop/sara/docs/qa_examples.md)
 
 ## Directory Structure
 
